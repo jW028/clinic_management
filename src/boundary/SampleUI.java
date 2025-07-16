@@ -1,5 +1,6 @@
 package boundary;
 
+<<<<<<< HEAD
 import control.TreatmentMaintenance;
 import entity.Treatment;
 import java.util.Scanner;
@@ -26,3 +27,8 @@ public class SampleUI {
         // Create and add treatment using treatmentMaintenance
     }
 }
+=======
+public class SampleUI {
+    
+}
+>>>>>>> 6f518f0c9ce339547ac6dcb17c22c815185d649c
