@@ -8,7 +8,7 @@ public class Treatment {
     private Patient patient;
     private Doctor doctor;
     private Diagnosis diagnosis;
-    //private Medicine[] prescribedMedicines;
+    private Medicine[] prescribedMedicines;
     private String[] proceduresPerformed;
     private LocalDateTime treatmentDate;
     private String notes;
@@ -26,7 +26,7 @@ public class Treatment {
         this.notes = notes;
         this.isCritical = isCritical;
     }
-    /*public Treatment(String treatmentID, String consultationID, Patient patient, Doctor doctor, Diagnosis diagnosis,
+    public Treatment(String treatmentID, String consultationID, Patient patient, Doctor doctor, Diagnosis diagnosis,
                      Medicine[] prescribedMedicines, String[] proceduresPerformed, LocalDateTime treatmentDate, String notes,
                      boolean isCritical) {
         this.treatmentID = treatmentID;
@@ -39,7 +39,7 @@ public class Treatment {
         this.treatmentDate = treatmentDate;
         this.notes = notes;
         this.isCritical = isCritical;
-    }*/
+    }
 
     // Getters
 
@@ -63,9 +63,9 @@ public class Treatment {
         return diagnosis;
     }
 
-    /*public Medicine[] getPrescribedMedicines() {
+    public Medicine[] getPrescribedMedicines() {
         return prescribedMedicines;
-    }*/
+    }
 
     public String[] getProceduresPerformed() {
         return proceduresPerformed;
@@ -101,7 +101,7 @@ public class Treatment {
                 .append("Doctor: ").append(doctor.getName()).append("\n")
                 .append("Diagnosis: ").append(diagnosis.getDescription()).append("\n")
                 .append("Prescribed Medicines: ");
-        /*if (prescribedMedicines != null && prescribedMedicines.length > 0) {
+        if (prescribedMedicines != null && prescribedMedicines.length > 0) {
             for (Medicine medicine : prescribedMedicines) {
                 sb.append(medicine.getName()).append(", ");
             }
@@ -119,7 +119,6 @@ public class Treatment {
         sb.append("\nTreatment Date: ").append(treatmentDate.toString()).append("\n")
                 .append("Notes: ").append(notes).append("\n")
                 .append("Is Critical: ").append(isCritical ? "Yes" : "No");
-    }*/
         return "";
     }
 }
