@@ -119,6 +119,6 @@ public class Treatment {
         sb.append("\nTreatment Date: ").append(treatmentDate.toString()).append("\n")
                 .append("Notes: ").append(notes).append("\n")
                 .append("Is Critical: ").append(isCritical ? "Yes" : "No");
-        return "";
+        return sb.toString();
     }
 }
