@@ -69,15 +69,20 @@ public class CustomADT<K, V> {
     private void resize() {
         capacity *= 2;
         Node<K, V>[] newTable = new Node[capacity];
-        this.table = newTable;
-
-        // Rehash all existing entries by iterating through the linked list
+        table = newTable;
+        
+        
+        // Rehash all entries
         Node<K, V> current = head;
         while (current != null) {
+            // Clear old hash pointer
+            current.hashNext = null;
+
+            // Rehash and reinsert into hash table
             int newIndex = hash(current.key);
-            // Add to front of the new chain
-            current.hashNext = newTable[newIndex];
-            newTable[newIndex] = current;
+            current.hashNext = table[newIndex];
+            table[newIndex] = current;
+
             current = current.next;
         }
     }
@@ -107,13 +112,13 @@ public class CustomADT<K, V> {
                 current.value = value;
                 return oldValue;
             }
-            current = current.hashNext;
+            current = current.hashNext; // use hashNext for hash traversal
         }
 
         // Create new node
         Node<K, V> newNode = new Node<>(key, value);
-
-        // Add to hash table (at the front of the chain)
+        
+        // Add to hash table
         newNode.hashNext = table[index];
         table[index] = newNode;
 
@@ -159,7 +164,18 @@ public class CustomADT<K, V> {
      * Returns true if this map contains a mapping for the specified key
      */
     public boolean containsKey(K key) {
-        return get(key) != null;
+        if (key == null) return false;
+
+        int index = hash(key);
+        Node<K, V> current = table[index];
+
+        while (current != null) {
+            if (current.key != null && current.key.equals(key)) {
+                return true; 
+            }
+            current = current.hashNext;
+        }
+        return false;
     }
 
     /**
@@ -170,16 +186,15 @@ public class CustomADT<K, V> {
     public V remove(K key) {
         int index = hash(key);
         Node<K, V> current = table[index];
-        Node<K, V> prevInChain = null;
-
-        // Traverse the hash chain
+        Node<K, V> hashPrev = null;
+        
         while (current != null) {
-            if (current.key == key || (current.key != null && current.key.equals(key))) {
-                // Remove from hash table chain
-                if (prevInChain == null) {
+            if (current.key != null && current.key.equals(key)) {
+                // Remove from hash table
+                if (hashPrev == null) {
                     table[index] = current.hashNext;
                 } else {
-                    prevInChain.hashNext = current.hashNext;
+                    hashPrev.hashNext = current.hashNext;
                 }
 
                 // Remove from linked list
@@ -188,8 +203,8 @@ public class CustomADT<K, V> {
                 size--;
                 return current.value;
             }
-            prevInChain = current;
-            current = current.hashNext;
+            hashPrev = current;
+            current = current.hashNext; // Use hashNext for hash traversal
         }
         return null;
     }
@@ -247,6 +262,11 @@ public class CustomADT<K, V> {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
         }
 
+        // Check for duplicate key 
+        if (containsKey(key)) {
+            throw new IllegalArgumentException("Key already exists: " + key);
+        }
+        
         if (index == size) {
             put(key, value);
             return;
@@ -283,8 +303,13 @@ public class CustomADT<K, V> {
         int hashIndex = hash(key);
         newNode.hashNext = table[hashIndex];
         table[hashIndex] = newNode;
-
+        
         size++;
+
+        // Resize if necessary
+        if (size > capacity * LOAD_FACTOR) {
+            resize();
+        }
     }
 
     /**
