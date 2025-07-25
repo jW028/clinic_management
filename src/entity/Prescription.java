@@ -1,37 +1,63 @@
 package entity;
 
+import adt.CustomADT;
+
 public class Prescription {
     private String prescriptionID;
     private String treatmentID;
-    private String medicationID;
-    private int quantity;
+    private CustomADT<String, PrescribedMedicine> medicines;
+    private double totalPrice;
 
-    public Prescription(String prescriptionID, String treatmentID, String medicationID, int quantity) {
+    public Prescription(String prescriptionID,String treatmentID){
         this.prescriptionID = prescriptionID;
         this.treatmentID = treatmentID;
-        this.medicationID = medicationID;
-        this.quantity = quantity;
+        this.medicines = new CustomADT<>();
+        this.totalPrice = 0.0;
+    }
+
+    public void addMedicine(Medicine medicine, int quantity, String dosage, String frequency, String description) {
+        PrescribedMedicine prescribedMedicine = new PrescribedMedicine(medicine, quantity, dosage, frequency, description);
+        System.out.println("DEBUG: " + prescribedMedicine); // This should print all details
+        if (prescribedMedicine.isValidDosage()) {
+            medicines.put(medicine.getId(), prescribedMedicine);
+            totalPrice += prescribedMedicine.calculateSubtotal();
+        } else {
+            throw new IllegalArgumentException("Invalid dosage or frequency for medicine: " + medicine.getName());
+        }
+    }
+
+    public CustomADT<String, PrescribedMedicine> getMedicines() {
+        return medicines;
+    }
+
+    public void calculateTotalPrice() {
+        totalPrice = 0.0;
+        for (int i = 0; i < medicines.size(); i++) {
+            PrescribedMedicine pm = medicines.get(i);
+            totalPrice += pm.calculateSubtotal();
+        }
     }
 
     public String getPrescriptionID() {
         return prescriptionID;
     }
 
-    public String getTreatmentID() {
+    public String getTreatmentID(){
         return treatmentID;
-    }
-
-    public String getMedicationID() {
-        return medicationID;
-    }
-
-    public int getQuantity() {
-        return quantity;
     }
 
     @Override
     public String toString() {
-        return String.format("Prescription ID: %s, Treatment ID: %s, Medication ID: %s, Quantity: %d",
-                prescriptionID, treatmentID, medicationID, quantity);
+        StringBuilder sb = new StringBuilder();
+        sb.append("Prescription ID: ").append(prescriptionID)
+                .append("\nTreatment ID: ").append(treatmentID)
+                .append("\nTotal Price: ").append(totalPrice)
+                .append("\nPrescribed Medicines:\n");
+        for (int i = 0; i < medicines.size(); i++) {
+            PrescribedMedicine pm = medicines.get(i);
+            sb.append("  - ").append(pm.toString()).append("\n");
+        }
+        return sb.toString();
     }
+
 }
