@@ -57,8 +57,10 @@ public class Treatment {
     public Treatment(String treatmentID, String consultationID, Patient patient, Doctor doctor, Diagnosis diagnosis,
                      Prescription prescription, LocalDateTime treatmentDate, String notes,
                      boolean isCritical) {
-        this(treatmentID, consultationID, patient, doctor, diagnosis, prescription, treatmentDate, notes, isCritical);
+        this(treatmentID, consultationID, patient, doctor, diagnosis,
+         treatmentDate, notes, isCritical);
 
+        this.prescription = prescription;
         // Initialize procedures as an empty CustomADT
         this.procedures = new CustomADT<>();
 
@@ -70,13 +72,12 @@ public class Treatment {
     // Constructor for follow-up treatments
     public Treatment(String treatmentID, String consultationID, Patient patient, Doctor doctor,
                      Diagnosis diagnosis, LocalDateTime treatmentDate,
-                     String notes, boolean isCritical, String originalTreatmentID, String followUpType) {
+                     String notes, boolean isCritical, String originalTreatmentID) {
         this(treatmentID, consultationID, patient, doctor, diagnosis,
              treatmentDate, notes, isCritical);
 
         this.procedures = new CustomADT<>();
         this.originalTreatmentID = originalTreatmentID;
-        this.followUpType = followUpType;
         this.type = "FOLLOW_UP";
     }
 
@@ -121,9 +122,12 @@ public class Treatment {
     
     public double getTotalProcedureCost() {
         double totalCost = 0.0;
-        procedures.forEach(procedure -> {
-            totalCost += procedure.getCost();
-        });
+        for (int i = 0; i < procedures.size(); i++) {
+            Procedure procedure = procedures.get(i);
+            if (procedure != null) {
+                totalCost += procedure.getCost();
+            }
+        }
         return totalCost;
     }
 
@@ -150,14 +154,13 @@ public class Treatment {
     public boolean isRequiresFollowUp() { return requiresFollowUp; }
     public LocalDateTime getFollowUpDate() { return followUpDate; }
     public String getFollowUpInstructions() { return followUpInstructions; }
-    public LocalDateTime getCompletedDate() { return completedDate; }
     public String getOriginalTreatmentID() { return originalTreatmentID; }
 
 
     // Setters
     public void setNotes(String notes) { this.notes = notes; }
     public void setCritical(boolean critical) { isCritical = critical; }
-    public void settype(String type) { this.type = type; }
+    public void setType(String type) { this.type = type; }
     public void setOriginalTreatmentID(String originalTreatmentID) { this.originalTreatmentID = originalTreatmentID; }
     public void setRequiresFollowUp(boolean requiresFollowUp) { this.requiresFollowUp = requiresFollowUp; }
 
@@ -173,11 +176,8 @@ public class Treatment {
           .append("Patient: ").append(patient != null ? patient.getName() : "N/A").append("\n")
           .append("Doctor: ").append(doctor != null ? doctor.getName() : "N/A").append("\n")
           .append("Diagnosis: ").append(diagnosis != null ? diagnosis.getDescription() : "N/A").append("\n")
-          .append("Treatment Date: ").append(treatmentDate != null ? treatmentDate.toString() : "N/A").append("\n")
+          .append("Treatment Date: ").append(treatmentDate != null ? treatmentDate.toString() : "N/A").append("\n");
 
-          if (completedDate != null) {
-            sb.append("Completed Date: ").append(completedDate.toString()).append("\n");
-          }
 
         sb.append("Critical: ").append(isCritical ? "Yes" : "No").append("\n");
 
@@ -197,9 +197,10 @@ public class Treatment {
         // Procedures
         sb.append("\n=== PROCEDURES ===\n");
         if (procedures != null && !procedures.isEmpty()) {
-            for (Procedure procedure : procedures) {
-                sb.append(procedure.getProcedureName()).append(", ");
-            }
+            procedures.forEach(procedure -> {
+                sb.append("- ").append(procedure.getProcedureName())
+                  .append(" (RM").append(String.format("%.2f", procedure.getCost())).append(")\n");
+            });
         } else {
             sb.append("None");
         }
