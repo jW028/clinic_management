@@ -10,16 +10,10 @@ package adt;
  * This ADT is designed to be generic and suitable for use across all modules
  * in the clinic management system.
  *
- *                                       |
- *                                       |
- *                                       v
- *
- * --------> AS REFERENCE FOR NOW: WE CAN BASE OUR ADT OFF THIS STRUCTURE <-----------
- *
- *
- *
+ * @param <K> the type of keys maintained by this ADT
+ * @param <V> the type of mapped values
  */
-public class CustomADT<K, V> {
+public class CustomADT<K, V> implements CustomADTInterface<K, V> {
 
     // Internal node structure for the doubly-linked list
     private static class Node<K, V> {
@@ -62,7 +56,10 @@ public class CustomADT<K, V> {
 
     private int hash(K key) {
         if (key == null) return 0;
-        return Math.abs(key.hashCode() % capacity);
+
+        int hash = key.hashCode();
+        hash ^= (hash >>> 16);
+        return Math.abs(hash % capacity);
     }
 
     @SuppressWarnings("unchecked")
@@ -87,10 +84,6 @@ public class CustomADT<K, V> {
         }
     }
 
-    private void updateIndices() {
-        // This method is no longer needed but kept as a placeholder.
-    }
-
     // ===============================
     // MAP OPERATIONS
     // ===============================
@@ -101,6 +94,7 @@ public class CustomADT<K, V> {
      * @param value the value to be associated with the specified key
      * @return the previous value associated with key, or null if there was no mapping
      */
+    @Override
     public V put(K key, V value) {
         int index = hash(key);
         Node<K, V> current = table[index];
@@ -146,6 +140,7 @@ public class CustomADT<K, V> {
      * @param key the key whose associated value is to be returned
      * @return the value to which the specified key is mapped, or null if no mapping exists
      */
+    @Override
     public V get(K key) {
         int index = hash(key);
         Node<K, V> current = table[index];
@@ -163,6 +158,7 @@ public class CustomADT<K, V> {
     /**
      * Returns true if this map contains a mapping for the specified key
      */
+    @Override
     public boolean containsKey(K key) {
         if (key == null) return false;
 
@@ -183,6 +179,7 @@ public class CustomADT<K, V> {
      * @param key key whose mapping is to be removed from the map
      * @return the previous value associated with key, or null if there was no mapping
      */
+    @Override
     public V remove(K key) {
         int index = hash(key);
         Node<K, V> current = table[index];
@@ -219,6 +216,7 @@ public class CustomADT<K, V> {
      * @return the element at the specified position
      * @throws IndexOutOfBoundsException if the index is out of range
      */
+    @Override
     public V get(int index) {
         if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
@@ -237,6 +235,7 @@ public class CustomADT<K, V> {
      * @param value element to be stored at the specified position
      * @return the element previously at the specified position
      */
+    @Override
     public V set(int index, V value) {
         if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
@@ -257,6 +256,7 @@ public class CustomADT<K, V> {
      * @param key the key for the element
      * @param value element to be inserted
      */
+    @Override
     public void add(int index, K key, V value) {
         if (index < 0 || index > size) {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
@@ -317,6 +317,7 @@ public class CustomADT<K, V> {
      * @param index the index of the element to be removed
      * @return the element that was removed from the list
      */
+    @Override
     public V removeAt(int index) {
         if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
@@ -335,55 +336,11 @@ public class CustomADT<K, V> {
     // ===============================
 
     /**
-     * Inserts the specified element into this queue (at the tail).
-     * This is a simplified, non-keyed version used by some modules.
-     * Note: Items added this way are not retrievable via get(key) unless the key is null.
-     * @param item the element to add
-     */
-    public void enqueue(Object item) {
-        // Assume null key for simple queue operations.
-        @SuppressWarnings("unchecked")
-        Node<K, V> newNode = new Node<>(null, (V) item);
-        if (tail == null) {
-            head = tail = newNode;
-        } else {
-            tail.next = newNode;
-            newNode.prev = tail; // FIX: Added missing link back
-            tail = newNode;
-        }
-        size++;
-        // WARNING: This node is not added to the hash table for consistency.
-        // It's a standalone queue operation.
-    }
-
-    /**
-     * Retrieves and removes the head of this queue.
-     * This is a simplified, non-keyed version used by some modules.
-     * @return the head of this queue, or null if this queue is empty
-     */
-    public Object dequeue() {
-        if (head == null) {
-            return null;
-        }
-        V data = head.value; // FIX: Use 'value' field instead of 'data'
-
-        // This simplified dequeue only removes from the list, not the map,
-        // to match the behavior of the simplified enqueue.
-        head = head.next;
-        if (head != null) {
-            head.prev = null; // FIX: Sever the link from the new head
-        } else {
-            tail = null; // The list is now empty
-        }
-        size--;
-        return data;
-    }
-
-    /**
      * Inserts the specified element into this queue.
      * This is the standard, map-aware queue operation.
      * @return true (as specified by the Queue interface)
      */
+    @Override
     public boolean offer(K key, V value) {
         put(key, value);
         return true;
@@ -394,6 +351,7 @@ public class CustomADT<K, V> {
      * This is the standard, map-aware queue operation.
      * @return the head of this queue, or null if this queue is empty
      */
+    @Override
     public V poll() {
         if (isEmpty()) {
             return null;
@@ -406,6 +364,7 @@ public class CustomADT<K, V> {
      * Retrieves, but does not remove, the head of this queue, or returns null if empty
      * @return the head of this queue, or null if this queue is empty
      */
+    @Override
     public V peek() {
         return isEmpty() ? null : head.value;
     }
@@ -419,6 +378,7 @@ public class CustomADT<K, V> {
      * @param key the key for the element
      * @param value the element to be pushed onto this stack
      */
+    @Override
     public void push(K key, V value) {
         put(key, value);
     }
@@ -428,6 +388,7 @@ public class CustomADT<K, V> {
      * @return the object at the top of this stack
      * @throws RuntimeException if this stack is empty
      */
+    @Override
     public V pop() {
         if (isEmpty()) {
             throw new RuntimeException("Stack is empty");
@@ -441,6 +402,7 @@ public class CustomADT<K, V> {
      * @return the object at the top of this stack
      * @throws RuntimeException if this stack is empty
      */
+    @Override
     public V top() {
         if (isEmpty()) {
             throw new RuntimeException("Stack is empty");
@@ -472,6 +434,7 @@ public class CustomADT<K, V> {
      * Returns the number of elements in this collection
      * @return the number of elements in this collection
      */
+    @Override
     public int size() {
         return size;
     }
@@ -480,6 +443,7 @@ public class CustomADT<K, V> {
      * Returns true if this collection contains no elements
      * @return true if this collection contains no elements
      */
+    @Override
     public boolean isEmpty() {
         return size == 0;
     }
@@ -488,6 +452,7 @@ public class CustomADT<K, V> {
      * Removes all elements from this collection
      */
     @SuppressWarnings("unchecked")
+    @Override
     public void clear() {
         // Clear the hash table
         this.capacity = DEFAULT_CAPACITY;
@@ -502,6 +467,7 @@ public class CustomADT<K, V> {
      * @return array of values
      */
     @SuppressWarnings("unchecked")
+    @Override
     public V[] toArray() {
         V[] array = (V[]) new Object[size];
         Node<K, V> current = head;
@@ -517,19 +483,17 @@ public class CustomADT<K, V> {
      * Applies the given operation to each value in this collection
      * @param operation the operation to apply to each value
      */
+    @Override
     public void forEach(ValueProcessor<V> operation) {
-        Node<K, V> current = head;
+        if (operation == null) {
+            throw new NullPointerException("Operation cannot be null");
+        }
+
+        Node<K,V> current = head;
         while (current != null) {
             operation.process(current.value);
             current = current.next;
         }
-    }
-
-    /**
-     * Functional interface for processing values in forEach method
-     */
-    public interface ValueProcessor<V> {
-        void process(V value);
     }
 
     /**
