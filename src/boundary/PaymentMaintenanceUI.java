@@ -17,7 +17,7 @@ public class PaymentMaintenanceUI {
     }
 
     public Payment inputPaymentDetails() {
-        scanner.nextLine(); // Clear newline
+        scanner.nextLine();
         System.out.print("Enter Payment ID: ");
         String paymentId = scanner.nextLine();
 
@@ -29,7 +29,7 @@ public class PaymentMaintenanceUI {
 
         System.out.print("Enter Paid Amount: ");
         double paidAmount = scanner.nextDouble();
-        scanner.nextLine(); // Clear newline
+        scanner.nextLine();
 
         System.out.print("Enter Payment Status (Paid/Unpaid): ");
         String paymentStatus = scanner.nextLine();
@@ -42,7 +42,7 @@ public class PaymentMaintenanceUI {
             String desc = scanner.nextLine();
             System.out.print("Enter amount for " + desc + ": ");
             double amt = scanner.nextDouble();
-            scanner.nextLine(); // Clear newline
+            scanner.nextLine();
             breakdown.put(desc, amt);
 
             System.out.print("Add another breakdown? (y/n): ");
