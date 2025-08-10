@@ -15,7 +15,7 @@ public class ScheduleInitializer {
                 new Schedule("S003", "D002", "2025-08-16", "09:00–10:00", true));
 
         ScheduleDAO dao = new ScheduleDAO();
-        dao.saveSchedules(scheduleMap);
+        dao.saveToFile(scheduleMap);
         System.out.println("Schedules initialized and saved.");
     }
 }

@@ -75,9 +75,9 @@ public class ScheduleUI {
         // Updated Schedule without patientID
         Schedule schedule = new Schedule(scheduleID, doctorID, date, timeslot, status);
         if (scheduleMaintenance.assignSchedule(schedule)) {
-            System.out.println("✅ Schedule assigned successfully.");
+            System.out.println("Schedule assigned successfully.");
         } else {
-            System.out.println("❌ Schedule already exists.");
+            System.out.println("Schedule already exists.");
         }
     }
 
@@ -86,9 +86,9 @@ public class ScheduleUI {
         boolean status = InputHandler.getBoolean("Set availability (true/false)");
 
         if (scheduleMaintenance.updateAvailability(doctorID, date, timeSlot, status)) {
-            System.out.println("✅ Availability updated.");
+            System.out.println("Availability updated.");
         } else {
-            System.out.println("❌ Schedule not found.");
+            System.out.println("Schedule not found.");
         }
     }
 
@@ -96,9 +96,9 @@ public class ScheduleUI {
         String timeSlot = InputHandler.getString("Enter Time Slot to remove");
 
         if (scheduleMaintenance.removeSchedule(doctorID, date, timeSlot)) {
-            System.out.println("🗑️ Schedule removed.");
+            System.out.println("Schedule removed.");
         } else {
-            System.out.println("❌ Schedule not found.");
+            System.out.println("Schedule not found.");
         }
     }
 }
