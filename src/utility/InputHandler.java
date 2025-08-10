@@ -425,4 +425,14 @@ public class InputHandler {
         int choice = getChoice(prompt, frequencyOptions);
         return frequencyOptions[choice];
     }
+    public static boolean getBoolean(String prompt) {
+        String input;
+        while (true) {
+            System.out.print(prompt + " (true/false): ");
+            input = scanner.nextLine().trim().toLowerCase();
+            if (input.equals("true")) return true;
+            if (input.equals("false")) return false;
+            System.out.println("Invalid input. Please type 'true' or 'false'.");
+        }
+    }
 }
