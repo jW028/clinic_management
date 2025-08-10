@@ -1,6 +1,7 @@
 package control;
 
 import adt.CustomADT;
+import dao.DoctorDAO;
 import entity.Doctor;
 
 public class DoctorMaintenance {
