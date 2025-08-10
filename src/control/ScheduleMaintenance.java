@@ -12,7 +12,7 @@ public class ScheduleMaintenance {
 
     public ScheduleMaintenance() {
         scheduleDAO = new ScheduleDAO();
-        scheduleList = scheduleDAO.loadSchedules(); // Load from file at start
+        scheduleList = scheduleDAO.retrieveFromFile();
     }
 
     public boolean assignSchedule(Schedule schedule) {
@@ -21,7 +21,7 @@ public class ScheduleMaintenance {
             return false;
         }
         scheduleList.put(key, schedule);
-        scheduleDAO.saveSchedules(scheduleList); // Save after adding
+        scheduleDAO.saveToFile(scheduleList);
         return true;
     }
 
@@ -34,7 +34,7 @@ public class ScheduleMaintenance {
         Schedule schedule = getSchedule(doctorID, date, timeSlot);
         if (schedule != null) {
             schedule.setStatus(available);
-            scheduleDAO.saveSchedules(scheduleList); // Save after update
+            scheduleDAO.saveToFile(scheduleList);
             return true;
         }
         return false;
@@ -44,7 +44,7 @@ public class ScheduleMaintenance {
         String key = generateKey(doctorID, date, timeSlot);
         boolean removed = scheduleList.remove(key) != null;
         if (removed) {
-            scheduleDAO.saveSchedules(scheduleList); // Save after removal
+            scheduleDAO.saveToFile(scheduleList);
         }
         return removed;
     }
@@ -97,7 +97,6 @@ public class ScheduleMaintenance {
         int monthLength = today.lengthOfMonth();
         int dayOfWeek = today.withDayOfMonth(1).getDayOfWeek().getValue(); // 1=Mon
 
-        // Print padding for first week
         for (int i = 1; i < dayOfWeek; i++) {
             System.out.print("    ");
         }

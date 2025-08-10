@@ -58,9 +58,9 @@ public class DoctorUI {
 
         Doctor doctor = new Doctor(id, name, specialty, phone, email, address, gender, dob);
         if (doctorMaintenance.registerDoctor(doctor)) {
-            System.out.println("✅ Doctor registered successfully.");
+            System.out.println("Doctor registered successfully.");
         } else {
-            System.out.println("❌ Doctor ID already exists.");
+            System.out.println("Doctor ID already exists.");
         }
     }
 
@@ -70,7 +70,7 @@ public class DoctorUI {
         if (doctor != null) {
             System.out.println("\n" + doctor);
         } else {
-            System.out.println("❌ Doctor not found.");
+            System.out.println("Doctor not found.");
         }
     }
 
@@ -104,18 +104,18 @@ public class DoctorUI {
             if (!gender.isEmpty()) doctor.setGender(gender);
             if (!dob.isEmpty()) doctor.setDateOfBirth(dob);
 
-            System.out.println("✅ Doctor details updated.");
+            System.out.println("Doctor details updated.");
         } else {
-            System.out.println("❌ Doctor not found.");
+            System.out.println("Doctor not found.");
         }
     }
 
     private void removeDoctor() {
         String id = InputHandler.getString("Enter Doctor ID to remove");
         if (doctorMaintenance.removeDoctor(id)) {
-            System.out.println("🗑️ Doctor removed.");
+            System.out.println("Doctor removed.");
         } else {
-            System.out.println("❌ Doctor not found.");
+            System.out.println("Doctor not found.");
         }
     }
 

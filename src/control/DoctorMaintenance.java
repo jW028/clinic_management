@@ -8,7 +8,7 @@ public class DoctorMaintenance {
     private CustomADT<String, Doctor> doctorRegistry;
 
     public DoctorMaintenance() {
-        doctorRegistry = DoctorDAO.loadDoctors(); // Now ADT, not ArrayList
+        doctorRegistry = DoctorDAO.loadDoctors();
     }
 
     public boolean registerDoctor(Doctor doctor) {

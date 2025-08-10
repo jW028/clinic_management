@@ -23,6 +23,6 @@ public class DoctorInitializer {
                 "016-5551234", "emily.wong@hospital.com", "22 Jalan Taman Hijau", "Female", "1982-07-03"));
 
         DoctorDAO.saveDoctors(doctorRegistry);
-        System.out.println("✅ Doctors initialized and saved to file.");
+        System.out.println("Doctors initialized and saved to file.");
     }
 }
