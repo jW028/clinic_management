@@ -13,6 +13,10 @@ import entity.Diagnosis;
 import entity.Payment;
 import entity.Patient;
 import entity.Doctor;
+import entity.Schedule;
+import utility.DateTimeFormatterUtil;
+
+import java.time.LocalDateTime;
 
 public class ConsultationMaintenance {
     private final CustomADT<String, Consultation> consultationMap;
@@ -22,6 +26,7 @@ public class ConsultationMaintenance {
     private final CustomADT<String, Diagnosis> diagnosisMap;
     private final CustomADT<String, Payment> paymentMap;
     private final CustomADT<String, Doctor> doctorMap;
+    private final CustomADT<String, Schedule> scheduleMap;
 
     private final ConsultationDAO consultationDAO = new ConsultationDAO();
     private final PatientDAO patientDAO = new PatientDAO();
@@ -30,6 +35,7 @@ public class ConsultationMaintenance {
     private final ConsultationServiceDAO consultationServiceDAO = new ConsultationServiceDAO();
     private final AppointmentDAO appointmentDAO = new AppointmentDAO();
     // private final DoctorDAO doctorDAO = new DoctorDAO();
+    // private final scheduleDAO scheduleDAO = new ScheduleDAO();
 
     public static final String[] VALID_APPOINTMENT_STATUSES = {
             "Scheduled", "Completed", "Cancelled", "In Progress"
@@ -46,10 +52,9 @@ public class ConsultationMaintenance {
         // this.diagnosisMap = diagnosisDAO.retrieveFromFile();
         // this.doctorMap = doctorDAO.retrieveFromFile();
 
-        // this.appointmentMap = new CustomADT<>();
-        // this.serviceMap = new CustomADT<>();
         this.diagnosisMap = new CustomADT<>();
         this.doctorMap = new CustomADT<>();
+        this.scheduleMap = new CustomADT<>();   // or load from file
 
         // Example initial data
         diagnosisMap.put("D001", new Diagnosis("D001", "Flu", "Mild"));
@@ -110,6 +115,30 @@ public class ConsultationMaintenance {
     // Appointment CRUD
     public void addAppointment(Appointment appointment) {
         appointmentMap.put(appointment.getAppointmentId(), appointment);
+
+        // TODO Mark schedule as booked
+        for (int i = 0; i < scheduleMap.size(); i++) {
+            Schedule sched = scheduleMap.get(i);
+
+            // Combine date and from-time, and parse using your utility
+            String[] times = sched.getTimeslot().split("-");
+            String scheduleDateTimeStr = sched.getDate() + " " + times[0]; // e.g. "10/08/2025 15:00"
+            LocalDateTime scheduleDateTime;
+            try {
+                scheduleDateTime = DateTimeFormatterUtil.parseDisplayFormat(scheduleDateTimeStr);
+            } catch (Exception e) {
+                continue;
+            }
+
+            if (sched.getDoctorID().equals(appointment.getDoctorId())
+                    && scheduleDateTime.equals(appointment.getAppointmentTime())
+                    && sched.getStatus()) {
+                sched.setStatus(false);
+                scheduleMap.set(i, sched);
+                break;
+            }
+        }
+
         appointmentDAO.saveToFile(appointmentMap);
     }
 
@@ -194,6 +223,31 @@ public class ConsultationMaintenance {
         return paymentDAO.retrieveFromFile().toArray(new Payment[0]); // TODO
     }
 
+    // Schedule
+    public LocalDateTime[] getAvailableSlotsForDoctor(String doctorId) {
+        if (doctorId == null) return new LocalDateTime[0];
+
+        // Collect available slots for doctor
+        CustomADT<String, LocalDateTime> slotMap = new CustomADT<>();
+        for (int i = 0; i < scheduleMap.size(); i++) {
+            Schedule sched = scheduleMap.get(i);
+            if (sched.getDoctorID().equals(doctorId) && sched.getStatus()) {
+                try {
+//                    String[] times = sched.getTimeslot().split("-");
+//                    String dateTimeStr = sched.getDate() + "T" + times[0];
+//                    LocalDateTime slot = LocalDateTime.parse(dateTimeStr); // May need DateTimeFormatter
+//                    slotMap.put(sched.getScheduleID(), slot);
+                    String[] times = sched.getTimeslot().split("-");
+                    String scheduleDateTimeStr = sched.getDate() + " " + times[0]; // Eg. "10/08/2025 15:00"
+                    LocalDateTime slot = DateTimeFormatterUtil.parseDisplayFormat((scheduleDateTimeStr));
+                } catch (Exception e) {
+                    // Ignore format errors
+                }
+            }
+        }
+        return slotMap.toArray(new LocalDateTime[0]);
+    }
+
     public void printConsultationSummaryReport() {
         Consultation[] consultations = consultationMap.toArray(new Consultation[0]);
         System.out.println("=== Consultation Summary Report ===");
@@ -201,33 +255,37 @@ public class ConsultationMaintenance {
 
         // By patient
         CustomADT<String, Integer> byPatient = new CustomADT<>();
-        java.util.List<String> patientIds = new java.util.ArrayList<>();
+        CustomADT<String, String> patientIds = new CustomADT<>();
+
         for (Consultation c : consultations) {
             String pid = c.getPatient().getPatientId();
             Integer count = byPatient.get(pid);
             byPatient.put(pid, count == null ? 1 : count + 1);
-            if (!patientIds.contains(pid)) {
-                patientIds.add(pid); // Track unique keys
+            if (!patientIds.containsKey(pid)) {
+                patientIds.put(pid, pid);
             }
         }
-        System.out.println("Consultations by Patient:");
-        for (String pid : patientIds) {
+        System.out.println("Consultations by Patient: ");
+        String[] pidArray = patientIds.toArray(new String[0]);
+        for (String pid : pidArray) {
             System.out.println("Patient " + pid + ": " + byPatient.get(pid));
         }
 
         // By doctor
         CustomADT<String, Integer> byDoctor = new CustomADT<>();
-        java.util.List<String> doctorIds = new java.util.ArrayList<>();
+        CustomADT<String, String> doctorIds = new CustomADT<>();
+
         for (Consultation c : consultations) {
             String did = c.getDoctor().getDoctorID();
             Integer count = byDoctor.get(did);
             byDoctor.put(did, count == null ? 1 : count + 1);
-            if (!doctorIds.contains(did)) {
-                doctorIds.add(did);
+            if (!doctorIds.containsKey(did)) {
+                doctorIds.put(did, did);
             }
         }
-        System.out.println("Consultations by Doctor:");
-        for (String did : doctorIds) {
+        System.out.println("Consultations by Doctor: ");
+        String[] didArray = doctorIds.toArray(new String[0]);
+        for (String did : didArray) {
             System.out.println("Doctor " + did + ": " + byDoctor.get(did));
         }
     }

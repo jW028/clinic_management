@@ -437,7 +437,30 @@ public class ConsultationMaintenanceUI {
         }
 
         // TODO To check schedule
+        LocalDateTime[] availableSlots = maintenance.getAvailableSlotsForDoctor(doctor.getDoctorID());
+        if (availableSlots == null || availableSlots.length == 0) {
+            System.out.println("No available slots for selected doctor.");
+            return;
+        }
 
+        System.out.println("Available Time Slots:");
+        for (int i = 0; i < availableSlots.length; i++) {
+            System.out.println((i + 1) + ". " + DateTimeFormatterUtil.parseDisplayFormat(String.valueOf(availableSlots[i])));
+        }
+
+        int selectedSlot = -1;
+        while (selectedSlot < 1 || selectedSlot > availableSlots.length) {
+            System.out.print("Select slot (1-" + availableSlots.length + "): ");
+            try {
+                selectedSlot = Integer.parseInt(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Try again.");
+            }
+        }
+        LocalDateTime appointmentTime = availableSlots[selectedSlot - 1];
+
+        // Already got schedule, no need manually input appointmentTime
+        /*
         LocalDateTime appointmentTime = null;
         while (appointmentTime == null) {
             System.out.print("Appointment DateTime (DD/MM/YYYY HH:MM): ");
@@ -448,9 +471,9 @@ public class ConsultationMaintenanceUI {
             } catch (Exception e) {
                 System.out.println("Invalid format. Please try again.");
             }
-        }
+        }*/
 
-        // If want straightly assign "Scheduled" to new appointments
+        // TODO If want straightly assign "Scheduled" to new appointments
         // String status = "Scheduled";
 
         System.out.print("Status (");
