@@ -1,5 +1,7 @@
 package adt;
 
+import java.io.Serializable;
+
 /**
  * A versatile Abstract Data Type that combines the functionality of:
  * - Map (HashMap-like key-value storage with O(1) average lookup)
@@ -13,10 +15,13 @@ package adt;
  * @param <K> the type of keys maintained by this ADT
  * @param <V> the type of mapped values
  */
-public class CustomADT<K, V> implements CustomADTInterface<K, V> {
+public class CustomADT<K, V> implements CustomADTInterface<K, V>, Serializable {
+    private static final long serialVersionUID = 1L;
 
     // Internal node structure for the doubly-linked list
-    private static class Node<K, V> {
+    private static class Node<K, V> implements Serializable{
+        private static final long serialVersionUID = 1L;
+
         K key;
         V value;
         Node<K, V> prev;     // Doubly-linked list (order) pointer
@@ -466,14 +471,30 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V> {
      * Returns an array of all values in insertion order
      * @return array of values
      */
+//    @SuppressWarnings("unchecked")
+//    @Override
+//    public V[] toArray() {
+//        V[] array = (V[]) new Object[size];
+//        Node<K, V> current = head;
+//        int index = 0;
+//        while (current != null) {
+//            array[index++] = current.value;
+//            current = current.next;
+//        }
+//        return array;
+//    }
+
     @SuppressWarnings("unchecked")
     @Override
-    public V[] toArray() {
-        V[] array = (V[]) new Object[size];
-        Node<K, V> current = head;
-        int index = 0;
+    public V[] toArray(V[] array) {
+        int size = size();
+        if (array.length < size) {
+            array = (V[])java.lang.reflect.Array.newInstance(array.getClass().getComponentType(), size);
+        }
+        Node<K,V> current = head;
+        int i = 0;
         while (current != null) {
-            array[index++] = current.value;
+            array[i++] = current.value;
             current = current.next;
         }
         return array;

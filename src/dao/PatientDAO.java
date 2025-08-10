@@ -50,3 +50,5 @@ public class PatientDAO {
         return new CustomADT<>();
     }
 }
+
+// Suggestion All CustomADTInterface can change to CustomADT

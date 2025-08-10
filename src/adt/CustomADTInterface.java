@@ -190,7 +190,8 @@ public interface CustomADTInterface<K, V> {
      * 
      * @return an array containing all of the values in this collection
      */
-    V[] toArray();
+//    V[] toArray();
+    V[] toArray(V[] array);
 
     @FunctionalInterface
     interface ValueProcessor<V> {

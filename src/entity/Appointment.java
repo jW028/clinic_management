@@ -1,8 +1,11 @@
 package entity;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class Appointment {
+public class Appointment implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String appointmentId;
     private String patientId;
     private String doctorId;
@@ -11,7 +14,7 @@ public class Appointment {
 
     public Appointment(String appointmentId, String patientId, String doctorId, LocalDateTime appointmentTime, String status) {
         this.appointmentId = appointmentId;
-        this.patientId = patientId; 
+        this.patientId = patientId;
         this.doctorId = doctorId;
         this.appointmentTime = appointmentTime;
         this.status = status;
