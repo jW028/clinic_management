@@ -1,6 +1,9 @@
 package adt;
 
 import java.io.Serializable;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * A versatile Abstract Data Type that combines the functionality of:
@@ -15,11 +18,11 @@ import java.io.Serializable;
  * @param <K> the type of keys maintained by this ADT
  * @param <V> the type of mapped values
  */
-public class CustomADT<K, V> implements CustomADTInterface<K, V>, Serializable {
+public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, Serializable {
     private static final long serialVersionUID = 1L;
 
     // Internal node structure for the doubly-linked list
-    private static class Node<K, V> implements Serializable{
+    private static class Node<K, V> implements Serializable {
         private static final long serialVersionUID = 1L;
 
         K key;
@@ -501,19 +504,72 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Serializable {
     }
 
     /**
-     * Applies the given operation to each value in this collection
-     * @param operation the operation to apply to each value
+     * Returns an iterator over the values in this collection in insertion order
+     * @return an Iterator over the values in this collection
      */
-    @Override
-    public void forEach(ValueProcessor<V> operation) {
-        if (operation == null) {
-            throw new NullPointerException("Operation cannot be null");
+    @Override 
+    public Iterator<V> iterator() {
+        return new CustomADTIterator();
+    }
+
+    private class CustomADTIterator implements Iterator<V> {
+        private Node<K, V> current;
+        private Node<K, V> lastReturned;
+        private int expectedSize;
+
+        public CustomADTIterator() {
+            this.current = head;
+            this.lastReturned = null;
+            this.expectedSize = size; // Capture the expected size for fail-fast behavior
         }
 
-        Node<K,V> current = head;
-        while (current != null) {
-            operation.process(current.value);
+        /**
+         * Returns true if the iteration has more elements
+         */
+        @Override 
+        public boolean hasNext() {
+            checkForConcurrentModification();
+            return current != null;
+        }
+
+        /**
+         * Returns the next element in the iteration
+         */
+        @Override
+        public V next() {
+            checkForConcurrentModification();
+            if (!hasNext()) {
+                throw new NoSuchElementException("No more elements in iteration");
+            }
+
+            lastReturned = current;
             current = current.next;
+            return lastReturned.value;
+        }
+
+        /**
+         * Removes the last element returned by this iterator
+         */
+        @Override
+        public void remove() {
+            checkForConcurrentModification();
+            if (lastReturned == null) {
+                throw new IllegalStateException("No element to remove");
+            }
+
+            // Remove the last returned element
+            CustomADT.this.remove(lastReturned.key);
+            expectedSize = size; // Update expected size after removal
+            lastReturned = null; 
+        }
+
+        /**
+         * Check if the collection has been modified during iteration
+         */
+        private void checkForConcurrentModification() {
+            if (expectedSize != size) {
+                throw new ConcurrentModificationException("Collection modified during iteration");
+            }
         }
     }
 

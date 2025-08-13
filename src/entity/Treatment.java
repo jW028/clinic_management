@@ -9,9 +9,6 @@ public class Treatment {
     private String consultationID;
 
     // Core entities
-    private Patient patient;
-    private Doctor doctor;
-    private Diagnosis diagnosis;
     private CustomADT<String, Procedure> procedures;
 
     // Treatment details
@@ -24,11 +21,6 @@ public class Treatment {
     private String status; // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
     private String type;   // OUTPATIENT, INPATIENT, EMERGENCY, FOLLOW_UP
 
-    // Follow-up management
-    private boolean requiresFollowUp;
-    private LocalDateTime followUpDate;
-    private String followUpInstructions;
-    private String originalTreatmentID;
 
     // Constructors
 
@@ -51,7 +43,6 @@ public class Treatment {
         // Default values
         this.status = "SCHEDULED";
         this.type = "OUTPATIENT";
-        this.requiresFollowUp = false;
     }
 
     public Treatment(String treatmentID, String consultationID, Patient patient, Doctor doctor, Diagnosis diagnosis,
@@ -66,19 +57,6 @@ public class Treatment {
 
         this.status = "SCHEDULED";
         this.type = "OUTPATIENT";
-        this.requiresFollowUp = false;
-    }
-
-    // Constructor for follow-up treatments
-    public Treatment(String treatmentID, String consultationID, Patient patient, Doctor doctor,
-                     Diagnosis diagnosis, LocalDateTime treatmentDate,
-                     String notes, boolean isCritical, String originalTreatmentID) {
-        this(treatmentID, consultationID, patient, doctor, diagnosis,
-             treatmentDate, notes, isCritical);
-
-        this.procedures = new CustomADT<>();
-        this.originalTreatmentID = originalTreatmentID;
-        this.type = "FOLLOW_UP";
     }
 
     // Prescription Management
@@ -96,12 +74,6 @@ public class Treatment {
             this.status = "CANCELLED";
             this.notes += "\nCancellation Reason: " + reason;
         }
-    }
-
-    public void scheduleFollowUp(LocalDateTime followUpDate, String instructions) {
-        this.requiresFollowUp = true;
-        this.followUpDate = followUpDate;
-        this.followUpInstructions = instructions;
     }
 
     // Procedure Management
@@ -151,9 +123,6 @@ public class Treatment {
     public boolean isCritical() { return isCritical; }
     public String getStatus() { return status; }
     public String getType() { return type; }
-    public boolean isRequiresFollowUp() { return requiresFollowUp; }
-    public LocalDateTime getFollowUpDate() { return followUpDate; }
-    public String getFollowUpInstructions() { return followUpInstructions; }
     public String getOriginalTreatmentID() { return originalTreatmentID; }
 
 
@@ -162,7 +131,6 @@ public class Treatment {
     public void setCritical(boolean critical) { isCritical = critical; }
     public void setType(String type) { this.type = type; }
     public void setOriginalTreatmentID(String originalTreatmentID) { this.originalTreatmentID = originalTreatmentID; }
-    public void setRequiresFollowUp(boolean requiresFollowUp) { this.requiresFollowUp = requiresFollowUp; }
 
     // toString method for displaying treatment details
     @Override
@@ -203,18 +171,6 @@ public class Treatment {
             });
         } else {
             sb.append("None");
-        }
-
-        // Follow-up details
-        
-        if (requiresFollowUp) {
-            sb.append("\n\n=== FOLLOW-UP DETAILS ===\n")
-                .append("Follow-Up Required: Yes\n")
-                .append("Follow-Up Date: ").append(followUpDate != null ? followUpDate.toString() : "N/A").append("\n")
-                .append("Instructions: ").append(followUpInstructions != null ? followUpInstructions : "N/A").append("\n");
-            if (followUpInstructions != null) {
-                sb.append("Instructions: ").append(followUpInstructions).append("\n");
-            }
         }
 
         sb.append("\nNotes: ").append(notes != null ? notes : "None");      

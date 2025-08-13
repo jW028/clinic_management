@@ -193,25 +193,6 @@ public interface CustomADTInterface<K, V> {
 //    V[] toArray();
     V[] toArray(V[] array);
 
-    @FunctionalInterface
-    interface ValueProcessor<V> {
-        /**
-         * Processes a value from the collection.
-         * 
-         * @param value the value to process
-         */
-        void process(V value);
-    }
-
-    /**
-     * Performs the given action for each value in this collection in insertion order
-     * until all values have been processed or the action throws an exception.
-     * 
-     * @param operation the action to be performed for each value
-     * @throws NullPointerException if the specified action is null
-     */
-    void forEach(ValueProcessor<V> operation); 
-
     // ===============================
     // UTILITY OPERATIONS
     // ===============================
