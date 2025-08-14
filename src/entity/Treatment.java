@@ -131,6 +131,7 @@ public class Treatment {
     public void setCritical(boolean critical) { isCritical = critical; }
     public void setType(String type) { this.type = type; }
     public void setOriginalTreatmentID(String originalTreatmentID) { this.originalTreatmentID = originalTreatmentID; }
+    public void setPrescription(Prescription prescription) { this.prescription = prescription; }
 
     // toString method for displaying treatment details
     @Override

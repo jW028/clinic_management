@@ -109,9 +109,10 @@ public class TreatmentMaintenance {
      */
     public CustomADT<String, Consultation> getConsultationsWithoutTreatment() {
         // TODO: Change to match consultation controller
-        Consultation[] available = consultationController.getAllConsultations();
+        Consultation[] availableArr = consultationController.getAllConsultations();
+        CustomADT<String, Consultation> available = new CustomADT<>();
 
-        for (Consultation consultation : available) {
+        for (Consultation consultation : availableArr) {
             for (int i = 0; i < treatments.size(); i++) {
                 if (!(treatments.get(i).getConsultationID().equals(consultation.getConsultationId()))) {
                     available.put(consultation.getConsultationId(), consultation);
@@ -215,6 +216,18 @@ public class TreatmentMaintenance {
      */
     public CustomADT<String, String> getRecentTreatments() {
         return recentTreatments;
+    }
+
+    /**
+     * Clear all recent treatments
+     * @return true if cleared successfully, false if no recent treatments
+     */
+    public boolean clearRecentTreatments() {
+        if (recentTreatments.isEmpty()) {
+            return false;
+        }
+        recentTreatments.clear();
+        return true;
     }
 
     /**
@@ -343,4 +356,23 @@ public class TreatmentMaintenance {
 
         return filtered;
     }
+
+    /**
+     * Add prescription to a treatment
+     * @param treatmentID ID of the treatment to add the prescription to
+     * @param prescription Prescription object to add
+     * @return true if prescription was added successfully, false otherwise
+     */
+    public boolean addPrescriptionToTreatment(String treatmentID, Prescription prescription) {
+        Treatment treatment = treatments.get(treatmentID);
+        if (treatment != null) {
+            treatment.setPrescription(prescription);
+            prescriptions.put(prescription.getPrescriptionID(), prescription);
+            
+            //TODO: Implement prescription controller
+            return true;
+        }
+        return false;
+    }
+
 }

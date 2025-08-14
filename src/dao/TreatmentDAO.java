@@ -4,34 +4,23 @@ import entity.Treatment;
 import adt.CustomADT;
 
 public class TreatmentDAO {
-    private final CustomADT treatmentStorage;
+    private static final String FILE_NAME = "treatments.dat";
 
-    public TreatmentDAO() {
-        treatmentStorage = new CustomADT();
+    public static void saveTreatments(CustomADT<String, Treatment> treatments) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {
+            oos.writeObject(treatments);
+        } catch (IOException e) {
+            System.out.println("Error saving treatments to file: " + e.getMessage());
+        }
     }
 
-    public void save(Treatment treatment) {
-        treatmentStorage.enqueue(treatment);
-    }
-
-    public Treatment find(String treatmentID) {
-        CustomADT temp = new CustomADT();
-        Treatment found = null;
-
-        while (!treatmentStorage.isEmpty()) {
-            Treatment t = (Treatment)treatmentStorage.dequeue();
-            temp.enqueue(t);
-            if (t.getTreatmentID().equals(treatmentID)) {
-                found = t;
-                break;
-            }
+    public static CustomADT<String, Treatment> loadTreatments() {
+        CustomADT<String, Treatment> treatments = new CustomADT<>();
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(FILE_NAME))) {
+            treatments = (CustomADT<String, Treatment>) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("No existing treatment file found or error reading it.");
         }
-
-        // Restore storage
-        while (!temp.isEmpty()) {
-            treatmentStorage.enqueue(temp.dequeue());
-        }
-
-        return found;
+        return treatments;
     }
 }
