@@ -2,22 +2,24 @@ package entity;
 
 import adt.CustomADT;
 
-public class Prescription {
+import java.io.Serializable;
+
+public class Prescription implements Serializable {
     private String prescriptionID;
     private String treatmentID;
     private CustomADT<String, PrescribedMedicine> medicines;
     private double totalPrice;
 
+
     public Prescription(String prescriptionID,String treatmentID){
         this.prescriptionID = prescriptionID;
         this.treatmentID = treatmentID;
-        this.medicines = new CustomADT<>();
+        this.medicines = new CustomADT<String, PrescribedMedicine>();
         this.totalPrice = 0.0;
     }
 
     public void addMedicine(Medicine medicine, int quantity, String dosage, String frequency, String description) {
         PrescribedMedicine prescribedMedicine = new PrescribedMedicine(medicine, quantity, dosage, frequency, description);
-        System.out.println("DEBUG: " + prescribedMedicine); // This should print all details
         if (prescribedMedicine.isValidDosage()) {
             medicines.put(medicine.getId(), prescribedMedicine);
             totalPrice += prescribedMedicine.calculateSubtotal();

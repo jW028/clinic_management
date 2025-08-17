@@ -1,6 +1,8 @@
 package entity;
 
-public class PrescribedMedicine {
+import java.io.Serializable;
+
+public class PrescribedMedicine implements Serializable {
     private Medicine medicine;
     private int quantity;
     private String dosage;
@@ -66,7 +68,17 @@ public class PrescribedMedicine {
         this.medicine = medicine;
     }
 
+    public String getMedicineID() {
+        return medicine.getId();
+    }
 
+    public String getName() {
+        return medicine.getName();
+    }
+
+    public double getPrice(){
+        return medicine.getPrice();
+    }
 
 
     @Override
@@ -77,4 +89,3 @@ public class PrescribedMedicine {
         );
     }
 }
-

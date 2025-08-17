@@ -1,26 +1,35 @@
 package dao;
 
-import entity.Treatment;
 import adt.CustomADT;
+import entity.Medicine;
+import entity.Treatment;
+import java.io.*;
 
 public class TreatmentDAO {
-    private static final String FILE_NAME = "treatments.dat";
+    private final String fileName = "treatments.dat";
 
-    public static void saveTreatments(CustomADT<String, Treatment> treatments) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {
+    public void saveToFile(CustomADT<String, Treatment> treatments) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName))) {
             oos.writeObject(treatments);
         } catch (IOException e) {
             System.out.println("Error saving treatments to file: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
-    public static CustomADT<String, Treatment> loadTreatments() {
+    public CustomADT<String, Treatment> retrieveFromFile() {
         CustomADT<String, Treatment> treatments = new CustomADT<>();
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(FILE_NAME))) {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName))) {
             treatments = (CustomADT<String, Treatment>) ois.readObject();
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found: " + fileName);
         } catch (IOException | ClassNotFoundException e) {
-            System.out.println("No existing treatment file found or error reading it.");
+            System.out.println("Error retrieving treatments from file: " + e.getMessage());
+            e.printStackTrace();
         }
         return treatments;
     }
+
 }
+
+

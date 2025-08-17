@@ -6,6 +6,7 @@ public class IDGenerator {
     private static int diagnosisCounter = 1;
     private static int consultationCounter = 1;
     private static int doctorCounter = 1;
+    private static int transactionCounter = 1;
 
     public static String generateTreatmentID() {
         return "T" + String.format("%03d", treatmentCounter++);
@@ -25,4 +26,5 @@ public class IDGenerator {
     public static String generateDoctorID() {
         return "D" + String.format("%03d", doctorCounter++);
     }
+    public static String generateTransactionID() { return "TX" + String.format("%03d", transactionCounter++);}
 }
