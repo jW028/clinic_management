@@ -3,7 +3,6 @@ package control;
 import entity.Patient;
 import adt.*;
 import dao.PatientDAO;
-import entity.MedicalRecord;
 
 public class PatientMaintenance {
     private CustomADT<String, Patient> patientQueue;
@@ -42,15 +41,10 @@ public class PatientMaintenance {
         return patientRegistry.get(patientId);
     }
 
-    public Patient getPatientByIndex(int index) {
-        return patientRegistry.get(index);
+    public CustomADT<String, Patient> getAllPatients() {
+        return patientRegistry;
     }
 
-    public void listAllPatients(CustomADT.ValueProcessor<Patient> processor) {
-        patientRegistry.forEach(processor);
-    }
-
-    // Update
     public boolean updatePatient(String patientId, String name, int age, String gender,
                                  String contactNumber, String address) {
         Patient patient = patientRegistry.get(patientId);
@@ -90,50 +84,6 @@ public class PatientMaintenance {
         return patientQueue.poll();
     }
 
-    // Medical Record Management
-    public void addMedicalRecord(String patientId, MedicalRecord record) {
-        Patient patient = patientRegistry.get(patientId);
-        if (patient != null) {
-            patient.addMedicalRecord(record.getRecordId(), record);
-            saveChanges();
-        }
-    }
-
-    public MedicalRecord getMedicalRecord(String patientId, String recordId) {
-        Patient patient = patientRegistry.get(patientId);
-        if (patient != null) {
-            return patient.getMedicalRecord(recordId);
-        }
-        return null;
-    }
-
-    public CustomADT<String, MedicalRecord> getAllMedicalRecords(String patientId) {
-        Patient patient = patientRegistry.get(patientId);
-        return patient != null ? patient.getMedicalRecords() : null;
-    }
-
-    public boolean updateMedicalRecord(String patientId, String recordId, MedicalRecord updatedRecord) {
-        Patient patient = patientRegistry.get(patientId);
-        if (patient != null) {
-            patient.updateMedicalRecord(recordId, updatedRecord);
-            saveChanges();
-            return true;
-        }
-        return false;
-    }
-
-    public boolean deleteMedicalRecord(String patientId, String recordId) {
-        Patient patient = patientRegistry.get(patientId);
-        if (patient != null) {
-            boolean result = patient.deleteMedicalRecord(recordId);
-            if (result) {
-                saveChanges();
-            }
-            return result;
-        }
-        return false;
-    }
-
     // Utility methods
     public int getQueueSize() {
         return patientQueue.size();
@@ -141,10 +91,6 @@ public class PatientMaintenance {
 
     public int getRegisteredPatientCount() {
         return patientRegistry.size();
-    }
-
-    public boolean isPatientRegistered(String patientId) {
-        return patientRegistry.containsKey(patientId);
     }
 
     // Save current state

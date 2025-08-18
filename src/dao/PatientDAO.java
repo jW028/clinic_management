@@ -6,11 +6,6 @@ import java.io.*;
 
 public class PatientDAO {
     private final String fileName = "patients.dat";
-
-    /**
-     * Saves the provided list of patients to a binary file.
-     * @param patientList The list of patients to save.
-     */
     public void saveToFile(CustomADTInterface<String, Patient> patientList) { // 2. Update method signature
         File file = new File(fileName);
         // Use try-with-resources for automatic stream closing
@@ -23,10 +18,6 @@ public class PatientDAO {
         }
     }
 
-    /**
-     * Retrieves the list of patients from the binary file.
-     * @return A list of patients, or an empty list if the file doesn't exist or an error occurs.
-     */
     public CustomADTInterface<String, Patient> retrieveFromFile() { // 3. Update return type
         File file = new File(fileName);
         if (!file.exists()) {
@@ -50,5 +41,3 @@ public class PatientDAO {
         return new CustomADT<>();
     }
 }
-
-// Suggestion All CustomADTInterface can change to CustomADT
