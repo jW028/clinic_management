@@ -10,39 +10,16 @@ public class Patient implements Serializable {
     private String gender;
     private String contactNumber;
     private String address;
-    private CustomADT<String, MedicalRecord> medicalRecords;
+    private boolean isEmergency;
 
-    public Patient(String patientId, String name, int age, String gender, String contactNumber, String address) {
+    public Patient(String patientId, String name, int age, String gender, String contactNumber, String address, boolean isEmergency) {
         this.patientId = patientId;
         this.name = name;
         this.age = age;
         this.gender = gender;
         this.contactNumber = contactNumber;
         this.address = address;
-        this.medicalRecords = new CustomADT<>();
-    }
-
-    // Medical Record Management
-    public void addMedicalRecord(String recordId, MedicalRecord record) {
-        medicalRecords.put(recordId, record);
-    }
-
-    public void updateMedicalRecord(String recordId, MedicalRecord record) {
-        if (medicalRecords.containsKey(recordId)) {
-            medicalRecords.put(recordId, record);
-        }
-    }
-
-    public MedicalRecord getMedicalRecord(String recordId) {
-        return medicalRecords.get(recordId);
-    }
-
-    public boolean deleteMedicalRecord(String recordId) {
-        return medicalRecords.remove(recordId) != null;
-    }
-
-    public CustomADT<String, MedicalRecord> getMedicalRecords() {
-        return medicalRecords;
+        this.isEmergency = isEmergency;
     }
 
     // Getters
@@ -52,6 +29,7 @@ public class Patient implements Serializable {
     public String getGender() { return gender; }
     public String getContactNumber() { return contactNumber; }
     public String getAddress() { return address; }
+    public boolean isEmergency() { return isEmergency; }
 
     // Setters for updatable fields
     public void setName(String name) { this.name = name; }
@@ -59,6 +37,7 @@ public class Patient implements Serializable {
     public void setGender(String gender) { this.gender = gender; }
     public void setContactNumber(String contactNumber) { this.contactNumber = contactNumber; }
     public void setAddress(String address) { this.address = address; }
+    public void setEmergency(boolean isEmergency) { this.isEmergency = isEmergency; }
 
     @Override
     public String toString() {
@@ -74,8 +53,8 @@ public class Patient implements Serializable {
                 .append("Age: ").append(age).append("\n")
                 .append("Gender: ").append(gender).append("\n")
                 .append("Contact: ").append(contactNumber).append("\n")
-                .append("Address: ").append(address).append("\n")
-                .append("\nMedical Records: ").append(medicalRecords.size());
+                .append("Address: ").append(address)
+                .append("\nEmergency: ").append(isEmergency ? "YES" : "NO").append("\n");
         return sb.toString();
     }
 }

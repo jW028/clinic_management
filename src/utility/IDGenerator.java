@@ -16,6 +16,7 @@ public class IDGenerator {
     public static String generatePatientID() {
         return "P" + String.format("%03d", patientCounter++);
     }
+
     public static String generateProcedureID() {
         return "P" + String.format("%03d", procedureCounter++);
     }

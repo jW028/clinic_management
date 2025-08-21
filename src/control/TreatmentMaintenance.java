@@ -54,21 +54,21 @@ public class TreatmentMaintenance {
 
         // Create diagnosis from consultation
         Diagnosis diagnosis = new Diagnosis(
-            "DG" + System.currentTimeMillis(), // Simple ID generation
-            "Test Diagnosis",
-            "No Severity"
-            );
+                "DG" + System.currentTimeMillis(), // Simple ID generation
+                "Test Diagnosis",
+                "No Severity"
+        );
 
         // Create treatment
         Treatment treatment = new Treatment (
-            treatmentID,
-            consultationID,
-            patient,
-            doctor,
-            diagnosis,
-            LocalDateTime.now(),
-            notes,
-            isCritical
+                treatmentID,
+                consultationID,
+                patient,
+                doctor,
+                diagnosis,
+                LocalDateTime.now(),
+                notes,
+                isCritical
         );
 
         treatment.setType(treatmentType);
