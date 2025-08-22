@@ -1,6 +1,7 @@
 package adt;
 
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -490,7 +491,7 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
     @SuppressWarnings("unchecked")
     @Override
     public V[] toArray(V[] array) {
-        int size = size();
+        int currentSize = size();
         if (array.length < size) {
             array = (V[])java.lang.reflect.Array.newInstance(array.getClass().getComponentType(), size);
         }
@@ -572,6 +573,322 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
             }
         }
     }
+
+
+    @SuppressWarnings("unchecked")
+    private Node<K,V>[] createNodeArray() {
+        Node<K, V>[] array = new Node[size];
+        Node<K, V> current = head;
+        int index = 0;
+
+        while (current != null) {
+            array[index++] = current;
+            current = current.next;
+        }
+        return array;
+    }
+
+    /**
+     * Linear search through the collection
+     * @param target the value to search for
+     * @param comparator the comparator for equality checking
+     * @return the first matching value, or null if not found
+     */
+    public V linearSearch(V target, Comparator<V> comparator) {
+        Node<K, V> current = head;
+        while (current != null) {
+            if (comparator.compare(current.value, target) == 0) {
+                return current.value;
+            }
+            current = current.next;
+        }
+        return null;
+    }
+
+    /**
+     * Binary search for sorted data 
+     * Requires data to be sorted first
+     */
+    public V binarySearch(V target, Comparator<V> comparator) {
+        if (isEmpty() || target == null || comparator == null) return null;
+
+        // Convert linked list to array for binary search 
+        Node<K, V>[] nodeArray = createNodeArray();
+
+        int left = 0;
+        int right = size - 1;
+
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            if (nodeArray[mid].value == null) {
+                // Handle null values in array
+                left = mid + 1;
+                continue;
+            }
+
+            int comparison = comparator.compare(nodeArray[mid].value, target);
+
+            if (comparison == 0) {
+                return nodeArray[mid].value;
+            } else if (comparison < 0) {
+                // Target value is greater than mid, search the right half
+                left = mid + 1;
+            } else {
+                // Target value is less than mid, search the left half
+                right = mid - 1;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Sort the collection using merge sort algorithm
+     * @param comparator the comparator to determine the order of elements
+     */
+    public void sort(Comparator<V> comparator) {
+        if (size <= 1) return;
+
+        Node<K, V>[] nodeArray = createNodeArray();
+        mergeSort(nodeArray, 0, size - 1, comparator);
+        rebuildLinkedList(nodeArray);
+    }
+
+    private void mergeSort(Node<K, V>[] array, int left, int right, Comparator<V> comparator) {
+        if (left < right) {
+            int mid = left + (right - left) / 2;
+
+            mergeSort(array, left, mid, comparator);
+            mergeSort(array, mid + 1, right, comparator);
+            merge(array, left, mid, right, comparator);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void merge(Node<K, V>[] array, int left, int mid, int right, Comparator<V> comparator) {
+        int leftSize = mid - left + 1;
+        int rightSize = right - mid;
+
+        Node <K, V>[] leftArray = new Node[leftSize];
+        Node <K, V>[] rightArray = new Node[rightSize];
+
+        // Copy data to temporary arrays
+        System.arraycopy(array, left, leftArray, 0, leftSize);
+        System.arraycopy(array, mid + 1, rightArray, 0, rightSize);
+
+        int i = 0, j = 0, k = left;
+
+        // Merge back temporary arrays
+        while (i < leftSize && j < rightSize) {
+            if (comparator.compare(leftArray[i].value,  rightArray[j].value) <= 0) {
+                array[k] = leftArray[i];
+                i++;
+            } else {
+                array[k] = rightArray[j];
+                j++;
+            }
+            k++;
+        }
+
+        // Copy remaining elements
+        while (i < leftSize) {
+            array[k] = leftArray[i];
+            i++;
+            k++;
+        }
+
+        while (j < rightSize) {
+            array[k] = rightArray[j];
+            j++;
+            k++;
+        }
+    }
+
+    /**
+     * Rebuild the linked list from sorted node array
+     * @param nodeArray the sorted array of nodes
+     */
+    private void rebuildLinkedList(Node<K, V>[] nodeArray) {
+        if (nodeArray.length == 0) return;
+
+        // Reset all next/previous pointers
+        for (Node<K, V> node : nodeArray) {
+            node.next = null;
+            node.prev = null;
+        }
+
+        // Rebuild the linked list
+        head = nodeArray[0];
+        tail = nodeArray[nodeArray.length - 1];
+
+        for (int i = 0; i < nodeArray.length; i++) {
+            if (i > 0) {
+                nodeArray[i].prev = nodeArray[i - 1];
+                nodeArray[i - 1].next = nodeArray[i];
+            }
+        }
+    }
+
+    /**
+     * Find the first element that matches the given target
+     * @param target the value to search for
+     * @param comparator the comparator for matching
+     * @return the first matching element, or null if not found
+     */
+    public V findFirst(Comparator<V> condition, V referenceValue) {
+        Node<K, V> current = head;
+        while (current != null) {
+            if (condition.compare(current.value, referenceValue) == 0) {
+                return current.value;
+            }
+            current = current.next;
+        }
+        return null;
+    }
+
+    /**
+     * Find all elements that match the given criteria
+     * @param target the value to search for
+     * @param comparator the comparator for matching
+     * @return a new CustomADT containing all elements
+     */
+    public CustomADT<K, V> findAll(V target, Comparator<V> comparator) {
+        CustomADT<K, V> results = new CustomADT<>();
+        Node<K, V> current = head;
+
+        while (current != null) {
+            if (comparator.compare(current.value, target) == 0) {
+                results.put(current.key, current.value);
+            }
+            current = current.next;
+        }
+        return results;
+    }
+
+    /**
+     * Filter elements based on a condition using a predicate-style comparator
+     * @param referenceValue the value to compare against
+     * @param condition a comparator that returns 0 for elements to keep
+     * @return a new CustomADT containing filtered elements
+     */
+    public CustomADT<K, V> filter(V referenceValue, Comparator<V> condition) {
+        CustomADT<K, V> filtered = new CustomADT<>();
+        Node<K, V> current = head;
+
+        while (current != null) {
+            if (condition.compare(current.value, referenceValue) == 0) {
+                // Found a matching element
+                filtered.put(current.key, current.value);
+            }
+            current = current.next;
+        }
+        return filtered;
+    }
+
+    /**
+     * Range search for elements within a specified range
+     * @param min the minimum value (includsive)
+     * @param max the maximum value (inclusive)
+     * @param comparator the comparator for range checking
+     * @return a new CustomADT containing elements within the range
+     */
+    public CustomADT<K, V> rangeSearch(V min, V max, Comparator<V> comparator) {
+        CustomADT<K, V> results = new CustomADT<>();
+        Node<K, V> current = head;
+
+        while (current != null) {
+            if (comparator.compare(current.value, min) >= 0 &&
+                comparator.compare(current.value, max) <= 0) {
+                    results.put(current.key, current.value);
+            }
+            current = current.next;
+        }
+        return results;
+    }
+
+    /**
+     * Check if the collection is sorted according to the given comparator
+     * @param comparator the comparator to check ordering
+     * @return true if sorted, false otherwise
+     */
+    public boolean isSorted(Comparator<V> comparator) {
+        if (size <= 1) return true;
+
+        Node<K, V> current = head;
+        while (current.next != null) {
+            if (comparator.compare(current.value, current.next.value) > 0) {
+                return false;
+            }
+            current = current.next;
+        }
+        return true;
+    }
+
+    /**
+     * Sort by keys 
+     * @param keyComparator comparator for keys
+     */
+    public void sortByKeys(Comparator<K> keyComparator) {
+        if (size <= 1) return;
+
+        Node<K, V>[] nodeArray = createNodeArray();
+        mergeSortByKeys(nodeArray, 0, size - 1, keyComparator);
+        rebuildLinkedList(nodeArray);
+    }
+
+    /**
+     * Recursive merge sort for keys
+     */
+    private void mergeSortByKeys(Node<K,V>[] array, int left, int right, Comparator<K> keyComparator) {
+        if (left < right) {
+            int mid = left + (right - left) / 2;
+
+            mergeSortByKeys(array, left, mid, keyComparator);
+            mergeSortByKeys(array, mid + 1, right, keyComparator);
+            mergeByKeys(array, left, mid, right, keyComparator);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void mergeByKeys(Node<K, V>[] array, int left, int mid, int right, Comparator<K> keyComparator) {
+        int leftSize = mid - left + 1;
+        int rightSize = right - mid;
+
+        Node<K, V>[] leftArray = new Node[leftSize];
+        Node<K, V>[] rightArray = new Node[rightSize];
+
+        // Copy data to temp arrays
+        System.arraycopy(array, left, leftArray, 0, leftSize);
+        System.arraycopy(array, mid + 1, rightArray, 0, rightSize);
+
+        int i = 0, j = 0, k = left;
+
+        // Merge back by comparing keys
+        while (i < leftSize && j < rightSize) {
+            if (keyComparator.compare(leftArray[i].key, rightArray[j].key) <= 0) {
+                array[k] = leftArray[i];
+                i++;
+            } else {
+                array[k] = rightArray[j];
+                j++;
+            }
+            k++;
+        }
+        
+        // Copy remaining elements
+        while (i < leftSize) {
+            array[k] = leftArray[i];
+            i++;
+            k++;
+        }
+
+        while (j < rightSize) {
+            array[k] = rightArray[j];
+            j++;
+            k++;
+        }
+    }
+
+
 
     /**
      * Returns a string representation of this collection
