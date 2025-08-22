@@ -8,6 +8,7 @@ public class IDGenerator {
     private static int doctorCounter = 1;
     private static int patientCounter = 1;
     private static int transactionCounter = 1;
+    private static int visitCounter = 1;
 
     public static String generateTreatmentID() {
         return "T" + String.format("%03d", treatmentCounter++);
@@ -32,4 +33,7 @@ public class IDGenerator {
         return "D" + String.format("%03d", doctorCounter++);
     }
     public static String generateTransactionID() { return "TX" + String.format("%03d", transactionCounter++);}
+    public static String generateVisitID() {
+        return "V" + String.format("%03d", visitCounter++);
+    }
 }

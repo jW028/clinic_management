@@ -4,8 +4,14 @@ import control.PatientMaintenance;
 import entity.*;
 import utility.IDGenerator;
 import utility.InputHandler;
-import adt.CustomADT;
+import adt.*;
+import utility.DateTimeFormatterUtil;
 
+/**
+ * PatientUI class handles the user interface for patient management operations.
+ * It provides methods to register, update, delete patients, manage queues and waitlists,
+ * and view patient records and visit history.
+ */
 public class PatientUI {
     private final PatientMaintenance patientMaintenance;
 
@@ -13,113 +19,282 @@ public class PatientUI {
         this.patientMaintenance = patientMaintenance;
     }
 
+    /**
+     * Main menu
+     */
     public void displayMenu() {
-        while (true) {
-            String[] options = {
-                    "Patient Registration",
-                    "Queue Management",
-                    "Waitlist Management",
-                    "View Records",
-                    "Back to Main Menu"
-            };
+        int choice;
+        do {
+            printMenu();
+            choice = InputHandler.getInt("Select an option", 0, 4);
 
-            int choice = InputHandler.displayMenu("Patient Management System", options);
-
-            switch (choice) {
-                case 0 -> patientRegistrationMenu();
-                case 1 -> queueManagementMenu();
-                case 2 -> waitlistManagementMenu();
-                case 3 -> recordManagementMenu();
-                case 4 -> { return; }
+            switch(choice) {
+                case 1:
+                    patientRegistrationMenu();
+                    break;
+                case 2:
+                    queueManagementMenu();
+                    break;
+                case 3:
+                    waitlistManagementMenu();
+                    break;
+                case 4:
+                    recordManagementMenu();
+                    break;
+                case 0:
+                    System.out.println("Returning to main menu...");
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
             }
-        }
+
+            if (choice != 0) {
+                InputHandler.pauseForUser();
+            }
+
+        } while (choice != 0);
     }
 
-    private void patientRegistrationMenu() {
-        String[] options = {
-                "Register New Patient",
-                "Update Patient Details",
-                "Delete Patient",
-                "View Patient List",
-                "Back to Previous Menu"
-        };
-
-        while (true) {
-            int choice = InputHandler.displayMenu("Patient Registration Menu", options);
-
-            switch (choice) {
-                case 0 -> registerPatient();
-                case 1 -> updatePatient();
-                case 2 -> deletePatient();
-                case 3 -> viewPatientList();
-                case 4 -> { return; }
-            }
-        }
+    /**
+     * Display menu options
+     */
+    public void printMenu() {
+        System.out.println("\n" + "=".repeat(40));
+        System.out.println("   PATIENT MANAGEMENT SYSTEM");
+        System.out.println("=".repeat(40));
+        System.out.println("1. Patient Registration");
+        System.out.println("2. Queue Management");
+        System.out.println("3. Waitlist Management");
+        System.out.println("4. View Records");
+        System.out.println("0. Back to Main Menu");
+        System.out.println("=".repeat(40));
     }
 
-    private void queueManagementMenu() {
-        String[] options = {
-                "Add Patient to Queue",
-                "Serve Next Patient",
-                "View Queue Status",
-                "Back to Previous Menu"
-        };
+    /**
+     * Patient Registration submenu
+     */
+    public void patientRegistrationMenu() {
+        int choice;
+        do {
+            System.out.println("\n" + "=".repeat(40));
+            System.out.println("    PATIENT REGISTRATION MENU");
+            System.out.println("=".repeat(40));
+            System.out.println("1. Register New Patient");
+            System.out.println("2. Update Patient Details");
+            System.out.println("3. Delete Patient");
+            System.out.println("4. View Patient List");
+            System.out.println("0. Back to Patient Menu");
+            System.out.println("=".repeat(40));
 
-        while (true) {
-            int choice = InputHandler.displayMenu("Queue Management Menu", options);
+            choice = InputHandler.getInt("Select an option", 0, 4);
 
-            switch (choice) {
-                case 0 -> addToQueue();
-                case 1 -> servePatient();
-                case 2 -> viewQueueStatus();
-                case 3 -> { return; }
+            switch(choice) {
+                case 1:
+                    registerPatient();
+                    break;
+                case 2:
+                    updatePatient();
+                    break;
+                case 3:
+                    deletePatient();
+                    break;
+                case 4:
+                    viewPatientList();
+                    break;
+                case 0:
+                    System.out.println("Returning to patient menu...");
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
             }
-        }
+
+            if (choice != 0) {
+                InputHandler.pauseForUser();
+            }
+
+        } while (choice != 0);
     }
 
-    private void waitlistManagementMenu() {
-        String[] options = {
-                "View Waitlist",
-                "Add Patient to Waitlist",
-                "Remove from Waitlist",
-                "Promote from Waitlist to Queue",
-                "Back to Previous Menu"
-        };
+    /**
+     * Queue Management submenu
+     */
+    public void queueManagementMenu() {
+        int choice;
+        do {
+            System.out.println("\n" + "=".repeat(40));
+            System.out.println("     QUEUE MANAGEMENT MENU");
+            System.out.println("=".repeat(40));
+            System.out.println("1. Add Patient to Queue");
+            System.out.println("2. Serve Next Patient");
+            System.out.println("3. View Queue Status");
+            System.out.println("0. Back to Patient Menu");
+            System.out.println("=".repeat(40));
 
-        while (true) {
-            int choice = InputHandler.displayMenu("Waitlist Management Menu", options);
+            choice = InputHandler.getInt("Select an option", 0, 3);
 
-            switch (choice) {
-                case 0 -> viewWaitlist();
-                case 1 -> addToWaitlist();
-                case 2 -> removeFromWaitlist();
-                case 3 -> promoteFromWaitlist();
-                case 4 -> { return; }
+            switch(choice) {
+                case 1:
+                    addToQueue();
+                    break;
+                case 2:
+                    servePatient();
+                    break;
+                case 3:
+                    viewQueueStatus();
+                    break;
+                case 0:
+                    System.out.println("Returning to patient menu...");
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
             }
-        }
+
+            if (choice != 0) {
+                InputHandler.pauseForUser();
+            }
+
+        } while (choice != 0);
     }
 
-    private void recordManagementMenu() {
-        String[] options = {
-                "View Patient Records",
-                "Search Patient Records",
-                "Return to Main Menu"
-        };
+    /**
+     * Waitlist Management submenu
+     */
+    public void waitlistManagementMenu() {
+        int choice;
+        do {
+            System.out.println("\n" + "=".repeat(40));
+            System.out.println("    WAITLIST MANAGEMENT MENU");
+            System.out.println("=".repeat(40));
+            System.out.println("1. View Waitlist");
+            System.out.println("2. Add Patient to Waitlist");
+            System.out.println("3. Remove from Waitlist");
+            System.out.println("4. Promote from Waitlist to Queue");
+            System.out.println("0. Back to Patient Menu");
+            System.out.println("=".repeat(40));
 
-        while (true) {
-            int choice = InputHandler.displayMenu("Record Management Menu", options);
+            choice = InputHandler.getInt("Select an option", 0, 4);
 
-            switch (choice) {
-                case 0 -> viewPatientRecords();
-                case 1 -> searchPatientRecords();
-                case 2 -> { return; }
+            switch(choice) {
+                case 1:
+                    viewWaitlist();
+                    break;
+                case 2:
+                    addToWaitlist();
+                    break;
+                case 3:
+                    removeFromWaitlist();
+                    break;
+                case 4:
+                    promoteFromWaitlist();
+                    break;
+                case 0:
+                    System.out.println("Returning to patient menu...");
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
             }
-        }
+
+            if (choice != 0) {
+                InputHandler.pauseForUser();
+            }
+
+        } while (choice != 0);
     }
 
-    private void registerPatient() {
+    /**
+     * Record Management submenu
+     */
+    public void recordManagementMenu() {
+        int choice;
+        do {
+            System.out.println("\n" + "=".repeat(40));
+            System.out.println("     RECORD MANAGEMENT MENU");
+            System.out.println("=".repeat(40));
+            System.out.println("1. View Patient Records");
+            System.out.println("2. Search Patient Records");
+            System.out.println("3. Visit History Management");
+            System.out.println("0. Back to Patient Menu");
+            System.out.println("=".repeat(40));
+
+            choice = InputHandler.getInt("Select an option", 0, 3);
+
+            switch(choice) {
+                case 1:
+                    viewPatientRecordsWithHistory();
+                    break;
+                case 2:
+                    searchPatientRecords();
+                    break;
+                case 3:
+                    viewVisitHistoryMenu();
+                    break;
+                case 0:
+                    System.out.println("Returning to patient menu...");
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+
+            if (choice != 0) {
+                InputHandler.pauseForUser();
+            }
+
+        } while (choice != 0);
+    }
+
+    /**
+     * Visit History Management submenu
+     */
+    public void viewVisitHistoryMenu() {
+        int choice;
+        do {
+            System.out.println("\n" + "=".repeat(40));
+            System.out.println("    VISIT HISTORY MANAGEMENT");
+            System.out.println("=".repeat(40));
+            System.out.println("1. Add Visit History");
+            System.out.println("2. Update Visit History");
+            System.out.println("3. Remove Visit History");
+            System.out.println("4. View All Visit Histories");
+            System.out.println("0. Back to Records Menu");
+            System.out.println("=".repeat(40));
+
+            choice = InputHandler.getInt("Select an option", 0, 4);
+
+            switch(choice) {
+                case 1:
+                    addVisitHistory();
+                    break;
+                case 2:
+                    updateVisitHistory();
+                    break;
+                case 3:
+                    removeVisitHistory();
+                    break;
+                case 4:
+                    viewAllVisitHistories();
+                    break;
+                case 0:
+                    System.out.println("Returning to records menu...");
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+
+            if (choice != 0) {
+                InputHandler.pauseForUser();
+            }
+
+        } while (choice != 0);
+    }
+
+    /**
+     * Register new patient workflow
+     */
+    public void registerPatient() {
+        System.out.println("\n=== REGISTER NEW PATIENT ===");
+
         String id = IDGenerator.generatePatientID();
-        System.out.println("Registering new patient with ID: " + id);
+        System.out.println("Generated Patient ID: " + id);
 
         String name = InputHandler.getString("Enter Name");
         int age = InputHandler.getInt("Enter Age", 1, 150);
@@ -129,26 +304,30 @@ public class PatientUI {
         boolean isEmergency = InputHandler.getYesNo("Is this an emergency case?");
 
         if (patientMaintenance.registerPatient(id, name, age, gender, contactNumber, address, isEmergency)) {
-            System.out.println("Patient registered successfully!");
+            System.out.println("✅ Patient registered successfully!");
             System.out.println("Patient ID: " + id);
             System.out.println("Priority: " + (isEmergency ? "EMERGENCY" : "NORMAL"));
         } else {
-            System.out.println("Registration failed - ID already exists");
+            System.out.println("❌ Registration failed - ID already exists");
         }
     }
 
-    private void updatePatient() {
+    /**
+     * Update patient workflow
+     */
+    public void updatePatient() {
+        System.out.println("\n=== UPDATE PATIENT DETAILS ===");
+
         String id = InputHandler.getString("Enter Patient ID to update");
         Patient patient = patientMaintenance.getPatientById(id);
 
         if (patient == null) {
-            System.out.println("Patient not found!");
+            System.out.println("❌ Patient not found!");
             return;
         }
 
-        System.out.println("\nCurrent Details:");
-        System.out.println(patient.toString());
-        System.out.println("\nEnter new details:");
+        displayPatientDetails(patient);
+        System.out.println("\n--- ENTER NEW DETAILS ---");
 
         String name = InputHandler.getString("Enter New Name");
         int age = InputHandler.getInt("Enter New Age", 1, 150);
@@ -158,164 +337,208 @@ public class PatientUI {
         boolean isEmergency = InputHandler.getYesNo("Is this an emergency case?");
 
         if (patientMaintenance.updatePatient(id, name, age, gender, contactNumber, address, isEmergency)) {
-            System.out.println("Patient details updated successfully!");
+            System.out.println("✅ Patient details updated successfully!");
         } else {
-            System.out.println("Update failed - Patient not found");
+            System.out.println("❌ Update failed - Patient not found");
         }
-        InputHandler.pauseForUser();
     }
 
-    private void deletePatient() {
-        String id = InputHandler.getString("Enter Patient ID");
+    /**
+     * Delete patient workflow
+     */
+    public void deletePatient() {
+        System.out.println("\n=== DELETE PATIENT ===");
+
+        String id = InputHandler.getString("Enter Patient ID to delete");
+        Patient patient = patientMaintenance.getPatientById(id);
+
+        if (patient == null) {
+            System.out.println("❌ Patient not found!");
+            return;
+        }
+
+        displayPatientDetails(patient);
+
+        boolean confirm = InputHandler.getYesNo("Are you sure you want to delete this patient?");
+        if (!confirm) {
+            System.out.println("Operation cancelled.");
+            return;
+        }
 
         if (patientMaintenance.deletePatient(id)) {
-            System.out.println("Patient deleted successfully!");
+            System.out.println("✅ Patient deleted successfully!");
         } else {
-            System.out.println("Patient not found or could not be deleted.");
+            System.out.println("❌ Patient not found or could not be deleted.");
         }
-        InputHandler.pauseForUser();
     }
 
-    private void viewPatientList() {
-        System.out.println("\nPatient List:");
-        System.out.println("Total registered patients: " + patientMaintenance.getRegisteredPatientCount());
+    /**
+     * Display all patients in a formatted list
+     */
+    public void viewPatientList() {
+        System.out.println("\n=== PATIENT LIST ===");
 
         CustomADT<String, Patient> patients = patientMaintenance.getAllPatients();
-        for (int i = 0; i < patients.size(); i++) {
-            Patient patient = patients.get(i);
-            System.out.printf("ID: %s | Name: %s | Age: %d | Gender: %s | Contact: %s%n",
-                    patient.getPatientId(),
-                    patient.getName(),
-                    patient.getAge(),
-                    patient.getGender(),
-                    patient.getContactNumber());
+        if (patients.isEmpty()) {
+            System.out.println("No patients registered.");
+            return;
         }
-        InputHandler.pauseForUser();
+
+        displayPatientList(patients, "All Registered Patients");
+
+        System.out.println("\nTotal registered patients: " + patientMaintenance.getRegisteredPatientCount());
+
+        // Option to view details
+        System.out.println("\nOptions:");
+        System.out.println("1. View Patient Details");
+        System.out.println("0. Back to Registration Menu");
+
+        int actionChoice = InputHandler.getInt("Select action", 0, 1);
+
+        if (actionChoice == 1) {
+            viewSelectedPatientDetails(patients);
+        }
     }
-    private void addToQueue() {
+
+    /**
+     * Add patient to queue workflow
+     */
+    public void addToQueue() {
+        System.out.println("\n=== ADD PATIENT TO QUEUE ===");
+
         String id = InputHandler.getString("Enter Patient ID");
         Patient patient = patientMaintenance.getPatientById(id);
 
         if (patient == null) {
-            System.out.println("Patient not found!");
+            System.out.println("❌ Patient not found!");
             return;
         }
 
         if (patientMaintenance.isPatientInQueue(id)) {
-            System.out.println("Patient is already in queue!");
+            System.out.println("❌ Patient is already in queue!");
             return;
         }
 
         if (patientMaintenance.isPatientInWaitlist(id)) {
-            System.out.println("Patient is currently in waitlist. Use 'Promote from Waitlist' option instead.");
+            System.out.println("❌ Patient is currently in waitlist. Use 'Promote from Waitlist' option instead.");
             return;
         }
 
-        // Check if queue is full
         if (patientMaintenance.isQueueFull()) {
-            System.out.println("Queue is full! Patient will be added to waitlist instead.");
+            System.out.println("⚠️ Queue is full! Patient will be added to waitlist instead.");
             if (patientMaintenance.addToWaitlist(id)) {
-                System.out.println("Patient " + patient.getName() + " has been added to the waitlist.");
+                System.out.println("✅ Patient " + patient.getName() + " has been added to the waitlist.");
                 System.out.println("Waitlist position: " + patientMaintenance.getWaitlistSize());
             } else {
-                System.out.println("Cannot add to waitlist - it may be full or patient is already listed.");
+                System.out.println("❌ Cannot add to waitlist - it may be full or patient is already listed.");
             }
         } else {
             patientMaintenance.enqueuePatient(id);
-            System.out.println("Patient " + patient.getName() + " has been added to the " +
+            System.out.println("✅ Patient " + patient.getName() + " has been added to the " +
                     (patient.isEmergency() ? "emergency" : "normal") + " queue.");
         }
 
         displayCurrentStatus();
-        InputHandler.pauseForUser();
     }
 
-    private void servePatient() {
+    /**
+     * Serve next patient workflow
+     */
+    public void servePatient() {
+        System.out.println("\n=== SERVE NEXT PATIENT ===");
+
         Patient next = patientMaintenance.serveNextPatient();
         if (next != null) {
-            System.out.println("Now serving: " + next.toString());
+            System.out.println("🏥 Now serving:");
+            displayPatientDetails(next);
         } else {
-            System.out.println("No patients in queue");
+            System.out.println("❌ No patients in queue");
         }
-        InputHandler.pauseForUser();
     }
 
-    private void viewQueueStatus() {
+    /**
+     * View queue status
+     */
+    public void viewQueueStatus() {
+        System.out.println("\n=== QUEUE STATUS ===");
         displayCurrentStatus();
-        InputHandler.pauseForUser();
     }
 
-    // Waitlist methods
-    private void viewWaitlist() {
+    /**
+     * View waitlist
+     */
+    public void viewWaitlist() {
         System.out.println("\n=== WAITLIST STATUS ===");
-        System.out.println("Waitlist size: " + patientMaintenance.getWaitlistSize() + "/" + 30);
+        System.out.println("Waitlist size: " + patientMaintenance.getWaitlistSize() + "/30");
 
         CustomADT<String, Patient> waitlist = patientMaintenance.getWaitlist();
         if (waitlist.isEmpty()) {
             System.out.println("No patients in waitlist");
         } else {
-            System.out.println("\nPatients in waitlist (in order):");
-            for (int i = 0; i < waitlist.size(); i++) {
-                Patient patient = waitlist.get(i);
-                System.out.printf("%d. %s (%s) - %s\n",
-                        (i + 1),
-                        patient.getName(),
-                        patient.getPatientId(),
-                        patient.isEmergency() ? "EMERGENCY" : "NORMAL");
-            }
+            displayWaitlistPatients(waitlist);
         }
-        InputHandler.pauseForUser();
     }
 
-    private void addToWaitlist() {
+    /**
+     * Add patient to waitlist
+     */
+    public void addToWaitlist() {
+        System.out.println("\n=== ADD PATIENT TO WAITLIST ===");
+
         String id = InputHandler.getString("Enter Patient ID to add to waitlist");
         Patient patient = patientMaintenance.getPatientById(id);
 
         if (patient == null) {
-            System.out.println("Patient not found!");
+            System.out.println("❌ Patient not found!");
             return;
         }
 
         if (patientMaintenance.isPatientInQueue(id)) {
-            System.out.println("Patient is already in queue!");
+            System.out.println("❌ Patient is already in queue!");
             return;
         }
 
         if (patientMaintenance.addToWaitlist(id)) {
-            System.out.println("Patient " + patient.getName() + " added to waitlist successfully!");
+            System.out.println("✅ Patient " + patient.getName() + " added to waitlist successfully!");
             System.out.println("Waitlist position: " + patientMaintenance.getWaitlistSize());
         } else {
-            System.out.println("Cannot add to waitlist. It may be full or patient is already in waitlist.");
+            System.out.println("❌ Cannot add to waitlist. It may be full or patient is already in waitlist.");
         }
-
-        InputHandler.pauseForUser();
     }
 
-    private void removeFromWaitlist() {
+    /**
+     * Remove patient from waitlist
+     */
+    public void removeFromWaitlist() {
+        System.out.println("\n=== REMOVE FROM WAITLIST ===");
+
         if (patientMaintenance.getWaitlistSize() == 0) {
-            System.out.println("Waitlist is empty!");
+            System.out.println("❌ Waitlist is empty!");
             return;
         }
 
         String id = InputHandler.getString("Enter Patient ID to remove from waitlist");
 
         if (patientMaintenance.removeFromWaitlist(id)) {
-            System.out.println("Patient removed from waitlist successfully!");
+            System.out.println("✅ Patient removed from waitlist successfully!");
         } else {
-            System.out.println("Patient not found in waitlist!");
+            System.out.println("❌ Patient not found in waitlist!");
         }
-
-        InputHandler.pauseForUser();
     }
 
-    private void promoteFromWaitlist() {
+    /**
+     * Promote patient from waitlist to queue
+     */
+    public void promoteFromWaitlist() {
+        System.out.println("\n=== PROMOTE FROM WAITLIST ===");
+
         if (patientMaintenance.getWaitlistSize() == 0) {
-            System.out.println("Waitlist is empty!");
+            System.out.println("❌ Waitlist is empty!");
             return;
         }
 
         if (patientMaintenance.isQueueFull()) {
-            System.out.println("Queue is full! Cannot promote from waitlist.");
+            System.out.println("❌ Queue is full! Cannot promote from waitlist.");
             return;
         }
 
@@ -323,40 +546,35 @@ public class PatientUI {
         Patient patient = patientMaintenance.getPatientById(id);
 
         if (patient == null) {
-            System.out.println("Patient not found!");
+            System.out.println("❌ Patient not found!");
             return;
         }
 
         if (patientMaintenance.promoteFromWaitlist(id)) {
-            System.out.println("Patient " + patient.getName() + " promoted from waitlist to " +
+            System.out.println("✅ Patient " + patient.getName() + " promoted from waitlist to " +
                     (patient.isEmergency() ? "emergency" : "normal") + " queue successfully!");
             displayCurrentStatus();
         } else {
-            System.out.println("Cannot promote patient. They may not be in waitlist or queue may be full.");
+            System.out.println("❌ Cannot promote patient. They may not be in waitlist or queue may be full.");
         }
-
-        InputHandler.pauseForUser();
     }
 
-    private void displayCurrentStatus() {
-        System.out.println("\n=== CURRENT STATUS ===");
-        System.out.println("Emergency queue: " + patientMaintenance.getEmergencyQueueSize() + " patients");
-        System.out.println("Normal queue: " + patientMaintenance.getNormalQueueSize() + " patients");
-        System.out.println("Total queue size: " + patientMaintenance.getTotalQueueSize() + "/20");
-        System.out.println("Waitlist size: " + patientMaintenance.getWaitlistSize() + "/30");
-    }
+    /**
+     * View patient records
+     */
+    public void viewPatientRecordsWithHistory() {
+        System.out.println("\n=== VIEW PATIENT RECORDS & HISTORY ===");
 
-    private void viewPatientRecords() {
         String id = InputHandler.getString("Enter Patient ID");
         Patient patient = patientMaintenance.getPatientById(id);
 
         if (patient == null) {
-            System.out.println("Patient not found!");
-            InputHandler.pauseForUser();
+            System.out.println("❌ Patient not found!");
             return;
         }
 
-        System.out.println(patient.getDetailedView());
+        // Display patient details
+        displayPatientDetails(patient);
 
         // Show current status
         if (patientMaintenance.isPatientInQueue(id)) {
@@ -368,40 +586,426 @@ public class PatientUI {
             System.out.println("Current Status: REGISTERED (Not in queue or waitlist)");
         }
 
-        InputHandler.pauseForUser();
+        // Display visit history
+        displayPatientVisitHistory(id);
     }
 
-    private void searchPatientRecords() {
+    /**
+     * Search patient records
+     */
+    public void searchPatientRecords() {
+        System.out.println("\n=== SEARCH PATIENT RECORDS ===");
+
         String searchTerm = InputHandler.getString("Enter patient name or ID to search");
+        CustomADT<String, Patient> searchResults = new CustomADT<>();
 
-        System.out.println("\nSearch Results:");
         CustomADT<String, Patient> patients = patientMaintenance.getAllPatients();
-        boolean found = false;
-
         for (int i = 0; i < patients.size(); i++) {
             Patient patient = patients.get(i);
             if (patient.getPatientId().contains(searchTerm) ||
                     patient.getName().toLowerCase().contains(searchTerm.toLowerCase())) {
-                System.out.println(patient.toString());
-
-                // Show status
-                if (patientMaintenance.isPatientInQueue(patient.getPatientId())) {
-                    System.out.println("Status: IN QUEUE");
-                } else if (patientMaintenance.isPatientInWaitlist(patient.getPatientId())) {
-                    System.out.println("Status: IN WAITLIST");
-                } else {
-                    System.out.println("Status: REGISTERED");
-                }
-                System.out.println();
-                found = true;
+                searchResults.put(patient.getPatientId(), patient);
             }
         }
 
-        if (!found) {
-            System.out.println("No patients found matching the search term.");
+        if (searchResults.isEmpty()) {
+            System.out.println("❌ No patients found matching the search term.");
+            return;
         }
 
-        InputHandler.pauseForUser();
+        displayPatientList(searchResults, "Search Results for: " + searchTerm);
+
+        // Option to view details
+        System.out.println("\nOptions:");
+        System.out.println("1. View Patient Details");
+        System.out.println("0. Back to Records Menu");
+
+        int actionChoice = InputHandler.getInt("Select action", 0, 1);
+
+        if (actionChoice == 1) {
+            viewSelectedPatientDetails(searchResults);
+        }
+    }
+
+    /**
+     * Display detailed information for a single patient
+     */
+    public void displayPatientDetails(Patient patient) {
+        if (patient == null) {
+            System.out.println("No patient data available.");
+            return;
+        }
+
+        System.out.println("\n" + "=".repeat(50));
+        System.out.println("                PATIENT DETAILS");
+        System.out.println("=".repeat(50));
+
+        System.out.printf("Patient ID    : %s\n", patient.getPatientId());
+        System.out.printf("Name          : %s\n", patient.getName());
+        System.out.printf("Age           : %d\n", patient.getAge());
+        System.out.printf("Gender        : %s\n", patient.getGender());
+        System.out.printf("Contact       : %s\n", patient.getContactNumber());
+        System.out.printf("Address       : %s\n", patient.getAddress());
+        System.out.printf("Emergency     : %s\n", patient.isEmergency() ? "YES" : "No");
+
+        System.out.println("=".repeat(50));
+    }
+
+    /**
+     * Display a list of patients with essential information
+     */
+    public void displayPatientList(CustomADT<String, Patient> patients, String title) {
+        if (patients.isEmpty()) {
+            System.out.println("No patients found.");
+            return;
+        }
+
+        System.out.println("\n" + "=".repeat(80));
+        System.out.println("  " + title.toUpperCase());
+        System.out.println("=".repeat(80));
+        System.out.printf("%-4s %-12s %-20s %-4s %-8s %-15s %-10s\n",
+                "#", "ID", "Name", "Age", "Gender", "Contact", "Emergency");
+        System.out.println("-".repeat(80));
+
+        for (int i = 0; i < patients.size(); i++) {
+            Patient patient = patients.get(i);
+            if (patient != null) {
+                String name = patient.getName();
+                String contact = patient.getContactNumber();
+
+                // Truncate long names for table formatting
+                if (name.length() > 19) name = name.substring(0, 16) + "...";
+                if (contact.length() > 14) contact = contact.substring(0, 11) + "...";
+
+                System.out.printf("%-4d %-12s %-20s %-4d %-8s %-15s %-10s\n",
+                        i + 1,
+                        patient.getPatientId(),
+                        name,
+                        patient.getAge(),
+                        patient.getGender(),
+                        contact,
+                        patient.isEmergency() ? "YES" : "No"
+                );
+            }
+        }
+        System.out.println("=".repeat(80));
+    }
+
+    /**
+     * Display waitlist patients
+     */
+    public void displayWaitlistPatients(CustomADT<String, Patient> waitlist) {
+        System.out.println("\nPatients in waitlist (in order):");
+        System.out.println("-".repeat(50));
+        for (int i = 0; i < waitlist.size(); i++) {
+            Patient patient = waitlist.get(i);
+            System.out.printf("%d. %s (%s) - %s\n",
+                    (i + 1),
+                    patient.getName(),
+                    patient.getPatientId(),
+                    patient.isEmergency() ? "EMERGENCY" : "NORMAL");
+        }
+        System.out.println("-".repeat(50));
+    }
+
+    /**
+     * Display current system status
+     */
+    public void displayCurrentStatus() {
+        System.out.println("\n" + "=".repeat(40));
+        System.out.println("         CURRENT STATUS");
+        System.out.println("=".repeat(40));
+        System.out.println("Emergency queue: " + patientMaintenance.getEmergencyQueueSize() + " patients");
+        System.out.println("Normal queue: " + patientMaintenance.getNormalQueueSize() + " patients");
+        System.out.println("Total queue size: " + patientMaintenance.getTotalQueueSize() + "/20");
+        System.out.println("Waitlist size: " + patientMaintenance.getWaitlistSize() + "/30");
+        System.out.println("=".repeat(40));
+    }
+
+    /**
+     * Helper method to view details of a selected patient from a list
+     */
+    public void viewSelectedPatientDetails(CustomADT<String, Patient> patients) {
+        if (patients.isEmpty()) {
+            System.out.println("No patients available.");
+            return;
+        }
+
+        int choice = InputHandler.getInt("Select patient to view", 1, patients.size());
+        Patient selectedPatient = patients.get(choice - 1);
+
+        if (selectedPatient != null) {
+            displayPatientDetails(selectedPatient);
+
+            // Show status
+            String id = selectedPatient.getPatientId();
+            if (patientMaintenance.isPatientInQueue(id)) {
+                System.out.println("Status: IN QUEUE");
+            } else if (patientMaintenance.isPatientInWaitlist(id)) {
+                System.out.println("Status: IN WAITLIST");
+            } else {
+                System.out.println("Status: REGISTERED");
+            }
+        } else {
+            System.out.println("Patient not found.");
+        }
+    }
+
+    /**
+     * Display patient visit history
+     */
+    public void displayPatientVisitHistory(String patientId) {
+        CustomADT<String, VisitHistory> visitHistories = patientMaintenance.getPatientVisitHistory(patientId);
+
+        System.out.println("\n" + "=".repeat(80));
+        System.out.println("                    VISIT HISTORY");
+        System.out.println("=".repeat(80));
+
+        if (visitHistories.isEmpty()) {
+            System.out.println("No visit history found for this patient.");
+            System.out.println("=".repeat(80));
+            return;
+        }
+
+        System.out.printf("%-4s %-12s %-20s %-15s %-10s %-8s\n",
+                "#", "Visit ID", "Visit Date", "Reason", "Cost", "Status");
+        System.out.println("-".repeat(80));
+
+        for (int i = 0; i < visitHistories.size(); i++) {
+            VisitHistory visit = visitHistories.get(i);
+            String reason = visit.getVisitReason();
+            if (reason.length() > 19) reason = reason.substring(0, 16) + "...";
+
+            System.out.printf("%-4d %-12s %-20s %-15s RM%-7.2f %-8s\n",
+                    i + 1,
+                    visit.getVisitId(),
+                    DateTimeFormatterUtil.formatForDisplay(visit.getVisitDate()),
+                    reason,
+                    visit.getVisitCost(),
+                    visit.getStatus()
+            );
+        }
+        System.out.println("=".repeat(80));
+        System.out.println("Total visits: " + visitHistories.size());
+
+        // Option to view details
+        if (visitHistories.size() > 0) {
+            boolean viewDetails = InputHandler.getYesNo("View detailed visit history?");
+            if (viewDetails) {
+                viewSelectedVisitDetails(visitHistories);
+            }
+        }
+    }
+
+    /**
+     * Add visit history
+     */
+    public void addVisitHistory() {
+        System.out.println("\n=== ADD VISIT HISTORY ===");
+
+        String patientId = InputHandler.getString("Enter Patient ID");
+        Patient patient = patientMaintenance.getPatientById(patientId);
+
+        if (patient == null) {
+            System.out.println("❌ Patient not found!");
+            return;
+        }
+
+        String visitReason = InputHandler.getString("Enter visit reason");
+        double visitCost = InputHandler.getDouble("Enter visit cost (RM)", 0.0, 10000.0);
+
+        String[] statusOptions = {"SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"};
+        System.out.println("Select status:");
+        for (int i = 0; i < statusOptions.length; i++) {
+            System.out.println((i + 1) + ". " + statusOptions[i]);
+        }
+        int statusChoice = InputHandler.getInt("Select status", 1, statusOptions.length);
+        String status = statusOptions[statusChoice - 1];
+
+        if (patientMaintenance.addVisitHistory(patientId, visitReason, null, null, visitCost, status)) {
+            System.out.println("✅ Visit history added successfully!");
+        } else {
+            System.out.println("❌ Failed to add visit history.");
+        }
+    }
+
+    /**
+     * Update visit history
+     */
+    public void updateVisitHistory() {
+        System.out.println("\n=== UPDATE VISIT HISTORY ===");
+
+        String visitId = InputHandler.getString("Enter Visit ID to update");
+        VisitHistory visitHistory = patientMaintenance.getVisitHistory(visitId);
+
+        if (visitHistory == null) {
+            System.out.println("❌ Visit history not found!");
+            return;
+        }
+
+        displayVisitDetails(visitHistory);
+
+        System.out.println("\n--- ENTER NEW DETAILS (leave empty to keep current) ---");
+        String visitReason = InputHandler.getOptionalString("Enter new visit reason");
+        String costInput = InputHandler.getOptionalString("Enter new visit cost (RM)");
+        double visitCost = costInput.isEmpty() ? -1 : Double.parseDouble(costInput);
+        String status = InputHandler.getOptionalString("Enter new status");
+
+        if (patientMaintenance.updateVisitHistory(visitId, visitReason, visitCost, status)) {
+            System.out.println("✅ Visit history updated successfully!");
+        } else {
+            System.out.println("❌ Failed to update visit history.");
+        }
+    }
+
+    /**
+     * Remove visit history
+     */
+    public void removeVisitHistory() {
+        System.out.println("\n=== REMOVE VISIT HISTORY ===");
+
+        String visitId = InputHandler.getString("Enter Visit ID to remove");
+        VisitHistory visitHistory = patientMaintenance.getVisitHistory(visitId);
+
+        if (visitHistory == null) {
+            System.out.println("❌ Visit history not found!");
+            return;
+        }
+
+        displayVisitDetails(visitHistory);
+
+        boolean confirm = InputHandler.getYesNo("Are you sure you want to remove this visit history?");
+        if (!confirm) {
+            System.out.println("Operation cancelled.");
+            return;
+        }
+
+        if (patientMaintenance.removeVisitHistory(visitId)) {
+            System.out.println("✅ Visit history removed successfully!");
+        } else {
+            System.out.println("❌ Failed to remove visit history.");
+        }
+    }
+
+    /**
+     * View all visit histories
+     */
+    public void viewAllVisitHistories() {
+        System.out.println("\n=== ALL VISIT HISTORIES ===");
+
+        CustomADT<String, VisitHistory> allVisits = patientMaintenance.getAllVisitHistories();
+
+        if (allVisits.isEmpty()) {
+            System.out.println("No visit histories found.");
+            return;
+        }
+
+        displayVisitHistoryList(allVisits, "All Visit Histories");
+
+        // Option to view details
+        System.out.println("\nOptions:");
+        System.out.println("1. View Visit Details");
+        System.out.println("0. Back to Visit History Menu");
+
+        int actionChoice = InputHandler.getInt("Select action", 0, 1);
+
+        if (actionChoice == 1) {
+            viewSelectedVisitDetails(allVisits);
+        }
+    }
+
+    /**
+     * Display visit history list
+     */
+    public void displayVisitHistoryList(CustomADT<String, VisitHistory> visits, String title) {
+        if (visits.isEmpty()) {
+            System.out.println("No visit histories found.");
+            return;
+        }
+
+        System.out.println("\n" + "=".repeat(90));
+        System.out.println("  " + title.toUpperCase());
+        System.out.println("=".repeat(90));
+        System.out.printf("%-4s %-12s %-15s %-20s %-15s %-10s %-8s\n",
+                "#", "Visit ID", "Patient", "Visit Date", "Reason", "Cost", "Status");
+        System.out.println("-".repeat(90));
+
+        for (int i = 0; i < visits.size(); i++) {
+            VisitHistory visit = visits.get(i);
+            String patientName = visit.getPatient().getName();
+            String reason = visit.getVisitReason();
+
+            if (patientName.length() > 14) patientName = patientName.substring(0, 11) + "...";
+            if (reason.length() > 19) reason = reason.substring(0, 16) + "...";
+
+            System.out.printf("%-4d %-12s %-15s %-20s %-15s RM%-7.2f %-8s\n",
+                    i + 1,
+                    visit.getVisitId(),
+                    patientName,
+                    DateTimeFormatterUtil.formatForDisplay(visit.getVisitDate()),
+                    reason,
+                    visit.getVisitCost(),
+                    visit.getStatus()
+            );
+        }
+        System.out.println("=".repeat(90));
+        System.out.println("Total visit histories: " + visits.size());
+    }
+
+    /**
+     * Display detailed visit information
+     */
+    public void displayVisitDetails(VisitHistory visit) {
+        if (visit == null) {
+            System.out.println("No visit data available.");
+            return;
+        }
+
+        System.out.println("\n" + "=".repeat(60));
+        System.out.println("                 VISIT DETAILS");
+        System.out.println("=".repeat(60));
+
+        System.out.printf("Visit ID        : %s\n", visit.getVisitId());
+        System.out.printf("Patient         : %s (%s)\n",
+                visit.getPatient().getName(), visit.getPatient().getPatientId());
+        System.out.printf("Visit Date      : %s\n",
+                DateTimeFormatterUtil.formatForDisplay(visit.getVisitDate()));
+        System.out.printf("Visit Reason    : %s\n", visit.getVisitReason());
+        System.out.printf("Visit Cost      : RM %.2f\n", visit.getVisitCost());
+        System.out.printf("Status          : %s\n", visit.getStatus());
+
+        if (visit.getTreatment() != null) {
+            System.out.printf("Treatment ID    : %s\n", visit.getTreatment().getTreatmentID());
+        } else {
+            System.out.println("Treatment       : None");
+        }
+
+        if (visit.getConsultation() != null) {
+            System.out.printf("Consultation ID : %s\n", visit.getConsultation().getConsultationId());
+        } else {
+            System.out.println("Consultation    : None");
+        }
+
+        System.out.println("=".repeat(60));
+    }
+
+    /**
+     * Helper method to view details of selected visit
+     */
+    public void viewSelectedVisitDetails(CustomADT<String, VisitHistory> visits) {
+        if (visits.isEmpty()) {
+            System.out.println("No visit histories available.");
+            return;
+        }
+
+        int choice = InputHandler.getInt("Select visit to view", 1, visits.size());
+        VisitHistory selectedVisit = visits.get(choice - 1);
+
+        if (selectedVisit != null) {
+            displayVisitDetails(selectedVisit);
+        } else {
+            System.out.println("Visit history not found.");
+        }
     }
 
     public static void main(String[] args) {
