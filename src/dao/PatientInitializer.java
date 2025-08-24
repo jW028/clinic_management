@@ -6,8 +6,8 @@ import adt.CustomADT;
 public class PatientInitializer {
     public static CustomADT<String, Patient> initializePatients() {
         CustomADT<String, Patient> patients = new CustomADT<>();
-        patients.put("P001", new Patient("P001", "Alice", 19, "Female", "1234567890", "123 Main St"));
-        patients.put("P002", new Patient("P002", "Bob", 40, "Male", "0987654321", "456 Elm St"));
+        patients.put("P001", new Patient("P001", "Alice", 19, "Female", "1234567890", "123 Main St", false));
+        patients.put("P002", new Patient("P002", "Bob", 40, "Male", "0987654321", "456 Elm St", false));
         return patients;
     }
 

@@ -44,17 +44,4 @@ public class Patient implements Serializable {
         return String.format("Patient ID: %s | Name: %s | Age: %d | Gender: %s | Contact: %s | Address: %s",
                 patientId, name, age, gender, contactNumber, address);
     }
-
-    public String getDetailedView() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("\n=== Patient Details ===\n")
-                .append("ID: ").append(patientId).append("\n")
-                .append("Name: ").append(name).append("\n")
-                .append("Age: ").append(age).append("\n")
-                .append("Gender: ").append(gender).append("\n")
-                .append("Contact: ").append(contactNumber).append("\n")
-                .append("Address: ").append(address)
-                .append("\nEmergency: ").append(isEmergency ? "YES" : "NO").append("\n");
-        return sb.toString();
-    }
 }

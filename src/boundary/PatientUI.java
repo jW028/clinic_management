@@ -6,6 +6,7 @@ import utility.IDGenerator;
 import utility.InputHandler;
 import adt.*;
 import utility.DateTimeFormatterUtil;
+import java.time.LocalDateTime;
 
 /**
  * PatientUI class handles the user interface for patient management operations.
@@ -26,7 +27,7 @@ public class PatientUI {
         int choice;
         do {
             printMenu();
-            choice = InputHandler.getInt("Select an option", 0, 4);
+            choice = InputHandler.getInt("Select an option", 0, 5);
 
             switch(choice) {
                 case 1:
@@ -40,6 +41,9 @@ public class PatientUI {
                     break;
                 case 4:
                     recordManagementMenu();
+                    break;
+                case 5:
+                    displaySystemStatistics();
                     break;
                 case 0:
                     System.out.println("Returning to main menu...");
@@ -66,6 +70,7 @@ public class PatientUI {
         System.out.println("2. Queue Management");
         System.out.println("3. Waitlist Management");
         System.out.println("4. View Records");
+        System.out.println("5. Display System Statistics");
         System.out.println("0. Back to Main Menu");
         System.out.println("=".repeat(40));
     }
@@ -126,11 +131,14 @@ public class PatientUI {
             System.out.println("=".repeat(40));
             System.out.println("1. Add Patient to Queue");
             System.out.println("2. Serve Next Patient");
-            System.out.println("3. View Queue Status");
+            System.out.println("3. View Next Patient");
+            System.out.println("4. View Queue Status");
+            System.out.println("5. Display Queue Patients");
+            System.out.println("6. Clear All Queues");
             System.out.println("0. Back to Patient Menu");
             System.out.println("=".repeat(40));
 
-            choice = InputHandler.getInt("Select an option", 0, 3);
+            choice = InputHandler.getInt("Select an option", 0, 6);
 
             switch(choice) {
                 case 1:
@@ -140,7 +148,16 @@ public class PatientUI {
                     servePatient();
                     break;
                 case 3:
+                    viewNextPatient();
+                    break;
+                case 4:
                     viewQueueStatus();
+                    break;
+                case 5:
+                    viewQueue();
+                    break;
+                case 6:
+                    clearAllQueues();
                     break;
                 case 0:
                     System.out.println("Returning to patient menu...");
@@ -306,7 +323,15 @@ public class PatientUI {
         if (patientMaintenance.registerPatient(id, name, age, gender, contactNumber, address, isEmergency)) {
             System.out.println("✅ Patient registered successfully!");
             System.out.println("Patient ID: " + id);
-            System.out.println("Priority: " + (isEmergency ? "EMERGENCY" : "NORMAL"));
+
+            // Automatically add to queue if emergency
+            System.out.print("Add patient to queue immediately? (y/n): ");
+            if (isEmergency && InputHandler.getYesNo("Add to queue?")) {
+                patientMaintenance.enqueuePatient(id);
+                System.out.println("✅ Patient added to emergency queue.");
+            } else {
+                System.out.println("Patient registration complete. You can add them to the queue later.");
+            }
         } else {
             System.out.println("❌ Registration failed - ID already exists");
         }
@@ -326,6 +351,7 @@ public class PatientUI {
             return;
         }
 
+        System.out.println("Current patient information:");
         displayPatientDetails(patient);
         System.out.println("\n--- ENTER NEW DETAILS ---");
 
@@ -350,13 +376,15 @@ public class PatientUI {
         System.out.println("\n=== DELETE PATIENT ===");
 
         String id = InputHandler.getString("Enter Patient ID to delete");
-        Patient patient = patientMaintenance.getPatientById(id);
 
-        if (patient == null) {
-            System.out.println("❌ Patient not found!");
+        // Use CustomADT's containsKey for efficient existence check
+        if (!patientMaintenance.getAllPatients().containsKey(id)) {
+            System.out.println("✗ Patient not found with ID: " + id);
             return;
         }
 
+        Patient patient = patientMaintenance.getPatientById(id);
+        System.out.println("Patient to delete:");
         displayPatientDetails(patient);
 
         boolean confirm = InputHandler.getYesNo("Are you sure you want to delete this patient?");
@@ -456,11 +484,42 @@ public class PatientUI {
         }
     }
 
+    /*
+    * View next patient using CustomADT's peek method
+     */
+    private void viewNextPatient() {
+        System.out.println("\n=== NEXT PATIENT IN QUEUE ===");
+
+        Patient next = patientMaintenance.peekNextPatient();
+        if (next != null) {
+            System.out.println("Next patient to be served:");
+            displayPatientDetails(next);
+        } else {
+            System.out.println("❌ No patients in queue");
+        }
+    }
+
     /**
      * View queue status
      */
     public void viewQueueStatus() {
         System.out.println("\n=== QUEUE STATUS ===");
+        displayCurrentStatus();
+    }
+
+    /**
+     * Clear all queues using CustomADT operations
+     */
+    private void clearAllQueues() {
+        System.out.println("\n=== CLEAR ALL QUEUES ===");
+
+        System.out.print("Are you sure you want to clear all queues? (y/n): ");
+        if (!InputHandler.getYesNo("Confirm clear all queues")) {
+            patientMaintenance.clearAllQueues();
+            System.out.println("Operation cancelled.");
+            return;
+        }
+
         displayCurrentStatus();
     }
 
@@ -667,6 +726,8 @@ public class PatientUI {
                 "#", "ID", "Name", "Age", "Gender", "Contact", "Emergency");
         System.out.println("-".repeat(80));
 
+        Patient[] patientsOrder = patientMaintenance.getAllPatientsArray();
+
         for (int i = 0; i < patients.size(); i++) {
             Patient patient = patients.get(i);
             if (patient != null) {
@@ -676,6 +737,8 @@ public class PatientUI {
                 // Truncate long names for table formatting
                 if (name.length() > 19) name = name.substring(0, 16) + "...";
                 if (contact.length() > 14) contact = contact.substring(0, 11) + "...";
+
+                int patOrder = findRegistrationOrder(patientsOrder, patient.getPatientId());
 
                 System.out.printf("%-4d %-12s %-20s %-4d %-8s %-15s %-10s\n",
                         i + 1,
@@ -689,6 +752,15 @@ public class PatientUI {
             }
         }
         System.out.println("=".repeat(80));
+    }
+
+    private int findRegistrationOrder(Patient[] patientsOrder, String patientId) {
+        for (int i = 0; i < patientsOrder.length; i++) {
+            if (patientsOrder[i] != null && patientsOrder[i].getPatientId().equals(patientId)) {
+                return i + 1;
+            }
+        }
+        return -1; // Not found
     }
 
     /**
@@ -706,6 +778,65 @@ public class PatientUI {
                     patient.isEmergency() ? "EMERGENCY" : "NORMAL");
         }
         System.out.println("-".repeat(50));
+    }
+
+    /**
+     * View Specific Queue Patients
+     * Allows user to view patients in a specific queue (emergency or normal)
+     * and perform actions like viewing next patient or displaying all patients in that queue.
+     */
+    private void viewQueue() {
+        System.out.println("\n=== VIEW QUEUE PATIENTS ===");
+        String queueType = InputHandler.getString("Enter queue type (emergency/normal)").toLowerCase().trim();
+        if (!queueType.equals("emergency") && !queueType.equals("normal")) {
+            System.out.println("❌ Invalid queue type. Please enter 'emergency' or 'normal'.");
+            return;
+        }
+
+        displayQueuePatients(queueType);
+        System.out.println("\nOptions:");
+        System.out.println("1. View Next Patient");
+        System.out.println("2. Display Queue Patients");
+        System.out.println("0. Back to Queue Menu");
+        int actionChoice = InputHandler.getInt("Select action", 0, 2);
+        switch (actionChoice) {
+            case 1:
+                viewNextPatient();
+                break;
+            case 2:
+                displayQueuePatients(queueType);
+                break;
+            case 0:
+                System.out.println("Returning to queue menu...");
+                break;
+            default:
+                System.out.println("Invalid choice. Please try again.");
+        }
+    }
+
+    /*
+       * Display Queue contents
+     */
+    public void displayQueuePatients(String queueType) {
+        System.out.println("\nPatients in queue (in order):");
+        System.out.println("-".repeat(50));
+        CustomADT<String, Patient> queue = queueType.equals("emergency")
+                ? patientMaintenance.getEmergencyQueue()
+                : patientMaintenance.getNormalQueue();
+
+        if (queue.isEmpty()) {
+            System.out.println("Queue is empty.");
+            return;
+        }
+
+        System.out.println("Queue size: " + queue.size());
+        System.out.println("-".repeat(80));
+
+        int position = 1;
+        // Use CustomADT's iterator for efficient queue traversal
+        for (Patient patient : queue) {
+            System.out.printf("%d. %s\n", position++, patient.toString());
+        }
     }
 
     /**
@@ -767,8 +898,8 @@ public class PatientUI {
             return;
         }
 
-        System.out.printf("%-4s %-12s %-20s %-15s %-10s %-8s\n",
-                "#", "Visit ID", "Visit Date", "Reason", "Cost", "Status");
+        System.out.printf("%-4s %-12s %-20s %-15s %-8s\n",
+                "#", "Visit ID", "Visit Date", "Reason", "Status");
         System.out.println("-".repeat(80));
 
         for (int i = 0; i < visitHistories.size(); i++) {
@@ -776,12 +907,11 @@ public class PatientUI {
             String reason = visit.getVisitReason();
             if (reason.length() > 19) reason = reason.substring(0, 16) + "...";
 
-            System.out.printf("%-4d %-12s %-20s %-15s RM%-7.2f %-8s\n",
+            System.out.printf("%-4d %-12s %-20s %-15s %-8s\n",
                     i + 1,
                     visit.getVisitId(),
                     DateTimeFormatterUtil.formatForDisplay(visit.getVisitDate()),
                     reason,
-                    visit.getVisitCost(),
                     visit.getStatus()
             );
         }
@@ -812,7 +942,6 @@ public class PatientUI {
         }
 
         String visitReason = InputHandler.getString("Enter visit reason");
-        double visitCost = InputHandler.getDouble("Enter visit cost (RM)", 0.0, 10000.0);
 
         String[] statusOptions = {"SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"};
         System.out.println("Select status:");
@@ -822,7 +951,7 @@ public class PatientUI {
         int statusChoice = InputHandler.getInt("Select status", 1, statusOptions.length);
         String status = statusOptions[statusChoice - 1];
 
-        if (patientMaintenance.addVisitHistory(patientId, visitReason, null, null, visitCost, status)) {
+        if (patientMaintenance.addVisitHistory(patientId, visitReason, status)) {
             System.out.println("✅ Visit history added successfully!");
         } else {
             System.out.println("❌ Failed to add visit history.");
@@ -847,11 +976,9 @@ public class PatientUI {
 
         System.out.println("\n--- ENTER NEW DETAILS (leave empty to keep current) ---");
         String visitReason = InputHandler.getOptionalString("Enter new visit reason");
-        String costInput = InputHandler.getOptionalString("Enter new visit cost (RM)");
-        double visitCost = costInput.isEmpty() ? -1 : Double.parseDouble(costInput);
         String status = InputHandler.getOptionalString("Enter new status");
 
-        if (patientMaintenance.updateVisitHistory(visitId, visitReason, visitCost, status)) {
+        if (patientMaintenance.updateVisitHistory(visitId, visitReason, status)) {
             System.out.println("✅ Visit history updated successfully!");
         } else {
             System.out.println("❌ Failed to update visit history.");
@@ -926,8 +1053,8 @@ public class PatientUI {
         System.out.println("\n" + "=".repeat(90));
         System.out.println("  " + title.toUpperCase());
         System.out.println("=".repeat(90));
-        System.out.printf("%-4s %-12s %-15s %-20s %-15s %-10s %-8s\n",
-                "#", "Visit ID", "Patient", "Visit Date", "Reason", "Cost", "Status");
+        System.out.printf("%-4s %-12s %-15s %-20s %-15s %-8s\n",
+                "#", "Visit ID", "Patient", "Visit Date", "Reason", "Status");
         System.out.println("-".repeat(90));
 
         for (int i = 0; i < visits.size(); i++) {
@@ -938,13 +1065,12 @@ public class PatientUI {
             if (patientName.length() > 14) patientName = patientName.substring(0, 11) + "...";
             if (reason.length() > 19) reason = reason.substring(0, 16) + "...";
 
-            System.out.printf("%-4d %-12s %-15s %-20s %-15s RM%-7.2f %-8s\n",
+            System.out.printf("%-4d %-12s %-15s %-20s %-15s %-8s\n",
                     i + 1,
                     visit.getVisitId(),
                     patientName,
                     DateTimeFormatterUtil.formatForDisplay(visit.getVisitDate()),
                     reason,
-                    visit.getVisitCost(),
                     visit.getStatus()
             );
         }
@@ -971,20 +1097,7 @@ public class PatientUI {
         System.out.printf("Visit Date      : %s\n",
                 DateTimeFormatterUtil.formatForDisplay(visit.getVisitDate()));
         System.out.printf("Visit Reason    : %s\n", visit.getVisitReason());
-        System.out.printf("Visit Cost      : RM %.2f\n", visit.getVisitCost());
         System.out.printf("Status          : %s\n", visit.getStatus());
-
-        if (visit.getTreatment() != null) {
-            System.out.printf("Treatment ID    : %s\n", visit.getTreatment().getTreatmentID());
-        } else {
-            System.out.println("Treatment       : None");
-        }
-
-        if (visit.getConsultation() != null) {
-            System.out.printf("Consultation ID : %s\n", visit.getConsultation().getConsultationId());
-        } else {
-            System.out.println("Consultation    : None");
-        }
 
         System.out.println("=".repeat(60));
     }
@@ -1006,6 +1119,29 @@ public class PatientUI {
         } else {
             System.out.println("Visit history not found.");
         }
+    }
+
+    /**
+     * Display comprehensive system statistics
+     */
+    private void displaySystemStatistics() {
+        System.out.println("\n=== SYSTEM STATISTICS ===");
+        System.out.println("📊 PATIENT STATISTICS:");
+        System.out.println("   Total Registered Patients: " + patientMaintenance.getRegisteredPatientCount());
+
+        System.out.println("\n🏥 QUEUE STATISTICS:");
+        System.out.println("   Emergency Queue: " + patientMaintenance.getEmergencyQueueSize() + " patients");
+        System.out.println("   Normal Queue: " + patientMaintenance.getNormalQueueSize() + " patients");
+        System.out.println("   Total in Queue: " + patientMaintenance.getTotalQueueSize() + "/20");
+        System.out.println("   Waitlist: " + patientMaintenance.getWaitlistSize() + "/30");
+
+        System.out.println("\n📋 VISIT STATISTICS:");
+        CustomADT<String, VisitHistory> allVisits = patientMaintenance.getAllVisitHistories();
+        System.out.println("   Total Visit Records: " + allVisits.size());
+
+        System.out.println("\n💾 STORAGE STATISTICS:");
+        System.out.println("   Using CustomADT for efficient data management");
+        System.out.println("   Queue Status: " + (patientMaintenance.isQueueFull() ? "FULL" : "Available"));
     }
 
     public static void main(String[] args) {

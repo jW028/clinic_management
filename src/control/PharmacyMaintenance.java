@@ -140,7 +140,7 @@ public class PharmacyMaintenance {
         String treatmentId = prescription.getTreatmentID();
         Treatment treatment = treatmentMap.get(treatmentId);
         if (treatment != null) {
-            return treatment.getPatientId();
+            return treatment.getPatient().getPatientId();
         }
         return null; // or throw an exception if not found
     }

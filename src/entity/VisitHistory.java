@@ -1,25 +1,21 @@
 package entity;
 
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
-public class VisitHistory {
+public class VisitHistory  implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String visitId;
     private Patient patient;
     private LocalDateTime visitDate;
     private String visitReason;
-    private Treatment treatment;
-    private Consultation consultation;
-    private double visitCost;
     private String status;
 
-    public VisitHistory(String visitId, Patient patient, LocalDateTime visitDate, String visitReason, Treatment treatment, Consultation consultation, double visitCost, String status) {
+    public VisitHistory(String visitId, Patient patient, LocalDateTime visitDate, String visitReason, String status) {
         this.visitId = visitId;
         this.patient = patient;
         this.visitDate = visitDate;
         this.visitReason = visitReason;
-        this.treatment = treatment;
-        this.consultation = consultation;
-        this.visitCost = visitCost;
         this.status = status;
     }
 
@@ -33,15 +29,6 @@ public class VisitHistory {
         return visitDate;}
     public String getVisitReason() {
         return visitReason;
-    }
-    public Treatment getTreatment() {
-        return treatment;
-    }
-    public Consultation getConsultation() {
-        return consultation;
-    }
-    public double getVisitCost() {
-        return visitCost;
     }
     public String getStatus() {
         return status;
@@ -58,15 +45,6 @@ public class VisitHistory {
     public void setVisitReason(String visitReason) {
         this.visitReason = visitReason;
     }
-    public void setTreatment(Treatment treatment) {
-        this.treatment = treatment;
-    }
-    public void setConsultation(Consultation consultation) {
-        this.consultation = consultation;
-    }
-    public void setVisitCost(double visitCost) {
-        this.visitCost = visitCost;
-    }
     public void setStatus(String status) {
         this.status = status;
     }
@@ -78,9 +56,6 @@ public class VisitHistory {
           .append("Patient: ").append(patient.getName()).append("\n")
           .append("Visit Date: ").append(visitDate).append("\n")
           .append("Visit Reason: ").append(visitReason).append("\n")
-          .append("Treatment: ").append(treatment.getTreatmentID()).append("\n")
-          .append("Consultation: ").append(consultation.getConsultationId()).append("\n")
-          .append("Visit Cost: $").append(visitCost).append("\n")
           .append("Status: ").append(status).append("\n");
         return sb.toString();
     }

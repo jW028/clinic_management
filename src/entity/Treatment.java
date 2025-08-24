@@ -7,7 +7,9 @@ public class Treatment {
     // Core identifiers
     private String treatmentID;
     private String consultationID;
-
+    private Patient patient;
+    private Doctor doctor;
+    private Diagnosis diagnosis;
     // Core entities
     private CustomADT<String, Procedure> procedures;
 
@@ -123,14 +125,14 @@ public class Treatment {
     public boolean isCritical() { return isCritical; }
     public String getStatus() { return status; }
     public String getType() { return type; }
-    public String getOriginalTreatmentID() { return originalTreatmentID; }
+    //public String getOriginalTreatmentID() { return originalTreatmentID; }
 
 
     // Setters
     public void setNotes(String notes) { this.notes = notes; }
     public void setCritical(boolean critical) { isCritical = critical; }
     public void setType(String type) { this.type = type; }
-    public void setOriginalTreatmentID(String originalTreatmentID) { this.originalTreatmentID = originalTreatmentID; }
+    //public void setOriginalTreatmentID(String originalTreatmentID) { this.originalTreatmentID = originalTreatmentID; }
     public void setPrescription(Prescription prescription) { this.prescription = prescription; }
 
     // toString method for displaying treatment details

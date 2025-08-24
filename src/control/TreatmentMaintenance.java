@@ -49,8 +49,8 @@ public class TreatmentMaintenance {
         String treatmentID = IDGenerator.generateTreatmentID();
 
         // Get patient and doctor from consultation
-        Patient patient = patientMaintenance.getPatientById(consultation.getPatientId());
-        Doctor doctor = new Doctor(consultation.getDoctorId(), "Test Dr.", "Test Specialty", "011-12345678", "test@example.com", "Test Clinic", "Male", "12-12-1980");
+        Patient patient = patientMaintenance.getPatientById(consultation.getPatient().getPatientId());
+        Doctor doctor = new Doctor(consultation.getDoctor().getDoctorID(), "Test Dr.", "Test Specialty", "011-12345678", "test@example.com", "Test Clinic", "Male", "12-12-1980");
 
         // Create diagnosis from consultation
         Diagnosis diagnosis = new Diagnosis(
