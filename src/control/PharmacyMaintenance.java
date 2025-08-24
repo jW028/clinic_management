@@ -4,30 +4,40 @@ import adt.CustomADT;
 import dao.*;
 import entity.*;
 
+import java.time.LocalDateTime;
+import java.util.Comparator;
+import utility.IDGenerator;
+
 public class PharmacyMaintenance {
     private final CustomADT<String, Medicine> medicineMap;
-    private final CustomADT<String, Prescription> prescriptionMap;
+    private final CustomADT<String, Prescription> pendingPrescriptionMap;
+    private final CustomADT<String, Prescription> processedPrescriptionMap;
     private final CustomADT<String, Transaction> transactionMap;
     private final CustomADT<String, Treatment> treatmentMap;
     private final TreatmentDAO treatmentDAO = new TreatmentDAO();
     private final MedicineDAO medicineDAO = new MedicineDAO();
-    private final PrescriptionDAO prescriptionDAO = new PrescriptionDAO();
+    private final PrescriptionDAO pendingPrescriptionDAO = new PrescriptionDAO(1);
     private final TransactionDAO transactionDAO = new TransactionDAO();
+    private final PrescriptionDAO processedPrescriptionDAO = new PrescriptionDAO(2);
 
     public PharmacyMaintenance() {
         this.medicineMap = medicineDAO.retrieveFromFile();
-        this.prescriptionMap = prescriptionDAO.retrieveFromFile();
+        this.pendingPrescriptionMap = pendingPrescriptionDAO.retrieveFromFile();
+        this.processedPrescriptionMap = processedPrescriptionDAO.retrieveFromFile();
         this.transactionMap = transactionDAO.retrieveFromFile();
         this.treatmentMap = treatmentDAO.retrieveFromFile();
+        IDGenerator.loadCounter("counter.dat");
     }
 
-    public Medicine[] listAllMedicines() {
-        return medicineDAO.retrieveFromFile().toArray(new Medicine[0]);
+
+    public CustomADT<String, Medicine> getMedicineMap() {
+        return medicineMap;
     }
 
     public void addMedicine(Medicine newMedicine) {
         medicineMap.put(newMedicine.getId(), newMedicine);
         medicineDAO.saveToFile(medicineMap);
+        IDGenerator.saveCounters("counter.dat");
     }
 
     public Medicine getMedicineById(String id) {
@@ -83,19 +93,59 @@ public class PharmacyMaintenance {
     }
 
     public void enqueuePrescription(Prescription prescription) {
-        prescriptionMap.offer(prescription.getPrescriptionID(), prescription);
-        prescriptionDAO.saveToFile(prescriptionMap);
+        pendingPrescriptionMap.offer(prescription.getPrescriptionID(), prescription);
+        pendingPrescriptionDAO.saveToFile(pendingPrescriptionMap);
+        IDGenerator.saveCounters("counter.dat");
     }
 
-    public Prescription[] listAllPrescriptions() {
-        return prescriptionDAO.retrieveFromFile().toArray(new Prescription[0]);
+    public CustomADT<String, Prescription> getPendingPrescriptionMap() {
+        return pendingPrescriptionMap;
+    }
+
+    public CustomADT<String, Prescription> getProcessedPrescriptionMap() {
+        return processedPrescriptionMap;
+    }
+
+    public Prescription getPrescriptionById(String id) {
+        Prescription presc = pendingPrescriptionMap.get(id);
+        if (presc == null) {
+            presc = processedPrescriptionMap.get(id);
+        }
+        return presc;
+    }
+
+    public boolean updatePrescribedMedicine(PrescribedMedicine pm, int newIntValue, String newStringValue, int choice) {
+
+        switch (choice) {
+            case 1:
+                pm.setQuantity(newIntValue);
+                break;
+            case 2:
+                pm.setDosage(newStringValue);
+                break;
+            case 3:
+                pm.setFrequency(newStringValue);
+                break;
+            case 4:
+                pm.setDescription(newStringValue);
+                break;
+            default:
+                System.out.println("Invalid choice.");
+                return false;
+        }
+        return true;
+    }
+
+    public void savePrescriptionFile(Prescription prescription) {
+        try {
+            pendingPrescriptionDAO.saveToFile(pendingPrescriptionMap);
+        } catch (Exception e) {
+            System.out.println("Error saving prescription file: " + e.getMessage());
+        }
     }
 
     public Prescription dequeuePrescription() {
-        Prescription nextPrescription =  prescriptionMap.poll();
-        if (nextPrescription != null) {
-            prescriptionDAO.saveToFile(prescriptionMap);
-        }
+        Prescription nextPrescription = pendingPrescriptionMap.poll();
         return nextPrescription;
     }
 
@@ -125,7 +175,20 @@ public class PharmacyMaintenance {
             }
         }
 
-        prescriptionDAO.saveToFile(prescriptionMap);
+        if (allProcessed) {
+            prescription.setStatus("COMPLETED");
+        } else {
+            prescription.setStatus("PARTIALLY COMPLETED");
+        }
+
+        if (pendingPrescriptionMap.containsKey(prescription.getPrescriptionID())) {
+            pendingPrescriptionMap.remove(prescription.getPrescriptionID());
+            processedPrescriptionMap.put(prescription.getPrescriptionID(), prescription);
+        }
+
+        processedPrescriptionMap.put(prescription.getPrescriptionID(), prescription);
+        pendingPrescriptionDAO.saveToFile(pendingPrescriptionMap);
+        processedPrescriptionDAO.saveToFile(processedPrescriptionMap);
         medicineDAO.saveToFile(medicineMap);
         transactionDAO.saveToFile(transactionMap);
         return allProcessed;
@@ -145,21 +208,13 @@ public class PharmacyMaintenance {
         return null; // or throw an exception if not found
     }
 
-    public Transaction[] listAllTransactions() {
-        return transactionDAO.retrieveFromFile().toArray(new Transaction[0]);
+    public CustomADT<String, Transaction> getTransactionMap() {
+        return transactionMap;
     }
 
-    public Medicine[] sortMedicinesByQuantityAscending(Medicine[] medicines) {
-        for (int i = 1; i < medicines.length; i++) {
-            Medicine key = medicines[i];
-            int j = i - 1;
-            while (j >= 0 && medicines[j].getQuantity() > key.getQuantity()) {
-                medicines[j + 1] = medicines[j];
-                j--;
-            }
-            medicines[j + 1] = key;
-        }
-        return medicines;
+
+    public void sortMedicinesByStock(){
+        medicineMap.sort(Comparator.comparingInt(Medicine::getQuantity));
     }
 
     public void saveMedicineStockReport(StringBuilder report, String date) {
@@ -182,4 +237,46 @@ public class PharmacyMaintenance {
             System.out.println("Failed to save report: " + e.getMessage());
         }
     }
+
+    public CustomADT<String, Medicine> searchMedicinesByName(String name) {
+        CustomADT<String, Medicine> results = medicineMap.filter(
+                new Medicine(null, name, 0, 0.0, null),
+                (med1, med2) -> med1.getName().toLowerCase().contains(med2.getName().toLowerCase()) ? 0 : 1
+        );
+        return results;
+    }
+
+    public CustomADT<String, Transaction> getTransactionsInMonth(int year, int month) {
+        LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
+        LocalDateTime end = start.withDayOfMonth(start.toLocalDate().lengthOfMonth()).withHour(23).withMinute(59).withSecond(59);
+        Transaction min = new Transaction();
+        min.setDate(start);
+        Transaction max = new Transaction();
+        max.setDate(end);
+        Comparator<Transaction> dateComparator = (t1, t2) -> t1.getDate().compareTo(t2.getDate());
+        CustomADT<String, Transaction> results = transactionMap.rangeSearch(min, max, dateComparator);
+        return results;
+    }
+
+    public CustomADT<String, Medicine> getLowStockMedicines() {
+        CustomADT<String, Medicine> lowStockMedicines = new CustomADT<>();
+        for (Medicine medicine : medicineMap) {
+            if (medicine.getQuantity() < 10) {
+                lowStockMedicines.put(medicine.getId(), medicine);
+            }
+        }
+        return lowStockMedicines;
+    }
+
+    public boolean addStockToMedicine(String medId, int quantity) {
+        Medicine medicine = medicineMap.get(medId);
+        if (medicine == null) {
+            System.out.println("Medicine not found.");
+            return false;
+        }
+        medicine.setQuantity(medicine.getQuantity() + quantity);
+        medicineDAO.saveToFile(medicineMap);
+        return true;
+    }
+
 }

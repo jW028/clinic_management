@@ -9,6 +9,7 @@ public class Prescription implements Serializable {
     private String treatmentID;
     private CustomADT<String, PrescribedMedicine> medicines;
     private double totalPrice;
+    private String status;
 
 
     public Prescription(String prescriptionID,String treatmentID){
@@ -16,6 +17,7 @@ public class Prescription implements Serializable {
         this.treatmentID = treatmentID;
         this.medicines = new CustomADT<String, PrescribedMedicine>();
         this.totalPrice = 0.0;
+        this.status = "PENDING";
     }
 
     public void addMedicine(Medicine medicine, int quantity, String dosage, String frequency, String description) {
@@ -40,12 +42,24 @@ public class Prescription implements Serializable {
         }
     }
 
+    public double getTotalPrice() {
+        return totalPrice;
+    }
+
     public String getPrescriptionID() {
         return prescriptionID;
     }
 
     public String getTreatmentID(){
         return treatmentID;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     @Override
@@ -57,7 +71,7 @@ public class Prescription implements Serializable {
                 .append("\nPrescribed Medicines:\n");
         for (int i = 0; i < medicines.size(); i++) {
             PrescribedMedicine pm = medicines.get(i);
-            sb.append("  - ").append(pm.toString()).append("\n");
+            sb.append(i + 1).append(". ").append(pm.toString()).append("\n");
         }
         return sb.toString();
     }

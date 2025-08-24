@@ -8,11 +8,11 @@ public class MedicineInitializer {
     public static void main(String[] args) {
         CustomADT<String, Medicine> medicationMap = new CustomADT<>();
 
-        medicationMap.put("MED001", new Medicine("MED001", "Paracetamol", 100, 5.00, "Pain reliever and fever reducer"));
-        medicationMap.put("MED002", new Medicine("MED002", "Ibuprofen", 50, 10.00, "Anti-inflammatory and pain reliever"));
-        medicationMap.put("MED003", new Medicine("MED003", "Amoxicillin", 30, 15.00, "Antibiotic for bacterial infections"));
-        medicationMap.put("MED004", new Medicine("MED004", "Cetirizine", 80, 8.00, "Antihistamine for allergy relief"));
-        medicationMap.put("MED005", new Medicine("MED005", "Omeprazole", 60, 20.00, "Proton pump inhibitor for acid reflux"));
+        medicationMap.put("M001", new Medicine("M001", "Paracetamol", 100, 5.00, "Pain reliever and fever reducer"));
+        medicationMap.put("M002", new Medicine("M002", "Ibuprofen", 50, 10.00, "Anti-inflammatory and pain reliever"));
+        medicationMap.put("M003", new Medicine("M003", "Amoxicillin", 30, 15.00, "Antibiotic for bacterial infections"));
+        medicationMap.put("M004", new Medicine("M004", "Cetirizine", 80, 8.00, "Antihistamine for allergy relief"));
+        medicationMap.put("M005", new Medicine("M005", "Omeprazole", 60, 20.00, "Proton pump inhibitor for acid reflux"));
 
         MedicineDAO dao = new MedicineDAO();
         dao.saveToFile(medicationMap);

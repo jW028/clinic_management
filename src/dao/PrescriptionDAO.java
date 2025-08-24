@@ -11,7 +11,19 @@ import adt.CustomADT;
 import entity.Prescription;
 
 public class PrescriptionDAO {
-    private final String fileName = "prescription.dat";
+    private String fileName;
+    private final String fileName1 = "pending_prescriptions.dat";
+    private final String fileName2 = "processed_prescriptions.dat";
+
+    public PrescriptionDAO(int type) {
+        if (type == 1) {
+            this.fileName = fileName1;
+        } else if (type == 2) {
+            this.fileName = fileName2;
+        } else {
+            throw new IllegalArgumentException("Invalid prescription type.");
+        }
+    }
 
     public void saveToFile(CustomADT<String, Prescription> prescriptions) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName))){
@@ -35,4 +47,3 @@ public class PrescriptionDAO {
         return prescriptions;
     }
 }
-

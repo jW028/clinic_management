@@ -9,5 +9,6 @@ public class TransactionInitializer {
 
         TransactionDAO dao = new TransactionDAO();
         dao.saveToFile(transactionMap);
+        System.out.println("Transaction data initialized and saved to file.");
     }
 }

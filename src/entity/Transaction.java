@@ -7,14 +7,22 @@ import java.time.LocalDateTime;
 
 public class Transaction implements Serializable {
     private String transactionID;
-    private String customerID;
+    private String patientID;
     private CustomADT<String, PrescribedMedicine> medicines;
     private LocalDateTime date;
     private double totalPrice;
 
-    public Transaction(String customerID) {
+    public Transaction() {
+        this.transactionID = "";
+        this.patientID = "";
+        this.medicines = new CustomADT<>();
+        this.date = LocalDateTime.now();
+        this.totalPrice = 0.0;
+    }
+
+    public Transaction(String patientID) {
         this.transactionID = IDGenerator.generateTransactionID();
-        this.customerID = customerID;
+        this.patientID = patientID;
         this.medicines = new CustomADT<>();
         this.totalPrice = 0.0;
         this.date = LocalDateTime.now();
@@ -43,15 +51,19 @@ public class Transaction implements Serializable {
         return transactionID;
     }
 
-    public String getCustomerID() {
-        return customerID;
+    public String getPatientId() {
+        return patientID;
+    }
+
+    public void setDate(LocalDateTime date) {
+        this.date = date;
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(String.format("Transaction ID: %s | Patient: %s | Total: RM%.2f | Date: %s\n",
-                transactionID, customerID, totalPrice, DateTimeFormatterUtil.formatForDisplay(date)));
+                transactionID, patientID, totalPrice, DateTimeFormatterUtil.formatForDisplay(date)));
         sb.append("Medicines:\n");
         for (int i = 0; i < medicines.size(); i++) {
             PrescribedMedicine pm = medicines.get(i);
