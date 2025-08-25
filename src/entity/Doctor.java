@@ -1,6 +1,7 @@
 package entity;
+import java.io.Serializable;
 
-public class Doctor {
+public class Doctor implements Serializable{
     private String doctorID;
     private String name;
     private String specialty;
@@ -24,23 +25,18 @@ public class Doctor {
     public String getDoctorID() {
         return doctorID;
     }
-
     public String getName(){
         return name;
     }
-
     public String getSpecialty() {
         return specialty;
     }
-
     public String getPhone() {
         return phone;
     }
-
     public String getEmail() {
         return email;
     }
-
     public String getAddress() {
         return address;
     }

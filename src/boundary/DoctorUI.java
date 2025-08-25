@@ -3,11 +3,8 @@ package boundary;
 import control.DoctorMaintenance;
 import control.ScheduleMaintenance;
 import entity.Doctor;
-import entity.Schedule;
 import utility.IDGenerator;
 import utility.InputHandler;
-
-import java.time.LocalDate;
 
 public class DoctorUI {
     private final DoctorMaintenance doctorMaintenance;
@@ -24,7 +21,7 @@ public class DoctorUI {
         do {
             System.out.println("\n=== Doctor Management Menu ===");
             System.out.println("1. Register Doctor");
-            System.out.println("2. View Doctor by ID");
+            System.out.println("2. Search Doctor");
             System.out.println("3. Update Doctor Details");
             System.out.println("4. Remove Doctor");
             System.out.println("5. List All Doctors");
@@ -34,7 +31,7 @@ public class DoctorUI {
 
             switch (choice) {
                 case 1 -> registerDoctor();
-                case 2 -> viewDoctor();
+                case 2 -> searchDoctor();
                 case 3 -> updateDoctor();
                 case 4 -> removeDoctor();
                 case 5 -> listDoctors();
@@ -64,50 +61,172 @@ public class DoctorUI {
         }
     }
 
-    private void viewDoctor() {
-        String id = InputHandler.getString("Enter Doctor ID");
-        Doctor doctor = doctorMaintenance.getDoctor(id);
-        if (doctor != null) {
-            System.out.println("\n" + doctor);
-        } else {
-            System.out.println("Doctor not found.");
+    private void searchDoctor() {
+        System.out.println("\n=== Search Doctor ===");
+        System.out.println("1. By ID");
+        System.out.println("2. By Name");
+        System.out.println("3. By Gender");
+        System.out.println("4. By Specialty");
+        int choice = InputHandler.getInt("Choose search option", 1, 4);
+
+        Doctor[] results = new Doctor[0];
+
+        switch (choice) {
+            case 1 -> {
+                String id = InputHandler.getString("Enter Doctor ID");
+                Doctor doctor = doctorMaintenance.getDoctor(id);
+                if (doctor != null) {
+                    results = new Doctor[]{doctor};
+                }
+            }
+            case 2 -> {
+                String name = InputHandler.getString("Enter Name");
+                results = doctorMaintenance.searchByName(name);
+            }
+            case 3 -> {
+                String gender = InputHandler.getGender("Select Gender");
+                results = doctorMaintenance.searchByGender(gender);
+            }
+            case 4 -> {
+                String specialty = InputHandler.getString("Enter Specialty");
+                results = doctorMaintenance.searchBySpecialty(specialty);
+            }
+        }
+
+        if (results.length == 0) {
+            System.out.println("No matching doctors found.");
+            return;
+        }
+
+        displayDoctorTable(results);
+
+//        System.out.println("\nDo you want to sort the results?");
+//        System.out.println("1. By ID");
+//        System.out.println("2. By Name");
+//        System.out.println("3. By Specialty");
+//        System.out.println("4. By Gender");
+//        System.out.println("0. No Sorting");
+//        int sortChoice = InputHandler.getInt("Choose option", 0, 4);
+//
+//        Doctor[] sorted = results;
+//        switch (sortChoice) {
+//            case 1 -> sorted = doctorMaintenance.sortByID(true);
+//            case 2 -> sorted = doctorMaintenance.sortByName(true);
+//            case 3 -> sorted = doctorMaintenance.sortBySpecialty(true);
+//            case 4 -> sorted = doctorMaintenance.sortByGender(true);
+//        }
+//
+//        if (sortChoice != 0) {
+//            System.out.println("\n=== Sorted Results ===");
+//            displayDoctorTable(sorted);
+//        }
+    }
+    private void listDoctors() {
+        Doctor[] doctors = doctorMaintenance.getAllDoctorsArray();
+
+        if (doctors.length == 0) {
+            System.out.println("No doctors registered.");
+            return;
+        }
+
+        System.out.println("\n=== All Doctors ===");
+        displayDoctorTable(doctors);
+
+        System.out.println("\nDo you want to sort the list?");
+        System.out.println("1. By ID");
+        System.out.println("2. By Name");
+        System.out.println("3. By Specialty");
+        System.out.println("4. By Gender");
+        System.out.println("0. Exit without sorting");
+        int sortChoice = InputHandler.getInt("Choose option", 0, 4);
+
+        Doctor[] sorted = doctors;
+        switch (sortChoice) {
+            case 1 -> sorted = doctorMaintenance.sortByID(true);
+            case 2 -> sorted = doctorMaintenance.sortByName(true);
+            case 3 -> sorted = doctorMaintenance.sortBySpecialty(true);
+            case 4 -> sorted = doctorMaintenance.sortByGender(true);
+        }
+
+        if (sortChoice != 0) {
+            System.out.println("\n=== Doctors (Sorted) ===");
+            displayDoctorTable(sorted);
         }
     }
+
+    private void displayDoctorTable(Doctor[] doctors) {
+        System.out.printf(
+                "%-8s | %-20s | %-15s | %-13s | %-25s | %-25s | %-8s | %-12s\n",
+                "ID", "Name", "Specialty", "Phone", "Email", "Address", "Gender", "DOB");
+        System.out.println("-----------------------------------------------------------------------------------------------"
+                + "------------------------------------------------------");
+
+        for (Doctor doctor : doctors) {
+            System.out.printf(
+                    "%-8s | %-20s | %-15s | %-13s | %-25s | %-25s | %-8s | %-12s\n",
+                    doctor.getDoctorID(), doctor.getName(), doctor.getSpecialty(), doctor.getPhone(),
+                    doctor.getEmail(), doctor.getAddress(), doctor.getGender(), doctor.getDateOfBirth());
+        }
+    }
+
 
     private void updateDoctor() {
         String id = InputHandler.getString("Enter Doctor ID to update");
         Doctor doctor = doctorMaintenance.getDoctor(id);
 
-        if (doctor != null) {
-            System.out.println("Leave blank to keep existing value.");
-
-            System.out.print("New Name [" + doctor.getName() + "]: ");
-            String name = InputHandler.getOptionalString("");
-            System.out.print("New Specialty [" + doctor.getSpecialty() + "]: ");
-            String specialty = InputHandler.getOptionalString("");
-            System.out.print("New Phone [" + doctor.getPhone() + "]: ");
-            String phone = InputHandler.getOptionalString("");
-            System.out.print("New Email [" + doctor.getEmail() + "]: ");
-            String email = InputHandler.getOptionalString("");
-            System.out.print("New Address [" + doctor.getAddress() + "]: ");
-            String address = InputHandler.getOptionalString("");
-            System.out.print("New Gender [" + doctor.getGender() + "]: ");
-            String gender = InputHandler.getOptionalString("");
-            System.out.print("New Date of Birth [" + doctor.getDateOfBirth() + "]: ");
-            String dob = InputHandler.getOptionalString("");
-
-            if (!name.isEmpty()) doctor.setName(name);
-            if (!specialty.isEmpty()) doctor.setSpecialty(specialty);
-            if (!phone.isEmpty()) doctor.setPhone(phone);
-            if (!email.isEmpty()) doctor.setEmail(email);
-            if (!address.isEmpty()) doctor.setAddress(address);
-            if (!gender.isEmpty()) doctor.setGender(gender);
-            if (!dob.isEmpty()) doctor.setDateOfBirth(dob);
-
-            System.out.println("Doctor details updated.");
-        } else {
+        if (doctor == null) {
             System.out.println("Doctor not found.");
+            return;
         }
+
+        boolean keepUpdating = true;
+        while (keepUpdating) {
+            System.out.println("\n=== Update Doctor Details ===");
+            System.out.println("1. Name        [" + doctor.getName() + "]");
+            System.out.println("2. Specialty   [" + doctor.getSpecialty() + "]");
+            System.out.println("3. Phone       [" + doctor.getPhone() + "]");
+            System.out.println("4. Email       [" + doctor.getEmail() + "]");
+            System.out.println("5. Address     [" + doctor.getAddress() + "]");
+            System.out.println("6. Gender      [" + doctor.getGender() + "]");
+            System.out.println("7. Date of Birth [" + doctor.getDateOfBirth() + "]");
+            System.out.println("0. Done");
+
+            int choice = InputHandler.getInt("Select field to update", 0, 7);
+
+            switch (choice) {
+                case 1 -> {
+                    String newName = InputHandler.getString("Enter New Name");
+                    doctorMaintenance.updateDoctorField(id, "name", newName);
+                }
+                case 2 -> {
+                    String newSpecialty = InputHandler.getString("Enter New Specialty");
+                    doctorMaintenance.updateDoctorField(id, "specialty", newSpecialty);
+                }
+                case 3 -> {
+                    String newPhone = InputHandler.getPhoneNumber("Enter New Phone");
+                    doctorMaintenance.updateDoctorField(id, "phone", newPhone);
+                }
+                case 4 -> {
+                    String newEmail = InputHandler.getEmail("Enter New Email");
+                    doctorMaintenance.updateDoctorField(id, "email", newEmail);
+                }
+                case 5 -> {
+                    String newAddress = InputHandler.getString("Enter New Address");
+                    doctorMaintenance.updateDoctorField(id, "address", newAddress);
+                }
+                case 6 -> {
+                    String newGender = InputHandler.getGender("Select New Gender");
+                    doctorMaintenance.updateDoctorField(id, "gender", newGender);
+                }
+                case 7 -> {
+                    String newDob = InputHandler.getString("Enter New Date of Birth (YYYY-MM-DD)");
+                    doctorMaintenance.updateDoctorField(id, "dob", newDob);
+                }
+                case 0 -> keepUpdating = false;
+            }
+        }
+
+        System.out.println("Doctor details updated.");
     }
 
     private void removeDoctor() {
@@ -117,11 +236,6 @@ public class DoctorUI {
         } else {
             System.out.println("Doctor not found.");
         }
-    }
-
-    private void listDoctors() {
-        System.out.println("\n--- All Registered Doctors ---");
-        doctorMaintenance.listAllDoctors();
     }
 
 //    private void viewDoctorSchedule() {
