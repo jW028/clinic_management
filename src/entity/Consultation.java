@@ -1,10 +1,12 @@
 package entity;
 
 import adt.CustomADT;
-
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class Consultation {
+public class Consultation implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String consultationId;
     private Appointment appointment;
     private Appointment followUpAppointment;

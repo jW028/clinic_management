@@ -4,8 +4,10 @@ import adt.CustomADT;
 import dao.AppointmentDAO;
 import dao.ConsultationDAO;
 import dao.ConsultationServiceDAO;
+import dao.DoctorDAO;
 import dao.PaymentDAO;
 import dao.PatientDAO;
+import dao.ScheduleDAO;
 import entity.Appointment;
 import entity.Consultation;
 import entity.ConsultationService;
@@ -17,6 +19,7 @@ import entity.Schedule;
 import utility.DateTimeFormatterUtil;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 
 public class ConsultationMaintenance {
     private final CustomADT<String, Consultation> consultationMap;
@@ -29,36 +32,56 @@ public class ConsultationMaintenance {
     private final CustomADT<String, Schedule> scheduleMap;
 
     private final ConsultationDAO consultationDAO = new ConsultationDAO();
-    private final PatientDAO patientDAO = new PatientDAO();
+    // private final PatientDAO patientDAO = new PatientDAO();
     // private final DiagnosisDAO diagnosisDAO = new Diagnosis();
     private final PaymentDAO paymentDAO = new PaymentDAO();
     private final ConsultationServiceDAO consultationServiceDAO = new ConsultationServiceDAO();
     private final AppointmentDAO appointmentDAO = new AppointmentDAO();
-    // private final DoctorDAO doctorDAO = new DoctorDAO();
-    // private final scheduleDAO scheduleDAO = new ScheduleDAO();
+    private final DoctorDAO doctorDAO = new DoctorDAO();
+    private final ScheduleDAO scheduleDAO = new ScheduleDAO();
 
     public static final String[] VALID_APPOINTMENT_STATUSES = {
-            "Scheduled", "Completed", "Cancelled", "In Progress"
+            "Scheduled", "Completed", "Cancelled"
     };
 
     public ConsultationMaintenance() {
         // Load from file or initialize empty
         this.consultationMap = consultationDAO.retrieveFromFile();
-        this.patientMap = (CustomADT<String, Patient>) patientDAO.retrieveFromFile();
         // this.patientMap = patientDAO.retrieveFromFile();
         this.paymentMap = paymentDAO.retrieveFromFile();
         this.appointmentMap = appointmentDAO.retrieveFromFile();
         this.serviceMap = consultationServiceDAO.retrieveFromFile();
         // this.diagnosisMap = diagnosisDAO.retrieveFromFile();
-        // this.doctorMap = doctorDAO.retrieveFromFile();
+        this.doctorMap = DoctorDAO.loadDoctors();
+        this.scheduleMap = scheduleDAO.retrieveFromFile();
 
+        this.patientMap = new CustomADT<>();
         this.diagnosisMap = new CustomADT<>();
-        this.doctorMap = new CustomADT<>();
-        this.scheduleMap = new CustomADT<>();   // or load from file
 
         // Example initial data
         diagnosisMap.put("D001", new Diagnosis("D001", "Flu", "Mild"));
-        doctorMap.put("DC001", new Doctor("DC001", "Lee", "Heart", "01112345678", "lee@gmail.com", "1, Street 1, Sunway", "M", "25/7/1980"));
+
+        patientMap.put("P001", new Patient("P001", "Alice", 19, "Female", "1234567890", "123 Main St", false));
+        patientMap.put("P002", new Patient("P002", "Bob", 40, "Male", "0987654321", "456 Elm St", false));
+        patientMap.put("P003", new Patient("P003", "Zoer", 19, "Female", "1234567890", "123 Main St", false));
+        patientMap.put("P004", new Patient("P004", "Star", 40, "Male", "0987654321", "456 Elm St", false));
+        patientMap.put("P005", new Patient("P005", "Lace", 19, "Female", "1234567890", "123 Main St", false));
+        patientMap.put("P006", new Patient("P006", "Wayne", 40, "Male", "0987654321", "456 Elm St", false));
+        patientMap.put("P007", new Patient("P007", "Din", 19, "Female", "1234567890", "123 Main St", false));
+        patientMap.put("P008", new Patient("P008", "Yej", 40, "Male", "0987654321", "456 Elm St", false));
+        patientMap.put("P009", new Patient("P009", "Chaer", 19, "Female", "1234567890", "123 Main St", false));
+        patientMap.put("P010", new Patient("P010", "Ryu", 40, "Male", "0987654321", "456 Elm St", false));
+
+//        doctorMap.put("DC001", new Doctor("DC001", "Lee", "Heart", "01112345678", "lee@gmail.com", "1, Street 1, Sunway", "M", "25/7/1980"));
+//        doctorMap.put("DC002", new Doctor("DC002", "Yap", "Heart", "01112345678", "lee@gmail.com", "1, Street 1, Sunway", "M", "25/7/1980"));
+//        doctorMap.put("DC003", new Doctor("DC003", "Hor", "Heart", "01112345678", "lee@gmail.com", "1, Street 1, Sunway", "M", "25/7/1980"));
+//        doctorMap.put("DC004", new Doctor("DC004", "Ang", "Heart", "01112345678", "lee@gmail.com", "1, Street 1, Sunway", "M", "25/7/1980"));
+//        doctorMap.put("DC005", new Doctor("DC005", "Sau", "Heart", "01112345678", "lee@gmail.com", "1, Street 1, Sunway", "M", "25/7/1980"));
+//        doctorMap.put("DC006", new Doctor("DC006", "Lim", "Heart", "01112345678", "lee@gmail.com", "1, Street 1, Sunway", "M", "25/7/1980"));
+//        doctorMap.put("DC007", new Doctor("DC007", "Chew", "Heart", "01112345678", "lee@gmail.com", "1, Street 1, Sunway", "M", "25/7/1980"));
+//        doctorMap.put("DC008", new Doctor("DC008", "Chin", "Heart", "01112345678", "lee@gmail.com", "1, Street 1, Sunway", "M", "25/7/1980"));
+//        doctorMap.put("DC009", new Doctor("DC009", "Ting", "Heart", "01112345678", "lee@gmail.com", "1, Street 1, Sunway", "M", "25/7/1980"));
+//        doctorMap.put("DC010", new Doctor("DC010", "Lai", "Heart", "01112345678", "lee@gmail.com", "1, Street 1, Sunway", "M", "25/7/1980"));
     }
 
     // Get patient info
@@ -109,7 +132,8 @@ public class ConsultationMaintenance {
     }
 
     public Consultation[] getAllConsultations() {
-        return consultationMap.toArray(new Consultation[0]);
+        // return consultationMap.toArray(new Consultation[0]);
+        return consultationDAO.retrieveFromFile().toArray(new Consultation[0]);
     }
 
     // Appointment CRUD
@@ -177,8 +201,8 @@ public class ConsultationMaintenance {
     }
 
     public Appointment[] getAllAppointments() {
-        // return appointmentMap.toArray(new Appointment[0]);
-        return appointmentDAO.retrieveFromFile().toArray(new Appointment[0]);
+        return appointmentMap.toArray(new Appointment[0]);
+        // return appointmentDAO.retrieveFromFile().toArray(new Appointment[0]);
     }
 
     public boolean isValidStatus(String status) {
@@ -224,33 +248,113 @@ public class ConsultationMaintenance {
     }
 
     // Schedule
-    public LocalDateTime[] getAvailableSlotsForDoctor(String doctorId) {
-        if (doctorId == null) return new LocalDateTime[0];
+    public String[] getAvailableSlotsForDoctor(String doctorId) {
+        // if (doctorId == null) return new LocalDateTime[0];
+        if (doctorId == null) return new String[0];
 
         // Collect available slots for doctor
-        CustomADT<String, LocalDateTime> slotMap = new CustomADT<>();
+        CustomADT<String, String> slotMap = new CustomADT<>();
+        int slotCounter = 1;
         for (int i = 0; i < scheduleMap.size(); i++) {
             Schedule sched = scheduleMap.get(i);
             if (sched.getDoctorID().equals(doctorId) && sched.getStatus()) {
-                try {
-//                    String[] times = sched.getTimeslot().split("-");
-//                    String dateTimeStr = sched.getDate() + "T" + times[0];
-//                    LocalDateTime slot = LocalDateTime.parse(dateTimeStr); // May need DateTimeFormatter
-//                    slotMap.put(sched.getScheduleID(), slot);
-                    String[] times = sched.getTimeslot().split("-");
-                    String scheduleDateTimeStr = sched.getDate() + " " + times[0]; // Eg. "10/08/2025 15:00"
-                    LocalDateTime slot = DateTimeFormatterUtil.parseDisplayFormat((scheduleDateTimeStr));
-                } catch (Exception e) {
-                    // Ignore format errors
-                }
+                String displaySlot = sched.getDate() + " " + sched.getTimeslot();
+                slotMap.put("slot" + slotCounter++, displaySlot);
             }
         }
-        return slotMap.toArray(new LocalDateTime[0]);
+        return slotMap.toArray(new String[0]);
+
+//        CustomADT<String, LocalDateTime> slotMap = new CustomADT<>();
+//        for (int i = 0; i < scheduleMap.size(); i++) {
+//            Schedule sched = scheduleMap.get(i);
+//            if (sched.getDoctorID().equals(doctorId) && sched.getStatus()) {
+//                try {
+////                    String[] times = sched.getTimeslot().split("-");
+////                    String dateTimeStr = sched.getDate() + "T" + times[0];
+////                    LocalDateTime slot = LocalDateTime.parse(dateTimeStr); // May need DateTimeFormatter
+////                    slotMap.put(sched.getScheduleID(), slot);
+//                    String[] times = sched.getTimeslot().split("[–-]");
+//                    String scheduleDateTimeStr = sched.getDate() + " " + times[0].trim(); // Eg. "10/08/2025 15:00"
+//                    System.out.println("Trying to parse: [" + scheduleDateTimeStr + "]");
+//                    LocalDateTime slot = DateTimeFormatterUtil.parseDisplayFormat(scheduleDateTimeStr);
+//                    slotMap.put(sched.getScheduleID(), slot);
+//                } catch (Exception e) {
+//                    System.out.println("Error parsing schedule: " + sched);
+//                }
+//            }
+//        }
+//        return slotMap.toArray(new LocalDateTime[0]);
+    }
+
+    // --- Searching and Sorting for Consultations ---
+    public CustomADT<String, Consultation> searchConsultationsByPatientName(String name) {
+        Comparator<Consultation> comparator = (c1, c2) -> c1.getPatient().getName().equalsIgnoreCase(name) ? 0 : -1;
+        Patient searchPatient = new Patient(null, null, 0, null, null, null, false);
+        return consultationMap.filter(new Consultation(null, null, searchPatient, null, null, null, null, null, null, false, null), comparator);
+    }
+
+    public CustomADT<String, Consultation> searchConsultationsByDoctorName(String name) {
+        Comparator<Consultation> comparator = (c1, c2) -> c1.getDoctor().getName().equalsIgnoreCase(name) ? 0 : -1;
+        Doctor searchDoctor = new Doctor(null, name, null, null, null, null, null, null);
+        return consultationMap.filter(new Consultation(null, null, null, searchDoctor, null, null, null, null, null, false, null), comparator);
+    }
+
+    public void sortConsultationsByPatientName() {
+        consultationMap.sort(Comparator.comparing(c -> c.getPatient().getName(), String.CASE_INSENSITIVE_ORDER));
+    }
+
+    public void sortConsultationsByDoctorName() {
+        consultationMap.sort(Comparator.comparing(c -> c.getDoctor().getName(), String.CASE_INSENSITIVE_ORDER));
+    }
+
+    public void sortConsultationsByDate() {
+        consultationMap.sort(Comparator.comparing(Consultation::getConsultationTime));
+    }
+
+    // --- Searching and Sorting for Appointments ---
+    public CustomADT<String, Appointment> searchAppointmentsByPatientName(String name) {
+        Comparator<Appointment> comparator = (a1, a2) -> {
+            Patient p = getPatient(a1.getPatientId());
+            return (p != null && p.getName().equalsIgnoreCase(name)) ? 0 : -1;
+        };
+        return appointmentMap.filter(new Appointment(null, null, null, null, null), comparator);
+    }
+
+    public CustomADT<String, Appointment> searchAppointmentsByDoctorName(String name) {
+        Comparator<Appointment> comparator = (a1, a2) -> {
+            Doctor d = getDoctor(a1.getDoctorId());
+            return (d != null && d.getName().equalsIgnoreCase(name)) ? 0 : -1;
+        };
+        return appointmentMap.filter(new Appointment(null, null, null, null, null), comparator);
+    }
+
+    public void sortAppointmentsByPatientName() {
+        appointmentMap.sort((a1, a2) -> {
+            Patient p1 = getPatient(a1.getPatientId());
+            Patient p2 = getPatient(a2.getPatientId());
+            String n1 = (p1 != null) ? p1.getName() : "";
+            String n2 = (p2 != null) ? p2.getName() : "";
+            return n1.compareToIgnoreCase(n2);
+        });
+    }
+
+    public void sortAppointmentsByDoctorName() {
+        appointmentMap.sort((a1, a2) -> {
+            Doctor d1 = getDoctor(a1.getDoctorId());
+            Doctor d2 = getDoctor(a2.getDoctorId());
+            String n1 = (d1 != null) ? d1.getName() : "";
+            String n2 = (d2 != null) ? d2.getName() : "";
+            return n1.compareToIgnoreCase(n2);
+        });
+    }
+
+    public void sortAppointmentsByDate() {
+        appointmentMap.sort(Comparator.comparing(Appointment::getAppointmentTime));
     }
 
     public void printConsultationSummaryReport() {
         Consultation[] consultations = consultationMap.toArray(new Consultation[0]);
-        System.out.println("=== Consultation Summary Report ===");
+        System.out.println("\n=== Consultation Summary Report ===");
         System.out.println("Total consultations: " + consultations.length);
 
         // By patient
@@ -304,7 +408,7 @@ public class ConsultationMaintenance {
                 }
             }
         }
-        System.out.println("=== Service Usage Report ===");
+        System.out.println("\n=== Service Usage Report ===");
         for (String sid : serviceIds) {
             ConsultationService service = serviceMap.get(sid);
             String serviceName = service != null ? service.getServiceName() : "Unknown";

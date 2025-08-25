@@ -435,4 +435,17 @@ public class InputHandler {
             System.out.println("Invalid input. Please type 'true' or 'false'.");
         }
     }
+
+    public static boolean isValidId(String id, String type) {
+        String pattern = "";
+        switch (type.toLowerCase()) {
+            case "appointment":    pattern = "^A\\d{3}$"; break;
+            case "consultation":   pattern = "^C\\d{3}$"; break;
+            case "doctor":         pattern = "^DC\\d{3}$"; break;
+            case "patient":        pattern = "^P\\d{3}$"; break;
+            case "diagnosis":      pattern = "^D\\d{3}$"; break;
+            default: return false;
+        }
+        return id != null && id.matches(pattern);
+    }
 }

@@ -41,3 +41,5 @@ public class PatientDAO {
         return new CustomADT<>();
     }
 }
+
+// Should implement CustomADT instead of CustomADTInterface
