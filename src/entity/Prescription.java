@@ -30,7 +30,7 @@ public class Prescription implements Serializable {
         }
     }
 
-    public CustomADT<String, PrescribedMedicine> getMedicines() {
+    public CustomADT<String, PrescribedMedicine>   getMedicines() {
         return medicines;
     }
 

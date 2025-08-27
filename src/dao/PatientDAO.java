@@ -5,7 +5,7 @@ import entity.Patient;
 import java.io.*;
 
 public class PatientDAO {
-    private final String fileName = "patients.dat";
+    private final String fileName = "src/data/patients.dat";
     public void saveToFile(CustomADTInterface<String, Patient> patientList) { // 2. Update method signature
         File file = new File(fileName);
         // Use try-with-resources for automatic stream closing

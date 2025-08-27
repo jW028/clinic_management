@@ -5,7 +5,7 @@ import entity.VisitHistory;
 import java.io.*;
 
 public class VisitHistoryDAO {
-    private static final String FILE_NAME = "visithistory.dat";
+    private static final String FILE_NAME = "src/data/visithistory.dat";
 
     public void saveToFile(CustomADT<String, VisitHistory> visitHistoryMap) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {

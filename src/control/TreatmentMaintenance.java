@@ -1,8 +1,11 @@
 package control;
 
 import adt.CustomADT;
+import dao.TreatmentDAO;
+import dao.ProcedureDAO;
 import entity.*;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import utility.IDGenerator;
 
 public class TreatmentMaintenance {
@@ -14,12 +17,15 @@ public class TreatmentMaintenance {
     private CustomADT<String, String> recentTreatments;
     private CustomADT<String, Prescription> prescriptions;
     private CustomADT<String, Consultation> consultations;
-
-    private PatientMaintenance patientMaintenance;
     private final ConsultationMaintenance consultationController;
+    private final PharmacyMaintenance prescriptionController;
 
+    private TreatmentDAO treatmentDAO;
+    private ProcedureDAO procedureDAO;
 
     public TreatmentMaintenance() {
+        this.treatmentDAO = new TreatmentDAO();
+        this.procedureDAO = new ProcedureDAO();
         this.treatments = new CustomADT<>();
         this.emergencyQueue = new CustomADT<>();
         this.regularQueue = new CustomADT<>();
@@ -27,9 +33,44 @@ public class TreatmentMaintenance {
 
         this.prescriptions = new CustomADT<>();
         this.consultations = new CustomADT<>();
-        this.patientMaintenance = new PatientMaintenance();
         this.consultationController = new ConsultationMaintenance();
+        this.prescriptionController = new PharmacyMaintenance();
 
+        loadAllData();
+        IDGenerator.loadCounter("counter.dat");
+        }
+
+    
+
+    public boolean saveAllData() {
+        boolean success = true;
+        success &= treatmentDAO.saveToFile(treatments);
+        success &= treatmentDAO.saveRecentActivities(recentTreatments);
+        return success;
+    }
+
+    public boolean loadAllData() {
+        treatments = treatmentDAO.retrieveFromFile();
+        recentTreatments = treatmentDAO.retrieveRecentActivities();
+
+        rebuildQueues();
+        return true;
+    }
+
+    private void rebuildQueues() {
+        emergencyQueue.clear();
+        regularQueue.clear();
+
+        for (Treatment treatment : treatments) {
+            if ("SCHEDULED".equals(treatment.getStatus()) || 
+                "IN_PROGRESS".equals(treatment.getStatus())) {
+                if (treatment.isCritical()) {
+                    emergencyQueue.offer(treatment.getTreatmentID(), treatment);
+                } else {
+                    regularQueue.offer(treatment.getTreatmentID(), treatment);
+                }
+            }
+        }
     }
 
     /**
@@ -41,7 +82,7 @@ public class TreatmentMaintenance {
      * @return The created Treatment object
      */
     public Treatment createTreatment(String consultationID, String treatmentType, boolean isCritical, String notes) {
-        Consultation consultation = consultations.get(consultationID);
+        Consultation consultation = consultationController.getConsultation(consultationID);
         if (consultation == null) {
             throw new IllegalArgumentException("Consultation " + consultationID +" not found.");
         }
@@ -49,8 +90,8 @@ public class TreatmentMaintenance {
         String treatmentID = IDGenerator.generateTreatmentID();
 
         // Get patient and doctor from consultation
-        Patient patient = patientMaintenance.getPatientById(consultation.getPatient().getPatientId());
-        Doctor doctor = new Doctor(consultation.getDoctor().getDoctorID(), "Test Dr.", "Test Specialty", "011-12345678", "test@example.com", "Test Clinic", "Male", "12-12-1980");
+        Patient patient = consultation.getPatient();
+        Doctor doctor = consultation.getDoctor();
 
         // Create diagnosis from consultation
         Diagnosis diagnosis = new Diagnosis(
@@ -65,7 +106,6 @@ public class TreatmentMaintenance {
                 consultationID,
                 patient,
                 doctor,
-                diagnosis,
                 LocalDateTime.now(),
                 notes,
                 isCritical
@@ -99,6 +139,8 @@ public class TreatmentMaintenance {
         // Track recent treatments using stack functionality
         recentTreatments.push("OP_" + System.currentTimeMillis(), 
                             "Added treatment: " + treatmentID);
+        saveAllData();
+        IDGenerator.saveCounters("counter.dat");
 
         System.out.println("Treatment " + treatmentID + " added successfully.");
     }
@@ -108,18 +150,43 @@ public class TreatmentMaintenance {
      * @return CustomADT of available consultations
      */
     public CustomADT<String, Consultation> getConsultationsWithoutTreatment() {
-        // TODO: Change to match consultation controller
         Consultation[] availableArr = consultationController.getAllConsultations();
+        System.out.println("DEBUG: getConsultationsWithoutTreatment -> availableArr.length=" + availableArr.length);
+
         CustomADT<String, Consultation> available = new CustomADT<>();
 
         for (Consultation consultation : availableArr) {
-            for (int i = 0; i < treatments.size(); i++) {
-                if (!(treatments.get(i).getConsultationID().equals(consultation.getConsultationId()))) {
-                    available.put(consultation.getConsultationId(), consultation);
+            if (consultation == null) {
+                System.out.println("DEBUG: skipping null consultation element");
+                continue;
+            }
+            String consultId = consultation.getConsultationId();
+            System.out.println("DEBUG: checking consultation id=" + consultId);
+
+            boolean hasExistingTreatment = false;
+            for (Treatment treatment : treatments) {
+                if (treatment == null) continue;
+                String tConsultId = treatment.getConsultationID();
+                // defensive null checks
+                if (tConsultId != null && consultId != null && tConsultId.equals(consultId)) {
+                    hasExistingTreatment = true;
+                    System.out.println("Consultation " + consultId + " already has treatment " + treatment.getTreatmentID());
                     break;
                 }
             }
+
+            if (!hasExistingTreatment) {
+                // defensive: ensure consultId not null
+                if (consultId == null) {
+                    System.out.println("Cannot add consultation with null id, skipping");
+                } else {
+                    available.put(consultId, consultation);
+                    System.out.println("Added consultation " + consultId + " to available");
+                }
+            }
         }
+
+        System.out.println("getConsultationsWithoutTreatment -> available.size=" + available.size());
         return available;
     }
 
@@ -134,10 +201,11 @@ public class TreatmentMaintenance {
             emergencyQueue.remove(treatmentID);
             regularQueue.remove(treatmentID);
 
-            if (removed.hasPrescriptions()) {
+            if (removed.hasPrescription()) {
                 prescriptions.remove(removed.getPrescription().getPrescriptionID());
             }
 
+            saveAllData();
             System.out.println("Treatment " + treatmentID + " removed successfully.");
             return true;
         }
@@ -170,7 +238,7 @@ public class TreatmentMaintenance {
      */
     public Prescription getPrescriptionForTreatment(String treatmentID) {
         Treatment treatment = treatments.get(treatmentID);
-        if (treatment != null && treatment.hasPrescriptions()) {
+        if (treatment != null && treatment.hasPrescription()) {
             return treatment.getPrescription();
         }
         return null;
@@ -187,10 +255,13 @@ public class TreatmentMaintenance {
             recentTreatments.push("OP_" + System.currentTimeMillis(),
                                   "Processed emergency treatment: " + next.getTreatmentID());
             System.out.println("Processed emergency treatment: " + next.getTreatmentID());
+            saveAllData();
         } else {
             System.out.println("No emergency treatments in queue.");
         }
+        
         return next;
+
     }
 
     /**
@@ -207,7 +278,10 @@ public class TreatmentMaintenance {
         } else {
             System.out.println("No regular treatments in queue.");
         }
+
+        saveAllData();
         return next;
+
     }
 
     /**
@@ -227,7 +301,11 @@ public class TreatmentMaintenance {
             return false;
         }
         recentTreatments.clear();
+        
+        saveAllData();
         return true;
+
+
     }
 
     /**
@@ -285,21 +363,7 @@ public class TreatmentMaintenance {
         return criticalPatients;
     }
 
-    /**
-     * Get a list of treatments for a specific patient
-     * @param patientID ID of the patient
-     * @return CustomADT of treatments for the patient
-     */
-    public CustomADT<String, Treatment> getTreatmentsByPatient(String patientID) {
-        CustomADT<String, Treatment> patientTreatments = new CustomADT<>();
-        for (Treatment treatment : treatments) {
-            if (treatment.getPatient().getPatientId().equals(patientID)) {
-                patientTreatments.put(treatment.getTreatmentID(), treatment);
-            }
-        }
-        return patientTreatments;
-    }
-
+    
     /**
      * Add procedure to existing treatment
      * @param treatmentID ID of the treatment to add the procedure to
@@ -341,20 +405,230 @@ public class TreatmentMaintenance {
     }
 
     /**
+     * Get a list of treatments for a specific patient
+     * @param patient Patient object to filter treatments for
+     * @return CustomADT of treatments for the patient
+     */
+    public CustomADT<String, Treatment> getTreatmentsByPatient(Patient patient) {
+        if (patient == null) return new CustomADT<>();
+
+        Treatment dummyTreatment = new Treatment("", "", patient, (Doctor)null, LocalDateTime.now(), "", false);
+        
+        return treatments.filter(dummyTreatment, (t1, t2) -> {
+            if (t1.getPatient() != null && t2.getPatient() != null &&
+                t1.getPatient().getPatientId().equals(t2.getPatient().getPatientId())) {
+                return 0; // Match found
+            }
+            return 1; // No match
+        });
+    }
+
+
+    /**
      * Get treatments by status
      * @param status The status to filter by
      * @return CustomADT of treatments with the specified status
      */
     public CustomADT<String, Treatment> getTreatmentsByStatus(String status) {
-        CustomADT<String, Treatment> filtered = new CustomADT<>();
+        // Create dummy treatment with the specified status
+        Treatment dummyTreatment = new Treatment("", "", (Patient)null, (Doctor)null, LocalDateTime.now(), "", false);
+        dummyTreatment.setStatus(status);
+        // Filter treatments with the same status
+        return treatments.filter(dummyTreatment, (t1, t2) -> {
+            if (t1.getStatus().equalsIgnoreCase(t2.getStatus())) {
+                return 0;
+            }
+            return -1;
+        });
+    }
+
+    /**
+     * Search treatments by notes keyword
+     * @param keyword The keyword to search for in treatment notes
+     * @return CustomADT of treatments containing the keyword in their notes
+     */
+    public CustomADT<String, Treatment> searchTreatmentByNotes(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) return new CustomADT<>();
+
+        Treatment dummyTreatment = new Treatment("", "", (Patient)null, (Doctor)null, LocalDateTime.now(), "", false);
+        dummyTreatment.setNotes(keyword);
+
+        return treatments.filter(dummyTreatment, (t1, t2) -> {
+            if (t1.getNotes() != null && t1.getNotes().toLowerCase().contains(t2.getNotes().toLowerCase())) {
+                return 0; // Match found
+            }
+            return 1; // No match
+        });
+    }
+
+    /**
+     * Search treatments by date range
+     * @param startDate
+     * @param endDate
+     * @return CustomADT of treatments within the date range
+     */
+    public CustomADT<String, Treatment> getTreatmentsByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+        if (startDate == null || endDate == null) return new CustomADT<>();
+
+        // Sort by date first for efficient range search
+        treatments.sort(Comparator.comparing(Treatment::getTreatmentDate));
         
-        for (Treatment treatment : treatments) {
-            if (treatment.getStatus().equalsIgnoreCase(status)) {
-                filtered.put(treatment.getTreatmentID(), treatment);
+        // Create dummy treatments for range bounds
+        Treatment startDummy = new Treatment("", "", (Patient)null, (Doctor)null, startDate, "", false);
+        Treatment endDummy = new Treatment("", "", (Patient)null, (Doctor)null, endDate, "", false);
+        
+        // Use rangeSearch with proper comparator
+        return treatments.rangeSearch(startDummy, endDummy, 
+            Comparator.comparing(Treatment::getTreatmentDate));
+    }
+
+    /**
+     * Binary search for treatments by procedure
+     * Requires treatments to be sorted by procedures
+     * @param procedureName
+     * @return CustomADT of treatments containing the specified procedure
+     */
+    public CustomADT<String, Treatment> searchTreatmentsByProcedure(String procedureName) {
+        if (procedureName == null || procedureName.isEmpty()) return new CustomADT<>();
+
+        Treatment dummyTreatment = new Treatment("", "", (Patient)null, (Doctor)null, LocalDateTime.now(), "", false);
+
+        return treatments.filter(dummyTreatment, (t1, t2) -> {
+            if (treatmentHasProcedure(t1, procedureName)) {
+                return 0; // Match found
+            }
+            return 1; // No match
+        });
+    }
+
+    /**
+     * Helper method to check if treatment has procedure
+     */
+    private boolean treatmentHasProcedure(Treatment treatment, String procedureName) {
+        if (treatment.getProcedures() == null) return false;
+
+        for (Procedure procedure : treatment.getProcedures()) {
+            if (procedure != null &&
+                procedure.getProcedureName().toLowerCase().contains(procedureName.toLowerCase())) {
+                    return true;
             }
         }
+        return false;
+    }
 
-        return filtered;
+    /**
+     * Search treatments by patient name
+     * @param patientName The patient name to search for
+     * @return CustomADT of treatments for patients with matching names
+     */
+    public CustomADT<String, Treatment> searchTreatmentsByPatientName(String patientName) {
+        if (patientName == null || patientName.trim().isEmpty()) return new CustomADT<>();
+
+        Treatment dummyTreatment = new Treatment("", "", (Patient)null, (Doctor)null, LocalDateTime.now(), "", false);
+
+        return treatments.filter(dummyTreatment, (t1, t2) -> {
+            if (t1.getPatient() != null && 
+                t1.getPatient().getName().toLowerCase().contains(patientName.toLowerCase())) {
+                return 0; // Match found
+            }
+            return 1; // No match
+        });
+    }
+
+    /**
+     * Sort treatments by date
+     * @param ascending true for ascending order, false for descending
+     * @return CustomADT of sorted treatments
+     */
+    public CustomADT<String, Treatment> sortTreatmentsByDate(boolean ascending) {
+        CustomADT<String, Treatment> sortedTreatments = new CustomADT<>();
+        
+        // Copy all treatments to new CustomADT
+        for (Treatment treatment : treatments) {
+            sortedTreatments.put(treatment.getTreatmentID(), treatment);
+        }
+        
+        // Sort using CustomADT sort method
+        if (ascending) {
+            sortedTreatments.sort(Comparator.comparing(Treatment::getTreatmentDate));
+        } else {
+            sortedTreatments.sort(Comparator.comparing(Treatment::getTreatmentDate).reversed());
+        }
+        
+        return sortedTreatments;
+    }
+
+    /**
+     * Sort treatments by patient name
+     * @param ascending true for ascending order, false for descending
+     * @return CustomADT of sorted treatments
+     */
+    public CustomADT<String, Treatment> sortTreatmentsByPatientName(boolean ascending) {
+        CustomADT<String, Treatment> sortedTreatments = new CustomADT<>();
+        
+        // Copy all treatments to new CustomADT
+        for (Treatment treatment : treatments) {
+            sortedTreatments.put(treatment.getTreatmentID(), treatment);
+        }
+        
+        // Sort using CustomADT sort method
+        if (ascending) {
+            sortedTreatments.sort(Comparator.comparing(t -> 
+                t.getPatient() != null ? t.getPatient().getName() : ""));
+        } else {
+            sortedTreatments.sort(Comparator.comparing((Treatment t) -> 
+                t.getPatient() != null ? t.getPatient().getName() : "").reversed());
+        }
+        
+        return sortedTreatments;
+    }
+
+    /**
+     * Sort treatments by status
+     * @param ascending true for ascending order, false for descending
+     * @return CustomADT of sorted treatments
+     */
+    public CustomADT<String, Treatment> sortTreatmentsByStatus(boolean ascending) {
+        CustomADT<String, Treatment> sortedTreatments = new CustomADT<>();
+        
+        // Copy all treatments to new CustomADT
+        for (Treatment treatment : treatments) {
+            sortedTreatments.put(treatment.getTreatmentID(), treatment);
+        }
+        
+        // Sort using CustomADT sort method
+        if (ascending) {
+            sortedTreatments.sort(Comparator.comparing(Treatment::getStatus));
+        } else {
+            sortedTreatments.sort(Comparator.comparing(Treatment::getStatus).reversed());
+        }
+        
+        return sortedTreatments;
+    }
+
+    /**
+     * Sort treatments by critical priority
+     * @param criticalFirst true to show critical treatments first, false for regular first
+     * @return CustomADT of sorted treatments
+     */
+    public CustomADT<String, Treatment> sortTreatmentsByCriticalPriority(boolean criticalFirst) {
+        CustomADT<String, Treatment> sortedTreatments = new CustomADT<>();
+        
+        // Copy all treatments to new CustomADT
+        for (Treatment treatment : treatments) {
+            sortedTreatments.put(treatment.getTreatmentID(), treatment);
+        }
+        
+        // Sort using CustomADT sort method
+        if (criticalFirst) {
+            // Critical treatments first (true > false)
+            sortedTreatments.sort(Comparator.comparing((Treatment t) -> !t.isCritical()));
+        } else {
+            // Regular treatments first (false > true)
+            sortedTreatments.sort(Comparator.comparing(Treatment::isCritical));
+        }
+        
+        return sortedTreatments;
     }
 
     /**
@@ -368,11 +642,85 @@ public class TreatmentMaintenance {
         if (treatment != null) {
             treatment.setPrescription(prescription);
             prescriptions.put(prescription.getPrescriptionID(), prescription);
+            prescriptionController.enqueuePrescription(prescription);
             
-            //TODO: Implement prescription controller
+            saveAllData();
             return true;
         }
         return false;
     }
+
+    /**
+     * Get all available procedures from the DAO
+     * @return CustomADT of all procedures
+     */
+    public CustomADT<String, Procedure> getAllAvailableProcedures() {
+        return procedureDAO.retrieveFromFile();
+    }
+
+    /**
+     * Get a specific procedure by ID
+     * @param procedureID The procedure ID to retrieve
+     * @return Procedure object if found, null otherwise
+     */
+    public Procedure getProcedureByID(String procedureID) {
+        CustomADT<String, Procedure> procedures = procedureDAO.retrieveFromFile();
+        return procedures.get(procedureID);
+    }
+
+    // TODO: add reporting features
+    public String generateTreatmentPerformanceReport() {
+        StringBuilder report = new StringBuilder();
+        report.append("Treatment Performance Report\n");
+        report.append("=============================\n");
+        report.append("Total Treatments: ").append(treatments.size()).append("\n");
+        report.append("Total Prescriptions: ").append(prescriptions.size()).append("\n");
+        report.append("Average Treatment Duration: ").append(calculateAverageTreatmentDuration()).append(" days\n");
+        return report.toString();
+    }
+
+    /**
+     * Save report content to a file
+     * @param reportContent The report content to save
+     * @param reportName The name of the report (without extension)
+     * @return true if saved successfully, false otherwise
+     */
+    public boolean saveReportToFile(String reportContent, String reportName) {
+        try {
+            // Create reports directory if it doesn't exist
+            java.io.File reportsDir = new java.io.File("reports");
+            if (!reportsDir.exists()) {
+                reportsDir.mkdirs();
+            }
+            
+            // Generate filename with timestamp
+            String timestamp = java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+            String filename = "reports/" + reportName + "_" + timestamp + ".txt";
+            
+            // Write to file
+            try (java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.FileWriter(filename))) {
+                writer.println("=".repeat(80));
+                writer.println("CLINIC MANAGEMENT SYSTEM - " + reportName.toUpperCase());
+                writer.println("Generated: " + java.time.LocalDateTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                writer.println("=".repeat(80));
+                writer.println();
+                writer.print(reportContent);
+                writer.println();
+                writer.println("=".repeat(80));
+                writer.println("End of Report");
+            }
+            
+            System.out.println("✅ Report saved successfully!");
+            System.out.println("📁 File saved as: " + filename);
+            return true;
+            
+        } catch (java.io.IOException e) {
+            System.err.println("❌ Error saving report: " + e.getMessage());
+            return false;
+        }
+    }
+
 
 }

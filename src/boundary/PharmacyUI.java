@@ -211,6 +211,7 @@ public class PharmacyUI {
         Prescription prescription = new Prescription(prescriptionID, treatmentID);
         System.out.println("Enter number of medicines to add: ");
         int numMedicines = Integer.parseInt(scanner.nextLine());
+        viewMedicine();
         for (int i = 0; i < numMedicines; i++) {
             System.out.println("Adding Medicine " + (i + 1) + ":");
             addPrescribedMedicine(prescription);

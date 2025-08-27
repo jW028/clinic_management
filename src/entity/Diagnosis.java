@@ -1,6 +1,7 @@
 package entity;
+import java.io.Serializable;
 
-public class Diagnosis {
+public class Diagnosis implements Serializable {
     private String id;
     private String name;
     private String description;

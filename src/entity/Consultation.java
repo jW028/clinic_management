@@ -35,6 +35,25 @@ public class Consultation implements Serializable {
         this.followUpDate = followUpDate;
     }
 
+    public Consultation(String consultationId, Patient patient, Doctor doctor, LocalDateTime consultationTime, Diagnosis diagnosis) {
+        this.consultationId = consultationId;
+        this.patient = patient;
+        this.doctor = doctor;
+        this.consultationTime = consultationTime;
+        this.diagnosis = diagnosis;
+        
+        // Set defaults for other fields
+        this.appointment = null;
+        this.followUpAppointment = null;
+        this.servicesUsed = new CustomADT<>();
+        this.notes = "";
+        this.payment = null;
+        this.followUpNeeded = false;
+        this.followUpDate = null;
+    }
+
+    
+
     public String getConsultationId() {
         return consultationId;
     }

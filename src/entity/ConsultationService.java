@@ -1,6 +1,8 @@
 package entity;
 
-public class ConsultationService {
+import java.io.Serializable;
+
+public class ConsultationService implements Serializable {
     private String serviceId;
     private String serviceName;
     private double serviceCharge;

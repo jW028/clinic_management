@@ -6,20 +6,18 @@ import dao.ConsultationDAO;
 import dao.ConsultationServiceDAO;
 import dao.DoctorDAO;
 import dao.PaymentDAO;
-import dao.PatientDAO;
 import dao.ScheduleDAO;
 import entity.Appointment;
 import entity.Consultation;
 import entity.ConsultationService;
 import entity.Diagnosis;
-import entity.Payment;
-import entity.Patient;
 import entity.Doctor;
+import entity.Patient;
+import entity.Payment;
 import entity.Schedule;
-import utility.DateTimeFormatterUtil;
-
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import utility.DateTimeFormatterUtil;
 
 public class ConsultationMaintenance {
     private final CustomADT<String, Consultation> consultationMap;
@@ -132,8 +130,8 @@ public class ConsultationMaintenance {
     }
 
     public Consultation[] getAllConsultations() {
-        // return consultationMap.toArray(new Consultation[0]);
-        return consultationDAO.retrieveFromFile().toArray(new Consultation[0]);
+        Consultation[] arr = consultationMap.toArray(new Consultation[0]);
+        return arr;
     }
 
     // Appointment CRUD

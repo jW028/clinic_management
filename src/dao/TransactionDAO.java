@@ -5,7 +5,7 @@ import entity.Transaction;
 import java.io.*;
 
 public class TransactionDAO {
-    private final String fileName = "transactions.dat";
+    private final String fileName = "src/data/transactions.dat";
 
     public void saveToFile(CustomADT<String, Transaction> transactions) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName))){
