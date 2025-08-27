@@ -41,7 +41,7 @@ public class ConsultationMaintenance {
     private final ScheduleDAO scheduleDAO = new ScheduleDAO();
 
     public static final String[] VALID_APPOINTMENT_STATUSES = {
-            "Scheduled", "Completed", "Cancelled"
+            "Scheduled", "In Progress", "Completed", "Cancelled"
     };
 
     public ConsultationMaintenance() {

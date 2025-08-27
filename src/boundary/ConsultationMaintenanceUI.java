@@ -86,10 +86,10 @@ public class ConsultationMaintenanceUI {
                     if (pName.equals("0")) return;
                     CustomADT<String, Appointment> found = maintenance.searchAppointmentsByPatientName(pName);
 
-                    String format = "| %-15s | %-12s | %-20s | %-12s | %-20s | %-20s | %-10s |\n";
-                    System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+------------+");
+                    String format = "| %-15s | %-12s | %-20s | %-12s | %-20s | %-20s | %-12s |\n";
+                    System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+--------------+");
                     System.out.printf(format, "Appointment ID", "Patient ID", "Patient Name", "Doctor ID", "Doctor Name", "Date & Time", "Status");
-                    System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+------------+");
+                    System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+--------------+");
 
                     for (Appointment appt : found) {
                         Patient patient = maintenance.getPatient(appt.getPatientId());
@@ -104,7 +104,7 @@ public class ConsultationMaintenanceUI {
                                 appt.getStatus()
                         );
                     }
-                    System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+------------+");
+                    System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+--------------+");
                 }
                 case 6 -> {
                     System.out.print("Enter doctor name (Eg. Dr. Alice Tan, or 0 to return): ");
@@ -112,10 +112,10 @@ public class ConsultationMaintenanceUI {
                     if (dName.equals("0")) return;
 
                     CustomADT<String, Appointment> found = maintenance.searchAppointmentsByDoctorName(dName);
-                    String format = "| %-15s | %-12s | %-20s | %-12s | %-20s | %-20s | %-10s |\n";
-                    System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+------------+");
+                    String format = "| %-15s | %-12s | %-20s | %-12s | %-20s | %-20s | %-12s |\n";
+                    System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+--------------+");
                     System.out.printf(format, "Appointment ID", "Patient ID", "Patient Name", "Doctor ID", "Doctor Name", "Date & Time", "Status");
-                    System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+------------+");
+                    System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+--------------+");
 
                     for (Appointment appt : found) {
                         Patient patient = maintenance.getPatient(appt.getPatientId());
@@ -130,7 +130,7 @@ public class ConsultationMaintenanceUI {
                                 appt.getStatus()
                         );
                     }
-                    System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+------------+");
+                    System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+--------------+");
                 }
                 case 0 -> { return; }
                 default -> System.out.println("Invalid choice. ");
@@ -550,8 +550,8 @@ public class ConsultationMaintenanceUI {
         );
 
         maintenance.addConsultation(consultation);
-        appointment.setStatus("Completed");
-        maintenance.updateAppointmentStatus(appointment.getAppointmentId(), "Completed");
+        appointment.setStatus("In Progress");
+        maintenance.updateAppointmentStatus(appointment.getAppointmentId(), "In Progress");
 
         System.out.println("Consultation added.");
     }
@@ -689,10 +689,10 @@ public class ConsultationMaintenanceUI {
     }
 
     private void printAllAppointments(Appointment[] appointments) {
-        String format = "| %-15s | %-12s | %-20s | %-12s | %-20s | %-20s | %-10s |\n";
-        System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+------------+");
+        String format = "| %-15s | %-12s | %-20s | %-12s | %-20s | %-20s | %-12s |\n";
+        System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+--------------+");
         System.out.printf(format, "Appointment ID", "Patient ID", "Patient Name", "Doctor ID", "Doctor Name", "Date & Time", "Status");
-        System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+------------+");
+        System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+--------------+");
 
         for (Appointment appt : appointments) {
             Patient patient = maintenance.getPatient(appt.getPatientId());
@@ -707,7 +707,7 @@ public class ConsultationMaintenanceUI {
                     appt.getStatus()
             );
         }
-        System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+------------+");
+        System.out.println("+-----------------+--------------+----------------------+--------------+----------------------+----------------------+--------------+");
 
         //        for (Appointment appt : appointments) {
         //            System.out.println(appt);
