@@ -1,6 +1,7 @@
 package entity;
+import java.io.Serializable;
 
-public class Schedule {
+public class Schedule implements Serializable {
     private String scheduleID;
     private String doctorID;
     private String date;

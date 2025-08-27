@@ -8,6 +8,7 @@ public class IDGenerator {
     private static int diagnosisCounter = 1;
     private static int consultationCounter = 1;
     private static int doctorCounter = 1;
+    private static int scheduleCounter = 1;
     private static int patientCounter = 1;
     private static int transactionCounter = 1;
     private static int visitCounter = 1;
@@ -34,8 +35,9 @@ public class IDGenerator {
         return "C" + String.format("%03d", consultationCounter++);
     }
     public static String generateDoctorID() {
-        return "D" + String.format("%03d", doctorCounter++);
+        return "DC" + String.format("%03d", doctorCounter++);
     }
+    public static String generateScheduleID() {return "S" + String.format("%03d", scheduleCounter++);}
     public static String generateTransactionID() { return "TX" + String.format("%03d", transactionCounter++);}
     public static String generateVisitID() {
         return "V" + String.format("%03d", visitCounter++);
@@ -55,6 +57,7 @@ public class IDGenerator {
             writer.println(diagnosisCounter);
             writer.println(consultationCounter);
             writer.println(doctorCounter);
+            writer.println(scheduleCounter);
             writer.println(patientCounter);
             writer.println(transactionCounter);
             writer.println(visitCounter);
@@ -72,6 +75,7 @@ public class IDGenerator {
             diagnosisCounter = Integer.parseInt(reader.readLine());
             consultationCounter = Integer.parseInt(reader.readLine());
             doctorCounter = Integer.parseInt(reader.readLine());
+            scheduleCounter = Integer.parseInt(reader.readLine());
             patientCounter = Integer.parseInt(reader.readLine());
             transactionCounter = Integer.parseInt(reader.readLine());
             visitCounter = Integer.parseInt(reader.readLine());
@@ -86,6 +90,11 @@ public class IDGenerator {
     public static void updateDoctorCounterFromHighestID(String highestID) {
         int num = Integer.parseInt(highestID.substring(1)); // "D005" => 5
         doctorCounter = num + 1;
+    }
+
+    public static void updateScheduleCounterFromHighestID(String highestID) {
+        int num = Integer.parseInt(highestID.substring(1)); // "S005" => 5
+        scheduleCounter = num + 1;
     }
 
     public static void main(String[] args){

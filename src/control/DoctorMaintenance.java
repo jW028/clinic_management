@@ -11,7 +11,7 @@ public class DoctorMaintenance {
     public DoctorMaintenance() {
         doctorRegistry = DoctorDAO.loadDoctors();
 
-        String highestID = "D000";
+        String highestID = "DC000";
         for (Doctor doctor : doctorRegistry) { // Use values() to iterate over all doctors
             String id = doctor.getDoctorID();
             if (id.compareTo(highestID) > 0) {
