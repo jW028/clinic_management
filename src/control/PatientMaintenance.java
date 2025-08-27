@@ -1,10 +1,10 @@
 package control;
 
-import entity.*;
 import adt.*;
 import dao.*;
-import utility.IDGenerator;
+import entity.*;
 import java.time.LocalDateTime;
+import utility.IDGenerator;
 
 public class PatientMaintenance {
     private final CustomADT<String, Patient> normalQueue;
@@ -34,7 +34,7 @@ public class PatientMaintenance {
         this.treatmentMaintenance = new TreatmentMaintenance();
 
         // Load existing patients with proper casting
-        CustomADTInterface<String, Patient> loadedPatients = patientDAO.retrieveFromFile();
+        CustomADT<String, Patient> loadedPatients = patientDAO.retrieveFromFile();
         if (loadedPatients instanceof CustomADT) {
             this.patientRegistry = (CustomADT<String, Patient>) loadedPatients;
         } else {
@@ -42,21 +42,21 @@ public class PatientMaintenance {
         }
 
         // Initialize visit history
-        CustomADTInterface<String, VisitHistory> loadedVisitHistory = visitHistoryDAO.retrieveFromFile();
+        CustomADT<String, VisitHistory> loadedVisitHistory = visitHistoryDAO.retrieveFromFile();
         if (loadedVisitHistory != null) {
             this.visitHistoryMap = (CustomADT<String, VisitHistory>) loadedVisitHistory;
         } else {
             this.visitHistoryMap = new CustomADT<>();
         }
 
-        CustomADTInterface<String, Consultation> loadedConsultations = consultationDAO.retrieveFromFile();
+        CustomADT<String, Consultation> loadedConsultations = consultationDAO.retrieveFromFile();
         if (loadedConsultations != null) {
             this.consultationMap = (CustomADT<String, Consultation>) loadedConsultations;
         } else {
             this.consultationMap = new CustomADT<>();
         }
 
-        CustomADTInterface<String, Treatment> loadedTreatments = treatmentDAO.retrieveFromFile();
+        CustomADT<String, Treatment> loadedTreatments = treatmentDAO.retrieveFromFile();
         if (loadedTreatments != null) {
             this.treatmentMap = (CustomADT<String, Treatment>) loadedTreatments;
         } else {

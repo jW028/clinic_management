@@ -1,22 +1,30 @@
 package boundary;
 
+import adt.CustomADT;
 import control.PatientMaintenance;
+import control.PaymentMaintenance;
+import control.TreatmentMaintenance;
 import entity.Patient;
+import entity.Payment;
+import entity.Treatment;
 import entity.VisitHistory;
 import utility.IDGenerator;
 import utility.InputHandler;
-import adt.CustomADT;
 
 public class StudentUI {
     private final PatientMaintenance patientMaintenance;
+    private final TreatmentMaintenance treatmentMaintenance;
+    private final PaymentMaintenance paymentMaintenance;
     private Patient currentPatient;
     private boolean exit = false;
 
     public StudentUI(PatientMaintenance patientMaintenance) {
         this.patientMaintenance = patientMaintenance;
+        this.treatmentMaintenance = new TreatmentMaintenance();
+        this.paymentMaintenance = PaymentMaintenance.getInstance();
     }
 
-    public void displayMenu() {
+    public void  displayMenu() {
         while (!exit) {
             System.out.println("\n========== MAIN MENU ==========");
             System.out.println("1. Patient");
@@ -93,14 +101,16 @@ public class StudentUI {
             System.out.println("3. Book appointment");
             System.out.println("4. View appointment status");
             System.out.println("5. View visit history");
+            System.out.println("6. View & Pay Treatment Bills");
             System.out.println("0. Logout");
-            int choice = InputHandler.getInt(0, 5);
+            int choice = InputHandler.getInt(0, 6);
             switch (choice) {
                 case 1 -> viewDetails();
                 case 2 -> updateDetails();
                 case 3 -> bookAppointment();
                 case 4 -> viewAppointmentStatus();
                 case 5 -> viewVisitHistory();
+                case 6 -> viewAndPayTreatmentBills();
                 case 0 -> {
                     back = true;
                     System.out.println("Logged out.");
@@ -234,6 +244,164 @@ public class StudentUI {
                     v.getVisitDate(),
                     v.getVisitReason(),
                     v.getStatus());
+        }
+    }
+
+    private void viewAndPayTreatmentBills() {
+        System.out.println("\n=== Treatment Bills & Payment ===");
+        
+        // Get all treatments for the current patient
+        CustomADT<String, Treatment> patientTreatments = treatmentMaintenance.getTreatmentsByPatient(currentPatient);
+        
+        if (patientTreatments.size() == 0) {
+            System.out.println("No treatments found for your account.");
+            return;
+        }
+        
+        // Filter for completed treatments that need payment
+        CustomADT<String, Treatment> unpaidTreatments = new CustomADT<>();
+        for (Treatment treatment : patientTreatments.toArray(new Treatment[0])) {
+            if ("COMPLETED".equals(treatment.getStatus())) {
+                // Check if payment exists and is not completed
+                String consultationId = treatment.getConsultationID();
+                boolean needsPayment = true;
+                
+                // Check if there's already a completed payment
+                Payment[] allPayments = paymentMaintenance.getAllPayments();
+                for (Payment payment : allPayments) {
+                    if (payment.getConsultationId().equals(consultationId) && 
+                        "COMPLETED".equals(payment.getPaymentStatus())) {
+                        needsPayment = false;
+                        break;
+                    }
+                }
+                
+                if (needsPayment) {
+                    unpaidTreatments.put(treatment.getTreatmentID(), treatment);
+                }
+            }
+        }
+        
+        if (unpaidTreatments.size() == 0) {
+            System.out.println("✅ All your treatments have been paid for!");
+            return;
+        }
+        
+        // Display unpaid treatments
+        System.out.println("\n📄 Treatments requiring payment:");
+        System.out.println("┌─────┬──────────────┬─────────────────┬──────────────┐");
+        System.out.println("│ No. │ Treatment ID │ Date            │ Type         │");
+        System.out.println("├─────┼──────────────┼─────────────────┼──────────────┤");
+        
+        Treatment[] unpaidArray = unpaidTreatments.toArray(new Treatment[0]);
+        for (int i = 0; i < unpaidArray.length; i++) {
+            Treatment t = unpaidArray[i];
+            System.out.printf("│ %-3d │ %-12s │ %-15s │ %-12s │%n",
+                i + 1,
+                t.getTreatmentID(),
+                t.getTreatmentDate().toLocalDate().toString(),
+                t.getType());
+        }
+        System.out.println("└─────┴──────────────┴─────────────────┴──────────────┘");
+        
+        // Let user select treatment to pay for
+        int choice = InputHandler.getInt("Select treatment to view bill (0 to go back)", 0, unpaidArray.length);
+        if (choice == 0) return;
+        
+        Treatment selectedTreatment = unpaidArray[choice - 1];
+        viewAndProcessPayment(selectedTreatment);
+    }
+    
+    private void viewAndProcessPayment(Treatment treatment) {
+        System.out.println("\n=== Treatment Bill Details ===");
+        System.out.println("Treatment ID: " + treatment.getTreatmentID());
+        System.out.println("Date: " + treatment.getTreatmentDate().toLocalDate());
+        System.out.println("Type: " + treatment.getType());
+        
+        // Create or get payment for this treatment
+        Payment payment = treatmentMaintenance.createSimplePayment(
+            treatment.getConsultationID(), 
+            treatment.getTreatmentID()
+        );
+        
+        if (payment == null) {
+            System.out.println("❌ Error: Could not generate payment details.");
+            return;
+        }
+        
+        // Display payment breakdown
+        System.out.println("\n💰 Bill Breakdown:");
+        System.out.println("┌─────────────────────────┬──────────────┐");
+        System.out.println("│ Service                 │ Amount (RM)  │");
+        System.out.println("├─────────────────────────┼──────────────┤");
+        
+        CustomADT<String, Double> breakdown = payment.getPaymentBreakdown();
+        double total = 0.0;
+        
+        // Iterate through breakdown items
+        String[] serviceTypes = {"Consultation Services", "Treatment Procedures", "Prescription Medicines"};
+        for (String serviceType : serviceTypes) {
+            Double amount = breakdown.get(serviceType);
+            if (amount != null && amount > 0) {
+                System.out.printf("│ %-23s │ %10.2f   │%n", serviceType, amount);
+                total += amount;
+            }
+        }
+        
+        System.out.println("├─────────────────────────┼──────────────┤");
+        System.out.printf("│ %-23s │ %10.2f   │%n", "TOTAL", total);
+        System.out.println("└─────────────────────────┴──────────────┘");
+        
+        // Payment options
+        System.out.println("\nPayment Options:");
+        System.out.println("1. Pay Full Amount (RM " + String.format("%.2f", total) + ")");
+        System.out.println("2. Pay Partial Amount");
+        System.out.println("0. Back to Bills List");
+        
+        int choice = InputHandler.getInt("Select payment option", 0, 2);
+        
+        switch (choice) {
+            case 1 -> processFullPayment(payment, total);
+            case 2 -> processPartialPayment(payment, total);
+            case 0 -> System.out.println("Returning to bills list...");
+        }
+    }
+    
+    private void processFullPayment(Payment payment, double totalAmount) {
+        boolean confirm = InputHandler.getYesNo("Confirm payment of RM " + String.format("%.2f", totalAmount) + "?");
+        
+        if (confirm) {
+            String result = treatmentMaintenance.processPayment(payment.getPaymentId(), totalAmount);
+            System.out.println("\n✅ " + result);
+            if (result.contains("COMPLETED")) {
+                System.out.println("💳 Payment completed successfully!");
+                System.out.println("📧 Receipt will be sent to your registered contact details.");
+            }
+        } else {
+            System.out.println("Payment cancelled.");
+        }
+    }
+    
+    private void processPartialPayment(Payment payment, double totalAmount) {
+        System.out.println("Total Amount Due: RM " + String.format("%.2f", totalAmount));
+        double paidAmount = InputHandler.getDouble("Enter amount to pay (RM)", 0.01, totalAmount);
+        
+        boolean confirm = InputHandler.getYesNo("Confirm payment of RM " + String.format("%.2f", paidAmount) + "?");
+        
+        if (confirm) {
+            String result = treatmentMaintenance.processPayment(payment.getPaymentId(), paidAmount);
+            System.out.println("\n✅ " + result);
+            
+            if (result.contains("PARTIAL")) {
+                double remaining = totalAmount - paidAmount;
+                System.out.println("💰 Remaining balance: RM " + String.format("%.2f", remaining));
+                System.out.println("📧 Partial payment receipt will be sent to your registered contact details.");
+            } else if (result.contains("COMPLETED")) {
+                System.out.println("💳 Payment completed successfully!");
+                System.out.println("📧 Full payment receipt will be sent to your registered contact details.");
+            }
+        } else {
+            System.out.println("Payment cancelled.");
         }
     }
 

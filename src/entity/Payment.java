@@ -1,8 +1,9 @@
 package entity;
 
 import adt.CustomADT;
+import java.io.Serializable;
 
-public class Payment {
+public class Payment implements Serializable {
     private String paymentId;
     private String consultationId;
     private double totalAmount;

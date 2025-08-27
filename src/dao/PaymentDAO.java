@@ -2,11 +2,10 @@ package dao;
 
 import adt.CustomADT;
 import entity.Payment;
-
 import java.io.*;
 
 public class PaymentDAO {
-    private final String fileName = "payments.dat";
+    private final String fileName = "src/data/payments.dat";
 
     public void saveToFile(CustomADT<String, Payment> payments) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName))) {

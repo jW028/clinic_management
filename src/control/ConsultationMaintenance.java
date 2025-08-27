@@ -5,6 +5,7 @@ import dao.AppointmentDAO;
 import dao.ConsultationDAO;
 import dao.ConsultationServiceDAO;
 import dao.DoctorDAO;
+import dao.PatientDAO;
 import dao.PaymentDAO;
 import dao.ScheduleDAO;
 import entity.Appointment;
@@ -30,7 +31,7 @@ public class ConsultationMaintenance {
     private final CustomADT<String, Schedule> scheduleMap;
 
     private final ConsultationDAO consultationDAO = new ConsultationDAO();
-    // private final PatientDAO patientDAO = new PatientDAO();
+    private final PatientDAO patientDAO = new PatientDAO();
     // private final DiagnosisDAO diagnosisDAO = new Diagnosis();
     private final PaymentDAO paymentDAO = new PaymentDAO();
     private final ConsultationServiceDAO consultationServiceDAO = new ConsultationServiceDAO();
@@ -45,7 +46,7 @@ public class ConsultationMaintenance {
     public ConsultationMaintenance() {
         // Load from file or initialize empty
         this.consultationMap = consultationDAO.retrieveFromFile();
-        // this.patientMap = patientDAO.retrieveFromFile();
+        this.patientMap = patientDAO.retrieveFromFile();
         this.paymentMap = paymentDAO.retrieveFromFile();
         this.appointmentMap = appointmentDAO.retrieveFromFile();
         this.serviceMap = consultationServiceDAO.retrieveFromFile();
@@ -53,22 +54,22 @@ public class ConsultationMaintenance {
         this.doctorMap = DoctorDAO.loadDoctors();
         this.scheduleMap = scheduleDAO.retrieveFromFile();
 
-        this.patientMap = new CustomADT<>();
+        // this.patientMap = new CustomADT<>();
         this.diagnosisMap = new CustomADT<>();
 
-        // Example initial data
+        // // Example initial data
         diagnosisMap.put("D001", new Diagnosis("D001", "Flu", "Mild"));
 
-        patientMap.put("P001", new Patient("P001", "Alice", 19, "Female", "1234567890", "123 Main St", false));
-        patientMap.put("P002", new Patient("P002", "Bob", 40, "Male", "0987654321", "456 Elm St", false));
-        patientMap.put("P003", new Patient("P003", "Zoer", 19, "Female", "1234567890", "123 Main St", false));
-        patientMap.put("P004", new Patient("P004", "Star", 40, "Male", "0987654321", "456 Elm St", false));
-        patientMap.put("P005", new Patient("P005", "Lace", 19, "Female", "1234567890", "123 Main St", false));
-        patientMap.put("P006", new Patient("P006", "Wayne", 40, "Male", "0987654321", "456 Elm St", false));
-        patientMap.put("P007", new Patient("P007", "Din", 19, "Female", "1234567890", "123 Main St", false));
-        patientMap.put("P008", new Patient("P008", "Yej", 40, "Male", "0987654321", "456 Elm St", false));
-        patientMap.put("P009", new Patient("P009", "Chaer", 19, "Female", "1234567890", "123 Main St", false));
-        patientMap.put("P010", new Patient("P010", "Ryu", 40, "Male", "0987654321", "456 Elm St", false));
+        // patientMap.put("P001", new Patient("P001", "Alice", 19, "Female", "1234567890", "123 Main St", false));
+        // patientMap.put("P002", new Patient("P002", "Bob", 40, "Male", "0987654321", "456 Elm St", false));
+        // patientMap.put("P003", new Patient("P003", "Zoer", 19, "Female", "1234567890", "123 Main St", false));
+        // patientMap.put("P004", new Patient("P004", "Star", 40, "Male", "0987654321", "456 Elm St", false));
+        // patientMap.put("P005", new Patient("P005", "Lace", 19, "Female", "1234567890", "123 Main St", false));
+        // patientMap.put("P006", new Patient("P006", "Wayne", 40, "Male", "0987654321", "456 Elm St", false));
+        // patientMap.put("P007", new Patient("P007", "Din", 19, "Female", "1234567890", "123 Main St", false));
+        // patientMap.put("P008", new Patient("P008", "Yej", 40, "Male", "0987654321", "456 Elm St", false));
+        // patientMap.put("P009", new Patient("P009", "Chaer", 19, "Female", "1234567890", "123 Main St", false));
+        // patientMap.put("P010", new Patient("P010", "Ryu", 40, "Male", "0987654321", "456 Elm St", false));
 
 //        doctorMap.put("DC001", new Doctor("DC001", "Lee", "Heart", "01112345678", "lee@gmail.com", "1, Street 1, Sunway", "M", "25/7/1980"));
 //        doctorMap.put("DC002", new Doctor("DC002", "Yap", "Heart", "01112345678", "lee@gmail.com", "1, Street 1, Sunway", "M", "25/7/1980"));

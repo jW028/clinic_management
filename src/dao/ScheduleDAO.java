@@ -8,31 +8,13 @@ public class ScheduleDAO {
     private final String fileName;
 
     public ScheduleDAO() {
-        // Try multiple possible paths to find the schedules.dat file
-        String[] possiblePaths = {
-            "src/data/schedules.dat",  // From project root
-            "schedules.dat",  // From working directory
-            System.getProperty("user.dir") + "/src/data/schedules.dat"  // Absolute path
-        };
-        
-        String workingFile = null;
-        for (String path : possiblePaths) {
-            File testFile = new File(path);
-            if (testFile.exists()) {
-                workingFile = path;
-                break;
-            }
-        }
-        
-        // Default to the standard path if none found
-        this.fileName = (workingFile != null) ? workingFile : "src/data/schedules.dat";
+        this.fileName = "src/data/schedules.dat";
     }
 
     public void saveToFile(CustomADT<String, Schedule> schedules) {
         try {
             // Ensure the directory exists
             File file = new File(fileName);
-            file.getParentFile().mkdirs();
             
             try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName))) {
                 oos.writeObject(schedules);

@@ -1,8 +1,8 @@
 package control;
 
 import adt.CustomADT;
-import dao.TreatmentDAO;
 import dao.ProcedureDAO;
+import dao.TreatmentDAO;
 import entity.*;
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -22,11 +22,13 @@ public class TreatmentMaintenance {
 
     private TreatmentDAO treatmentDAO;
     private ProcedureDAO procedureDAO;
+    private PaymentMaintenance paymentMaintenance;
 
     public TreatmentMaintenance() {
         this.treatmentDAO = new TreatmentDAO();
         this.procedureDAO = new ProcedureDAO();
         this.treatments = new CustomADT<>();
+        this.paymentMaintenance = PaymentMaintenance.getInstance();
         this.emergencyQueue = new CustomADT<>();
         this.regularQueue = new CustomADT<>();
         this.recentTreatments = new CustomADT<>();
@@ -709,6 +711,119 @@ public class TreatmentMaintenance {
             System.err.println("❌ Error saving report: " + e.getMessage());
             return false;
         }
+    }
+
+    // Simple Payment Feature - Links consultation, treatment, and prescription costs
+    public Payment createSimplePayment(String consultationId, String treatmentId) {
+        try {
+            // Get consultation and calculate consultation costs
+            Consultation consultation = consultationController.getConsultation(consultationId);
+            if (consultation == null) {
+                System.out.println("Consultation not found");
+                return null;
+            }
+
+            // Get treatment and calculate treatment costs
+            Treatment treatment = getTreatmentByID(treatmentId);
+            if (treatment == null) {
+                System.out.println("Treatment not found");
+                return null;
+            }
+
+            // Calculate total costs
+            double consultationCost = calculateConsultationCost(consultation);
+            double treatmentCost = calculateTreatmentCost(treatment);
+            double prescriptionCost = calculatePrescriptionCost(treatment.getPrescription());
+            double totalAmount = consultationCost + treatmentCost + prescriptionCost;
+
+            // Create payment breakdown
+            CustomADT<String, Double> breakdown = new CustomADT<>();
+            breakdown.put("Consultation Services", consultationCost);
+            breakdown.put("Treatment Procedures", treatmentCost);
+            breakdown.put("Prescription Medicines", prescriptionCost);
+
+            // Generate payment ID
+            String paymentId = "PAY" + System.currentTimeMillis();
+
+            // Create payment
+            Payment payment = new Payment(paymentId, consultationId, totalAmount, 0.0, "PENDING", breakdown);
+            paymentMaintenance.addPayment(payment);
+
+            // Link payment to consultation
+            consultation.setPayment(payment);
+            consultationController.addConsultation(consultation);
+
+            return payment;
+        } catch (Exception e) {
+            System.err.println("Error creating payment: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private double calculateConsultationCost(Consultation consultation) {
+        double total = 0.0;
+        if (consultation.getServicesUsed() != null) {
+            for (ConsultationService service : consultation.getServicesUsed().toArray(new ConsultationService[0])) {
+                total += service.getServiceCharge();
+            }
+        }
+        return total;
+    }
+
+    private double calculateTreatmentCost(Treatment treatment) {
+        double total = 0.0;
+        if (treatment.getProcedures() != null) {
+            for (Procedure procedure : treatment.getProcedures().toArray(new Procedure[0])) {
+                total += procedure.getCost();
+            }
+        }
+        return total;
+    }
+
+    private double calculatePrescriptionCost(Prescription prescription) {
+        if (prescription == null) {
+            return 0.0;
+        }
+        double total = 0.0;
+        if (prescription.getMedicines() != null) {
+            for (PrescribedMedicine prescribedMedicine : prescription.getMedicines().toArray(new PrescribedMedicine[0])) {
+                total += prescribedMedicine.calculateSubtotal();
+            }
+        }
+        return total;
+    }
+
+    public String processPayment(String paymentId, double paidAmount) {
+        try {
+            Payment payment = paymentMaintenance.getPayment(paymentId);
+            
+            if (payment == null) {
+                return "Payment not found";
+            }
+
+            payment.setPaidAmount(paidAmount);
+            
+            if (paidAmount >= payment.getTotalAmount()) {
+                payment.setPaymentStatus("COMPLETED");
+            } else if (paidAmount > 0) {
+                payment.setPaymentStatus("PARTIAL");
+            } else {
+                payment.setPaymentStatus("PENDING");
+            }
+
+            paymentMaintenance.addPayment(payment);
+            return "Payment processed successfully. Status: " + payment.getPaymentStatus();
+        } catch (Exception e) {
+            return "Error processing payment: " + e.getMessage();
+        }
+    }
+
+    public Procedure[] getAvailableProcedures() {
+        if (procedureDAO == null) {
+            return new Procedure[0];
+        }
+        CustomADT<String, Procedure> procedureMap = procedureDAO.retrieveFromFile();
+        return procedureMap.toArray(new Procedure[0]);
     }
 
 

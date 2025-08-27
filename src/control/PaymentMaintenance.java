@@ -7,9 +7,17 @@ import entity.Payment;
 public class PaymentMaintenance {
     private final CustomADT<String, Payment> paymentMap;
     private final PaymentDAO paymentDAO = new PaymentDAO();
+    private static PaymentMaintenance instance;
 
     public PaymentMaintenance() {
         this.paymentMap = paymentDAO.retrieveFromFile();
+    }
+
+    public static PaymentMaintenance getInstance() {
+        if (instance == null) {
+            instance = new PaymentMaintenance();
+        }
+        return instance;
     }
 
     public void addPayment(Payment payment) {

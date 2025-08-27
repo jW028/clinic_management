@@ -6,7 +6,7 @@ import java.io.*;
 
 public class PatientDAO {
     private final String fileName = "src/data/patients.dat";
-    public void saveToFile(CustomADTInterface<String, Patient> patientList) { // 2. Update method signature
+    public void saveToFile(CustomADT<String, Patient> patientList) { // 2. Update method signature
         File file = new File(fileName);
         // Use try-with-resources for automatic stream closing
         try (ObjectOutputStream ooStream = new ObjectOutputStream(new FileOutputStream(file))) {
@@ -18,7 +18,7 @@ public class PatientDAO {
         }
     }
 
-    public CustomADTInterface<String, Patient> retrieveFromFile() { // 3. Update return type
+    public CustomADT<String, Patient> retrieveFromFile() { // 3. Update return type
         File file = new File(fileName);
         if (!file.exists()) {
             // Return a new, empty list if the file doesn't exist yet.
@@ -28,7 +28,7 @@ public class PatientDAO {
         // Use try-with-resources for automatic stream closing
         try (ObjectInputStream oiStream = new ObjectInputStream(new FileInputStream(file))) {
             // 4. Cast to the correct interface
-            return (CustomADTInterface<String, Patient>) oiStream.readObject();
+            return (CustomADT<String, Patient>) oiStream.readObject();
         } catch (FileNotFoundException ex) {
             // This case is handled by the file.exists() check above, but good to have.
             System.out.println("\nFile not found during retrieval: " + fileName);
@@ -42,4 +42,4 @@ public class PatientDAO {
     }
 }
 
-// Should implement CustomADT instead of CustomADTInterface
+// Should implement CustomADT instead of CustomADT
