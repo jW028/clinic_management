@@ -38,9 +38,9 @@ public class TreatmentMaintenance {
 
         loadAllData();
         IDGenerator.loadCounter("counter.dat");
-        }
+    }
 
-    
+
 
     public boolean saveAllData() {
         boolean success = true;
@@ -62,8 +62,8 @@ public class TreatmentMaintenance {
         regularQueue.clear();
 
         for (Treatment treatment : treatments) {
-            if ("SCHEDULED".equals(treatment.getStatus()) || 
-                "IN_PROGRESS".equals(treatment.getStatus())) {
+            if ("SCHEDULED".equals(treatment.getStatus()) ||
+                    "IN_PROGRESS".equals(treatment.getStatus())) {
                 if (treatment.isCritical()) {
                     emergencyQueue.offer(treatment.getTreatmentID(), treatment);
                 } else {
@@ -203,8 +203,8 @@ public class TreatmentMaintenance {
 
             if (removed.hasPrescription()) {
                 prescriptions.remove(removed.getPrescription().getPrescriptionID());
-                prescriptionController.removePrescription(removed.getPrescription().getPrescriptionID());
             }
+
             saveAllData();
             System.out.println("Treatment " + treatmentID + " removed successfully.");
             return true;
@@ -253,13 +253,13 @@ public class TreatmentMaintenance {
         if (next != null) {
             next.complete(); // Mark treatment as completed
             recentTreatments.push("OP_" + System.currentTimeMillis(),
-                                  "Processed emergency treatment: " + next.getTreatmentID());
+                    "Processed emergency treatment: " + next.getTreatmentID());
             System.out.println("Processed emergency treatment: " + next.getTreatmentID());
             saveAllData();
         } else {
             System.out.println("No emergency treatments in queue.");
         }
-        
+
         return next;
 
     }

@@ -6,7 +6,6 @@ import utility.IDGenerator;
 import utility.InputHandler;
 import adt.*;
 import utility.DateTimeFormatterUtil;
-import java.time.LocalDateTime;
 
 /**
  * PatientUI class handles the user interface for patient management operations.
@@ -84,14 +83,15 @@ public class PatientUI {
             System.out.println("\n" + "=".repeat(40));
             System.out.println("    PATIENT REGISTRATION MENU");
             System.out.println("=".repeat(40));
-            System.out.println("1. Register New Patient");
-            System.out.println("2. Update Patient Details");
-            System.out.println("3. Delete Patient");
-            System.out.println("4. View Patient List");
+            System.out.println("1. Register New Patient"); // Patient
+            System.out.println("2. Update Patient Details"); // Patient
+            System.out.println("3. Delete Patient"); // Admin
+            System.out.println("4. View Patient List"); // Admin
+            System.out.println("5. Sort Patients");
             System.out.println("0. Back to Patient Menu");
             System.out.println("=".repeat(40));
 
-            choice = InputHandler.getInt("Select an option", 0, 4);
+            choice = InputHandler.getInt("Select an option", 0, 5);
 
             switch(choice) {
                 case 1:
@@ -105,6 +105,9 @@ public class PatientUI {
                     break;
                 case 4:
                     viewPatientList();
+                    break;
+                case 5:
+                    sortPatients();
                     break;
                 case 0:
                     System.out.println("Returning to patient menu...");
@@ -314,7 +317,7 @@ public class PatientUI {
         System.out.println("Generated Patient ID: " + id);
 
         String name = InputHandler.getString("Enter Name");
-        int age = InputHandler.getInt("Enter Age", 1, 150);
+        int age = InputHandler.getInt("Enter Age", 1, 120);
         String gender = InputHandler.getGender("Select Gender");
         String contactNumber = InputHandler.getPhoneNumber("Enter Contact Number");
         String address = InputHandler.getString("Enter Address");
@@ -324,8 +327,6 @@ public class PatientUI {
             System.out.println("✅ Patient registered successfully!");
             System.out.println("Patient ID: " + id);
 
-            // Automatically add to queue if emergency
-            System.out.print("Add patient to queue immediately? (y/n): ");
             if (isEmergency && InputHandler.getYesNo("Add to queue?")) {
                 patientMaintenance.enqueuePatient(id);
                 System.out.println("✅ Patient added to emergency queue.");
@@ -344,7 +345,7 @@ public class PatientUI {
         System.out.println("\n=== UPDATE PATIENT DETAILS ===");
 
         String id = InputHandler.getString("Enter Patient ID to update");
-        Patient patient = patientMaintenance.getPatientById(id);
+        Patient patient = patientMaintenance.getPatientById(id.toUpperCase());
 
         if (patient == null) {
             System.out.println("❌ Patient not found!");
@@ -356,7 +357,7 @@ public class PatientUI {
         System.out.println("\n--- ENTER NEW DETAILS ---");
 
         String name = InputHandler.getString("Enter New Name");
-        int age = InputHandler.getInt("Enter New Age", 1, 150);
+        int age = InputHandler.getInt("Enter New Age", 1, 120);
         String gender = InputHandler.getGender("Select New Gender");
         String contactNumber = InputHandler.getPhoneNumber("Enter New Contact Number");
         String address = InputHandler.getString("Enter New Address");
@@ -383,7 +384,7 @@ public class PatientUI {
             return;
         }
 
-        Patient patient = patientMaintenance.getPatientById(id);
+        Patient patient = patientMaintenance.getPatientById(id.toUpperCase());
         System.out.println("Patient to delete:");
         displayPatientDetails(patient);
 
@@ -435,7 +436,7 @@ public class PatientUI {
         System.out.println("\n=== ADD PATIENT TO QUEUE ===");
 
         String id = InputHandler.getString("Enter Patient ID");
-        Patient patient = patientMaintenance.getPatientById(id);
+        Patient patient = patientMaintenance.getPatientById(id.toUpperCase());
 
         if (patient == null) {
             System.out.println("❌ Patient not found!");
@@ -513,7 +514,6 @@ public class PatientUI {
     private void clearAllQueues() {
         System.out.println("\n=== CLEAR ALL QUEUES ===");
 
-        System.out.print("Are you sure you want to clear all queues? (y/n): ");
         if (!InputHandler.getYesNo("Confirm clear all queues")) {
             patientMaintenance.clearAllQueues();
             System.out.println("Operation cancelled.");
@@ -545,7 +545,7 @@ public class PatientUI {
         System.out.println("\n=== ADD PATIENT TO WAITLIST ===");
 
         String id = InputHandler.getString("Enter Patient ID to add to waitlist");
-        Patient patient = patientMaintenance.getPatientById(id);
+        Patient patient = patientMaintenance.getPatientById(id.toUpperCase());
 
         if (patient == null) {
             System.out.println("❌ Patient not found!");
@@ -602,7 +602,7 @@ public class PatientUI {
         }
 
         String id = InputHandler.getString("Enter Patient ID to promote from waitlist to queue");
-        Patient patient = patientMaintenance.getPatientById(id);
+        Patient patient = patientMaintenance.getPatientById(id.toUpperCase());
 
         if (patient == null) {
             System.out.println("❌ Patient not found!");
@@ -625,7 +625,7 @@ public class PatientUI {
         System.out.println("\n=== VIEW PATIENT RECORDS & HISTORY ===");
 
         String id = InputHandler.getString("Enter Patient ID");
-        Patient patient = patientMaintenance.getPatientById(id);
+        Patient patient = patientMaintenance.getPatientById(id.toUpperCase());
 
         if (patient == null) {
             System.out.println("❌ Patient not found!");
@@ -647,6 +647,45 @@ public class PatientUI {
 
         // Display visit history
         displayPatientVisitHistory(id);
+        displayConsultationsForPatient(id);
+        displayTreatmentsForPatient(id);
+    }
+
+    private void displayConsultationsForPatient(String patientId) {
+        CustomADT<String, Consultation> consults = patientMaintenance.getConsultationsByPatient(patientId);
+        System.out.println("\n=== CONSULTATIONS ===");
+        if (consults.isEmpty()) {
+            System.out.println("No consultations found.");
+            return;
+        }
+        for (int i = 0; i < consults.size(); i++) {
+            Consultation c = consults.get(i);
+            System.out.printf("%d. %s | Doctor: %s | Time: %s | Diagnosis: %s%n",
+                    i + 1,
+                    c.getConsultationId(),
+                    c.getDoctor() != null ? c.getDoctor().getName() : "-",
+                    c.getConsultationTime(),
+                    c.getDiagnosis() != null ? c.getDiagnosis().getName() : "-");
+        }
+    }
+
+    private void displayTreatmentsForPatient(String patientId) {
+        CustomADT<String, Treatment> treatments = patientMaintenance.getTreatmentsForPatient(patientId);
+        System.out.println("\n=== TREATMENTS ===");
+        if (treatments.isEmpty()) {
+            System.out.println("No treatments found.");
+            return;
+        }
+        for (int i = 0; i < treatments.size(); i++) {
+            Treatment t = treatments.get(i);
+            System.out.printf("%d. %s | Status: %s | Type: %s | Critical: %s | Total Procedure Cost: RM%.2f%n",
+                    i + 1,
+                    t.getTreatmentID(),
+                    t.getStatus(),
+                    t.getType(),
+                    t.isCritical() ? "Yes" : "No",
+                    t.getTotalProcedureCost());
+        }
     }
 
     /**
@@ -818,7 +857,7 @@ public class PatientUI {
        * Display Queue contents
      */
     public void displayQueuePatients(String queueType) {
-        System.out.println("\nPatients in queue (in order):");
+        System.out.println("\nPatients in " + queueType + " queue (in order):");
         System.out.println("-".repeat(50));
         CustomADT<String, Patient> queue = queueType.equals("emergency")
                 ? patientMaintenance.getEmergencyQueue()
@@ -835,8 +874,11 @@ public class PatientUI {
         int position = 1;
         // Use CustomADT's iterator for efficient queue traversal
         for (Patient patient : queue) {
-            System.out.printf("%d. %s\n", position++, patient.toString());
+            if (patient != null) {
+                System.out.printf("%d. %s\n", position++, patient.toString());
+            }
         }
+        System.out.println("-".repeat(80));
     }
 
     /**
@@ -934,7 +976,7 @@ public class PatientUI {
         System.out.println("\n=== ADD VISIT HISTORY ===");
 
         String patientId = InputHandler.getString("Enter Patient ID");
-        Patient patient = patientMaintenance.getPatientById(patientId);
+        Patient patient = patientMaintenance.getPatientById(patientId.toUpperCase());
 
         if (patient == null) {
             System.out.println("❌ Patient not found!");
@@ -1102,6 +1144,43 @@ public class PatientUI {
         System.out.println("=".repeat(60));
     }
 
+    /*
+    * Patient Sorting and Verification
+     */
+    private void sortPatients() {
+        int choice;
+        do {
+            System.out.println("\n" + "=".repeat(40));
+            System.out.println("       PATIENT SORTING MENU");
+            System.out.println("=".repeat(40));
+            System.out.println("1. Sort Patients by ID");
+            System.out.println("2. Sort Patients by Registration Order");
+            System.out.println("0. Back to Patient Menu");
+            System.out.println("=".repeat(40));
+
+            choice = InputHandler.getInt("Select an option", 0, 2);
+
+            switch(choice) {
+                case 1:
+                    //sortPatientsById();
+                    break;
+                case 2:
+                    //sortPatientsByRegistration();
+                    break;
+                case 0:
+                    System.out.println("Returning to patient menu...");
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+
+            if (choice != 0) {
+                InputHandler.pauseForUser();
+            }
+
+        } while (choice != 0);
+    }
+
     /**
      * Helper method to view details of selected visit
      */
@@ -1125,23 +1204,81 @@ public class PatientUI {
      * Display comprehensive system statistics
      */
     private void displaySystemStatistics() {
-        System.out.println("\n=== SYSTEM STATISTICS ===");
-        System.out.println("📊 PATIENT STATISTICS:");
-        System.out.println("   Total Registered Patients: " + patientMaintenance.getRegisteredPatientCount());
+        int choice;
+        do {
+            System.out.println("\n" + "=".repeat(40));
+            System.out.println("           REPORTS MENU");
+            System.out.println("=".repeat(40));
+            System.out.println("1. Patient Registration Summary Report");
+            System.out.println("2. Patient Visit Activity Report");
+            System.out.println("0. Back to Main Menu");
+            System.out.println("=".repeat(40));
 
-        System.out.println("\n🏥 QUEUE STATISTICS:");
-        System.out.println("   Emergency Queue: " + patientMaintenance.getEmergencyQueueSize() + " patients");
-        System.out.println("   Normal Queue: " + patientMaintenance.getNormalQueueSize() + " patients");
-        System.out.println("   Total in Queue: " + patientMaintenance.getTotalQueueSize() + "/20");
-        System.out.println("   Waitlist: " + patientMaintenance.getWaitlistSize() + "/30");
+            choice = InputHandler.getInt("Select report type", 0, 1);
 
-        System.out.println("\n📋 VISIT STATISTICS:");
-        CustomADT<String, VisitHistory> allVisits = patientMaintenance.getAllVisitHistories();
-        System.out.println("   Total Visit Records: " + allVisits.size());
+            switch (choice) {
+                case 1:
+                    displayPatientRegistrationReport();
+                    break;
+                case 0:
+                    System.out.println("Returning to main menu...");
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
 
-        System.out.println("\n💾 STORAGE STATISTICS:");
-        System.out.println("   Using CustomADT for efficient data management");
-        System.out.println("   Queue Status: " + (patientMaintenance.isQueueFull() ? "FULL" : "Available"));
+            if (choice != 0) {
+                InputHandler.pauseForUser();
+            }
+
+        } while (choice != 0);
+    }
+
+    /**
+     * Display patient registration summary report
+     */
+    public void displayPatientRegistrationReport() {
+        CustomADT<String, Object> reportData = patientMaintenance.generatePatientRegistrationReport();
+
+        System.out.println("\n" + "=".repeat(60));
+        System.out.println("            PATIENT REGISTRATION SUMMARY REPORT");
+        System.out.println("=".repeat(60));
+
+        // Overall statistics
+        System.out.println("📊 OVERALL PATIENT STATISTICS:");
+        System.out.println("   Total Registered Patients: " + reportData.get("totalPatients"));
+        System.out.println("   Emergency Patients: " + reportData.get("emergencyPatients"));
+        System.out.println("   Normal Patients: " + reportData.get("normalPatients"));
+
+        // Queue status
+        System.out.println("\n🏥 CURRENT QUEUE STATUS:");
+        System.out.println("   Patients in Queue: " + reportData.get("patientsInQueue") + "/20");
+        System.out.println("   Emergency Queue: " + reportData.get("emergencyQueueSize"));
+        System.out.println("   Normal Queue: " + reportData.get("normalQueueSize"));
+        System.out.println("   Waitlist: " + reportData.get("waitlistSize") + "/30");
+
+        // Gender breakdown
+        System.out.println("\n👥 GENDER DISTRIBUTION:");
+        CustomADT<String, Integer> genderStats = (CustomADT<String, Integer>) reportData.get("genderBreakdown");
+        for (String gender : new String[]{"Male", "Female", "Other"}) {
+            if (genderStats.containsKey(gender)) {
+                Integer count = genderStats.get(gender);
+                double percentage = (count.doubleValue() / (Integer) reportData.get("totalPatients")) * 100;
+                System.out.printf("   %-10s: %d patients (%.1f%%)\n", gender, count, percentage);
+            }
+        }
+
+        // Age group breakdown
+        System.out.println("\n📈 AGE GROUP DISTRIBUTION:");
+        CustomADT<String, Integer> ageStats = (CustomADT<String, Integer>) reportData.get("ageGroupBreakdown");
+        String[] ageOrder = {"0-18", "19-35", "36-50", "51-65", "65+"};
+        for (String ageGroup : ageOrder) {
+            Integer count = ageStats.get(ageGroup);
+            double percentage = (count.doubleValue() / (Integer) reportData.get("totalPatients")) * 100;
+            System.out.printf("   %-8s: %d patients (%.1f%%)\n", ageGroup, count, percentage);
+        }
+
+        System.out.println("=".repeat(60));
     }
 
     public static void main(String[] args) {

@@ -82,6 +82,19 @@ public class ConsultationMaintenance {
 //        doctorMap.put("DC010", new Doctor("DC010", "Lai", "Heart", "01112345678", "lee@gmail.com", "1, Street 1, Sunway", "M", "25/7/1980"));
     }
 
+    public Consultation[] getConsultationsByPatientId(String patientId) {
+        if (patientId == null) return new Consultation[0];
+        java.util.List<Consultation> list = new java.util.ArrayList<>();
+        for (Consultation c : consultationMap) {
+            if (c != null &&
+                    c.getPatient() != null &&
+                    patientId.equalsIgnoreCase(c.getPatient().getPatientId())) {
+                list.add(c);
+            }
+        }
+        return list.toArray(new Consultation[0]);
+    }
+
     // Get patient info
     public Patient getPatient(String patientId) { return patientMap.get(patientId); }
     public Patient[] getAllPatients() { return patientMap.toArray(new Patient[0]); }

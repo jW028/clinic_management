@@ -2,8 +2,7 @@ package control;
 
 import entity.*;
 import adt.*;
-import dao.PatientDAO;
-import dao.VisitHistoryDAO;
+import dao.*;
 import utility.IDGenerator;
 import java.time.LocalDateTime;
 
@@ -17,13 +16,23 @@ public class PatientMaintenance {
     private final VisitHistoryDAO visitHistoryDAO;
     private static final int MAX_QUEUE_SIZE = 20;
     private static final int MAX_WAITLIST_SIZE = 30;
-
+    private CustomADT<String, Consultation> consultationMap;
+    private CustomADT<String, Treatment> treatmentMap;
+    private final ConsultationDAO consultationDAO;
+    private final TreatmentDAO treatmentDAO;
+    private ConsultationMaintenance consultationMaintenance;
+    private TreatmentMaintenance treatmentMaintenance;
     public PatientMaintenance() {
         this.normalQueue = new CustomADT<>();
         this.emergencyQueue = new CustomADT<>();
         this.patientDAO = new PatientDAO();
         this.visitHistoryDAO = new VisitHistoryDAO();
         this.waitlist = new CustomADT<>();
+        this.consultationDAO = new ConsultationDAO();
+        this.treatmentDAO = new TreatmentDAO();
+        this.consultationMaintenance = new ConsultationMaintenance();
+        this.treatmentMaintenance = new TreatmentMaintenance();
+
         // Load existing patients with proper casting
         CustomADTInterface<String, Patient> loadedPatients = patientDAO.retrieveFromFile();
         if (loadedPatients instanceof CustomADT) {
@@ -39,8 +48,59 @@ public class PatientMaintenance {
         } else {
             this.visitHistoryMap = new CustomADT<>();
         }
+
+        CustomADTInterface<String, Consultation> loadedConsultations = consultationDAO.retrieveFromFile();
+        if (loadedConsultations != null) {
+            this.consultationMap = (CustomADT<String, Consultation>) loadedConsultations;
+        } else {
+            this.consultationMap = new CustomADT<>();
+        }
+
+        CustomADTInterface<String, Treatment> loadedTreatments = treatmentDAO.retrieveFromFile();
+        if (loadedTreatments != null) {
+            this.treatmentMap = (CustomADT<String, Treatment>) loadedTreatments;
+        } else {
+            this.treatmentMap = new CustomADT<>();
+        }
+
+        IDGenerator.loadCounter("counter.dat");
     }
 
+    // Fetch consultations for a patient
+    public CustomADT<String, Consultation> getConsultationsByPatient(String patientId) {
+        CustomADT<String, Consultation> result = new CustomADT<>();
+        if (consultationMaintenance == null) return result;
+        Consultation[] arr = consultationMaintenance.getAllConsultations();
+        for (Consultation c : arr) {
+            if (c != null && c.getPatient() != null &&
+                    patientId.equals(c.getPatient().getPatientId())) {
+                result.put(c.getConsultationId(), c);
+            }
+        }
+        return result;
+    }
+    // Fetch treatments for a patient
+    public CustomADT<String, Treatment> getTreatmentsForPatient(String patientId) {
+        CustomADT<String, Treatment> result = new CustomADT<>();
+        if (patientId == null) return result;
+        Patient p = getPatientById(patientId);
+        if (p == null) return result;
+
+        CustomADT<String, Treatment> fetched = treatmentMaintenance.getTreatmentsByPatient(p);
+        for (Treatment t : fetched) {
+            if (t != null && t.getTreatmentID() != null) {
+                result.put(t.getTreatmentID(), t);
+            }
+        }
+        return result;
+    }
+    // ===============================
+    // PATIENT MANAGEMENT SECTION
+    // ===============================
+
+    /**
+     * Register a new patient in the system
+     */
     public boolean registerPatient(String patientId, String name, int age, String gender,
                                    String contactNumber, String address, boolean isEmergency) {
         if (patientRegistry.containsKey(patientId)) {
@@ -55,18 +115,16 @@ public class PatientMaintenance {
         return true;
     }
 
+    /**
+     * Get patient by ID
+     */
     public Patient getPatientById(String patientId) {
         return patientRegistry.get(patientId);
     }
 
-    public CustomADT<String, Patient> getAllPatients() {
-        return patientRegistry;
-    }
-
-    public CustomADT<String, Patient> getWaitlist() {
-        return waitlist;
-    }
-
+    /**
+     * Update patient information
+     */
     public boolean updatePatient(String patientId, String name, int age, String gender,
                                  String contactNumber, String address, boolean isEmergency) {
         Patient patient = patientRegistry.get(patientId);
@@ -85,6 +143,9 @@ public class PatientMaintenance {
         return true;
     }
 
+    /**
+     * Delete patient from system
+     */
     public boolean deletePatient(String patientId) {
         if (!patientRegistry.containsKey(patientId)) {
             return false;
@@ -99,7 +160,51 @@ public class PatientMaintenance {
         return true;
     }
 
-    // Queue Management using CustomADT queue operations
+    /**
+     * Get all patients as array
+     */
+    public Patient[] getAllPatientsArray() {
+        Patient[] patientsArray = new Patient[patientRegistry.size()];
+        return patientRegistry.toArray(patientsArray);
+    }
+
+    /**
+     * Get registered patient count
+     */
+    public int getRegisteredPatientCount() {
+        return patientRegistry.size();
+    }
+
+    /**
+     * Get patient registry as CustomADT
+     */
+    public CustomADT<String, Patient> getAllPatients() {
+        // Create a copy to avoid modifying the original registry
+        CustomADT<String, Patient> sortedPatients = new CustomADT<>();
+        for (Patient patient : patientRegistry) {
+            sortedPatients.put(patient.getPatientId(), patient);
+        }
+
+        // Sort by patient name
+        sortedPatients.sort((p1, p2) -> p1.getName().compareToIgnoreCase(p2.getName()));
+
+        return sortedPatients;
+    }
+
+    /**
+     * Save patient changes to file
+     */
+    public void saveChanges() {
+        patientDAO.saveToFile(patientRegistry);
+    }
+
+    // ===============================
+    // QUEUE MANAGEMENT SECTION
+    // ===============================
+
+    /**
+     * Enqueue patient to appropriate queue
+     */
     public void enqueuePatient(String patientId) {
         Patient patient = patientRegistry.get(patientId);
         if (patient == null) {
@@ -123,6 +228,9 @@ public class PatientMaintenance {
         }
     }
 
+    /**
+     * Serve next patient from queues
+     */
     public Patient serveNextPatient() {
         // Use CustomADT's poll() method for proper queue behavior (FIFO)
         Patient nextPatient = emergencyQueue.poll();
@@ -138,7 +246,9 @@ public class PatientMaintenance {
         return nextPatient;
     }
 
-    // Peek at next patient without removing
+    /**
+     * Peek at next patient without removing
+     */
     public Patient peekNextPatient() {
         Patient nextPatient = emergencyQueue.peek();
         if (nextPatient == null) {
@@ -147,7 +257,9 @@ public class PatientMaintenance {
         return nextPatient;
     }
 
-    // Waitlist Management using CustomADT
+    /**
+     * Add patient to waitlist
+     */
     public boolean addToWaitlist(String patientId) {
         Patient patient = patientRegistry.get(patientId);
         if (patient == null || isPatientInWaitlist(patientId)) {
@@ -162,6 +274,9 @@ public class PatientMaintenance {
         return true;
     }
 
+    /**
+     * Process waitlist to move patients to main queue
+     */
     private void processWaitlistToQueue() {
         if (waitlist.isEmpty() || getTotalQueueSize() >= MAX_QUEUE_SIZE) {
             return;
@@ -201,6 +316,9 @@ public class PatientMaintenance {
         }
     }
 
+    /**
+     * Promote patient from waitlist to queue
+     */
     public boolean promoteFromWaitlist(String patientId) {
         if (!isPatientInWaitlist(patientId) || getTotalQueueSize() >= MAX_QUEUE_SIZE) {
             return false;
@@ -217,6 +335,101 @@ public class PatientMaintenance {
         }
         return false;
     }
+
+    /**
+     * Get emergency queue contents for display
+     */
+    public CustomADT<String, Patient> getEmergencyQueue() {
+        return getAllQueuedPatients().filter(null, (patient, reference) -> {
+            if (patient == null) return -1;
+            return patient.isEmergency() ? 0 : -1;
+        });
+    }
+
+    /**
+     * Get normal queue contents for display
+     */
+    public CustomADT<String, Patient> getNormalQueue() {
+        return getAllQueuedPatients().filter(null, (patient, reference) -> {
+            if (patient == null) return -1;
+            return !patient.isEmergency() ? 0 : -1;
+        });
+    }
+
+    /**
+     * Get waitlist
+     */
+    public CustomADT<String, Patient> getWaitlist() {
+        return waitlist;
+    }
+
+    /**
+     * Helper method to get all patients currently in any queue
+     */
+    private CustomADT<String, Patient> getAllQueuedPatients() {
+        CustomADT<String, Patient> allQueued = new CustomADT<>();
+
+        // Add all patients from emergency queue
+        for (Patient patient : emergencyQueue) {
+            allQueued.put(patient.getPatientId(), patient);
+        }
+
+        // Add all patients from normal queue
+        for (Patient patient : normalQueue) {
+            allQueued.put(patient.getPatientId(), patient);
+        }
+
+        return allQueued;
+    }
+
+    /**
+     * Remove patient from waitlist
+     */
+    public boolean removeFromWaitlist(String patientId) {
+        return waitlist.remove(patientId) != null;
+    }
+
+    /**
+     * Clear all queues and waitlist
+     */
+    public void clearAllQueues() {
+        normalQueue.clear();
+        emergencyQueue.clear();
+        waitlist.clear();
+    }
+
+    // Queue Status Methods
+    public boolean isPatientInWaitlist(String patientId) {
+        return waitlist.containsKey(patientId);
+    }
+
+    public boolean isPatientInQueue(String patientId) {
+        return emergencyQueue.containsKey(patientId) || normalQueue.containsKey(patientId);
+    }
+
+    public int getEmergencyQueueSize() {
+        return emergencyQueue.size();
+    }
+
+    public int getNormalQueueSize() {
+        return normalQueue.size();
+    }
+
+    public int getTotalQueueSize() {
+        return emergencyQueue.size() + normalQueue.size();
+    }
+
+    public int getWaitlistSize() {
+        return waitlist.size();
+    }
+
+    public boolean isQueueFull() {
+        return getTotalQueueSize() >= MAX_QUEUE_SIZE;
+    }
+
+    // ===============================
+    // RECORD MANAGEMENT SECTION
+    // ===============================
 
     /**
      * Create initial visit history when registering patient
@@ -261,9 +474,8 @@ public class PatientMaintenance {
         return true;
     }
 
-
     /**
-     * Get patient visit history including treatments
+     * Get patient visit history
      */
     public CustomADT<String, VisitHistory> getPatientVisitHistory(String patientId) {
         if (patientId == null || patientId.trim().isEmpty()) {
@@ -279,6 +491,8 @@ public class PatientMaintenance {
             }
         }
 
+        // Sort by visit date (chronological order)
+        patientVisits.sort((v1, v2) -> v1.getVisitDate().compareTo(v2.getVisitDate()));
 
         return patientVisits;
     }
@@ -294,7 +508,7 @@ public class PatientMaintenance {
     }
 
     /**
-     * Get all visit histories (defensive copy)
+     * Get all visit histories
      */
     public CustomADT<String, VisitHistory> getAllVisitHistories() {
         CustomADT<String, VisitHistory> copy = new CustomADT<>();
@@ -306,6 +520,9 @@ public class PatientMaintenance {
                 copy.put(visit.getVisitId(), visit);
             }
         }
+
+        // Sort by visit date (most recent first)
+        copy.sort((v1, v2) -> v2.getVisitDate().compareTo(v1.getVisitDate()));
 
         return copy;
     }
@@ -370,86 +587,78 @@ public class PatientMaintenance {
     }
 
     /**
-     * Get visit history count for patient using CustomADT iteration
+     * Generate patient registration summary report data
+     * @return CustomADT containing report data with keys for different metrics
      */
-    public int getPatientVisitCount(String patientId) {
-        int count = 0;
-        for (VisitHistory visit : visitHistoryMap) {
-            if (visit.getPatient().getPatientId().equals(patientId)) {
-                count++;
-            }
-        }
-        return count;
-    }
+    public CustomADT<String, Object> generatePatientRegistrationReport() {
+        CustomADT<String, Object> reportData = new CustomADT<>();
 
-    // Additional utility methods leveraging CustomADT capabilities
+        // Total counts
+        reportData.put("totalPatients", patientRegistry.size());
+        reportData.put("emergencyPatients", getEmergencyQueueSize());
+        reportData.put("normalPatients", patientRegistry.size() - getEmergencyQueueSize());
 
-    /**
-     * Get all patients as array
-     */
-    public Patient[] getAllPatientsArray() {
-        Patient[] patientsArray = new Patient[patientRegistry.size()];
-        return patientRegistry.toArray(patientsArray);
-    }
+        // Queue statistics
+        reportData.put("patientsInQueue", getTotalQueueSize());
+        reportData.put("emergencyQueueSize", getEmergencyQueueSize());
+        reportData.put("normalQueueSize", getNormalQueueSize());
+        reportData.put("waitlistSize", getWaitlistSize());
 
-    /**
-     * Clear all queues and waitlist
-     */
-    public void clearAllQueues() {
-        normalQueue.clear();
-        emergencyQueue.clear();
-        waitlist.clear();
-    }
+        // Gender breakdown using filter
+        CustomADT<String, Integer> genderStats = new CustomADT<>();
 
-    /**
-     * Get queue contents for display
-     */
-    public CustomADT<String, Patient> getEmergencyQueue() {
-        return emergencyQueue;
-    }
+        // Filter for males
+        CustomADT<String, Patient> malePatients = patientRegistry.filter(
+                new Patient("", "", 0, "Male", "", "", false),
+                (p1, p2) -> p1.getGender().equalsIgnoreCase(p2.getGender()) ? 0 : -1
+        );
+        genderStats.put("Male", malePatients.size());
 
-    public CustomADT<String, Patient> getNormalQueue() {
-        return normalQueue;
-    }
+        // Filter for females
+        CustomADT<String, Patient> femalePatients = patientRegistry.filter(
+                new Patient("", "", 0, "Female", "", "", false),
+                (p1, p2) -> p1.getGender().equalsIgnoreCase(p2.getGender()) ? 0 : -1
+        );
+        genderStats.put("Female", femalePatients.size());
 
-    // Existing utility methods
-    public boolean removeFromWaitlist(String patientId) {
-        return waitlist.remove(patientId) != null;
-    }
+        reportData.put("genderBreakdown", genderStats);
 
-    public boolean isPatientInWaitlist(String patientId) {
-        return waitlist.containsKey(patientId);
-    }
+        // Age group breakdown using filter
+        CustomADT<String, Integer> ageGroups = new CustomADT<>();
 
-    public boolean isPatientInQueue(String patientId) {
-        return emergencyQueue.containsKey(patientId) || normalQueue.containsKey(patientId);
-    }
+        // Filter for each age group
+        CustomADT<String, Patient> group0to18 = patientRegistry.filter(
+                new Patient("", "", 18, "", "", "", false),
+                (p1, p2) -> p1.getAge() <= 18 ? 0 : -1
+        );
+        ageGroups.put("0-18", group0to18.size());
 
-    public int getEmergencyQueueSize() {
-        return emergencyQueue.size();
-    }
+        CustomADT<String, Patient> group19to35 = patientRegistry.filter(
+                new Patient("", "", 35, "", "", "", false),
+                (p1, p2) -> (p1.getAge() >= 19 && p1.getAge() <= 35) ? 0 : -1
+        );
+        ageGroups.put("19-35", group19to35.size());
 
-    public int getNormalQueueSize() {
-        return normalQueue.size();
-    }
+        CustomADT<String, Patient> group36to50 = patientRegistry.filter(
+                new Patient("", "", 50, "", "", "", false),
+                (p1, p2) -> (p1.getAge() >= 36 && p1.getAge() <= 50) ? 0 : -1
+        );
+        ageGroups.put("36-50", group36to50.size());
 
-    public int getTotalQueueSize() {
-        return emergencyQueue.size() + normalQueue.size();
-    }
+        CustomADT<String, Patient> group51to65 = patientRegistry.filter(
+                new Patient("", "", 65, "", "", "", false),
+                (p1, p2) -> (p1.getAge() >= 51 && p1.getAge() <= 65) ? 0 : -1
+        );
+        ageGroups.put("51-65", group51to65.size());
 
-    public int getWaitlistSize() {
-        return waitlist.size();
-    }
+        CustomADT<String, Patient> group65Plus = patientRegistry.filter(
+                new Patient("", "", 66, "", "", "", false),
+                (p1, p2) -> p1.getAge() > 65 ? 0 : -1
+        );
+        ageGroups.put("65+", group65Plus.size());
 
-    public int getRegisteredPatientCount() {
-        return patientRegistry.size();
-    }
+        reportData.put("ageGroupBreakdown", ageGroups);
 
-    public boolean isQueueFull() {
-        return getTotalQueueSize() >= MAX_QUEUE_SIZE;
-    }
-
-    public void saveChanges() {
-        patientDAO.saveToFile(patientRegistry);
+        return reportData;
     }
 }

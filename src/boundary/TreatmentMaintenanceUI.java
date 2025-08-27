@@ -31,14 +31,14 @@ public class TreatmentMaintenanceUI {
         do {
             printMenu();
             choice = InputHandler.getInt("Select an option", 0, 9);
-            
+
             switch(choice) {
-                case 1: 
+                case 1:
                     createTreatment();
                     break;
                 case 2:
                     viewTreatmentsMenu();
-                    break;            
+                    break;
                 case 3:
                     updateTreatment();
                     break;
@@ -57,7 +57,7 @@ public class TreatmentMaintenanceUI {
                 case 8:
                     sortTreatmentsMenu();
                     break;
-                case 9: 
+                case 9:
                     reportsMenu();
                     break;
                 case 0:
@@ -66,11 +66,11 @@ public class TreatmentMaintenanceUI {
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
-            
+
             if (choice != 0) {
                 InputHandler.pauseForUser();
             }
-            
+
         } while (choice != 0);
     }
 
@@ -110,7 +110,7 @@ public class TreatmentMaintenanceUI {
             System.out.println("└" + "─".repeat(40) + "┘");
 
             choice = InputHandler.getInt("Select an option", 0, 3);
-            
+
             switch(choice) {
                 case 1:
                     displayAllTreatments();
@@ -127,11 +127,11 @@ public class TreatmentMaintenanceUI {
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
-            
+
             if (choice != 0) {
                 InputHandler.pauseForUser();
             }
-            
+
         } while (choice != 0);
     }
 
@@ -140,7 +140,7 @@ public class TreatmentMaintenanceUI {
      */
     private CustomADT<String, Consultation> createMockConsultations() {
         CustomADT<String, Consultation> mockConsultations = new CustomADT<>();
-        
+
         // Create sample patients
         Patient patient1 = new Patient("P001", "Ahmad Hassan", 35, "Male", "012-345-6789", "123 Jalan KL", false);
         Patient patient2 = new Patient("P002", "Siti Nurhaliza", 38, "Female", "012-987-6543", "456 Jalan PJ", false);
@@ -155,7 +155,7 @@ public class TreatmentMaintenanceUI {
         Diagnosis diagnosis1 = new Diagnosis("DIA001", "Hypertension", "High blood pressure");
         Diagnosis diagnosis2 = new Diagnosis("DIA002", "Common Cold", "Viral infection");
         Diagnosis diagnosis3 = new Diagnosis("DIA003", "Diabetes", "Type 2 diabetes");
-        
+
         // Create mock consultations
         Consultation consultation1 = new Consultation("CONS001", patient1, doctor1, LocalDateTime.now().minusDays(1), diagnosis1);
         Consultation consultation2 = new Consultation("CONS002", patient2, doctor2, LocalDateTime.now().minusDays(2), diagnosis2);
@@ -171,7 +171,7 @@ public class TreatmentMaintenanceUI {
         mockConsultations.put("CONS003", consultation3);
         mockConsultations.put("CONS004", consultation4);
         mockConsultations.put("CONS005", consultation5);
-        
+
         return mockConsultations;
     }
 
@@ -199,15 +199,15 @@ public class TreatmentMaintenanceUI {
 
             // Step 2: Display consultation list and get selection
             displayAvailableConsultations(availableConsultations);
-            
+
             System.out.println("\n┌" + "─".repeat(40) + "┐");
             printCenteredTableHeader("SELECT CONSULTATION", 40);
             System.out.println("├" + "─".repeat(40) + "┤");
             System.out.println("│ 0. Cancel                              │");
             System.out.println("└" + "─".repeat(40) + "┘");
-            
+
             int consultationChoice = InputHandler.getInt("Select consultation", 0, availableConsultations.size());
-            
+
             if (consultationChoice == 0) {
                 System.out.println("\n┌" + "─".repeat(35) + "┐");
                 printCenteredTableHeader("CANCELLED", 35);
@@ -235,10 +235,10 @@ public class TreatmentMaintenanceUI {
 
             // Step 4: Create the treatment
             Treatment treatment = treatmentController.createTreatment(
-                consultationId,
-                treatmentType,
-                isCritical,
-                notes
+                    consultationId,
+                    treatmentType,
+                    isCritical,
+                    notes
             );
 
             if (treatment == null) {
@@ -257,9 +257,9 @@ public class TreatmentMaintenanceUI {
             System.out.println("\n┌" + "─".repeat(50) + "┐");
             printCenteredTableHeader("PROCEDURE ADDITION", 50);
             System.out.println("└" + "─".repeat(50) + "┘");
-            
+
             boolean addProcedures = InputHandler.getYesNo("Would you like to add procedures to this treatment?");
-            
+
             if (addProcedures) {
                 addProceduresToNewTreatment(treatment);
             }
@@ -268,9 +268,9 @@ public class TreatmentMaintenanceUI {
             System.out.println("\n┌" + "─".repeat(50) + "┐");
             printCenteredTableHeader("PRESCRIPTION ADDITION", 50);
             System.out.println("└" + "─".repeat(50) + "┘");
-            
+
             boolean addPrescription = InputHandler.getYesNo("Would you like to add a prescription to this treatment?");
-            
+
             if (addPrescription) {
                 addPrescriptionToNewTreatment(treatment);
             }
@@ -303,27 +303,27 @@ public class TreatmentMaintenanceUI {
 
         for (int i = 0; i < consultations.size(); i++) {
             Consultation consultation = consultations.get(i);
-            
-            String patientName = consultation.getPatient() != null ? 
-                consultation.getPatient().getName() : "N/A";
-            String doctorName = consultation.getDoctor() != null ? 
-                consultation.getDoctor().getName() : "N/A";
-            String diagnosisName = consultation.getDiagnosis() != null ? 
-                consultation.getDiagnosis().getName() : "N/A";
+
+            String patientName = consultation.getPatient() != null ?
+                    consultation.getPatient().getName() : "N/A";
+            String doctorName = consultation.getDoctor() != null ?
+                    consultation.getDoctor().getName() : "N/A";
+            String diagnosisName = consultation.getDiagnosis() != null ?
+                    consultation.getDiagnosis().getName() : "N/A";
             String dateStr = DateTimeFormatterUtil.formatForDisplay(consultation.getConsultationTime());
-            
+
             // Truncate text if too long
             String truncatedPatient = patientName.length() > 16 ? patientName.substring(0, 13) + "..." : patientName;
             String truncatedDoctor = doctorName.length() > 16 ? doctorName.substring(0, 13) + "..." : doctorName;
             String truncatedDiagnosis = diagnosisName.length() > 18 ? diagnosisName.substring(0, 15) + "..." : diagnosisName;
 
             System.out.printf("│ %-2d │ %-12s │ %-18s │ %-18s │ %-14s │ %-17s │%n",
-                i + 1,
-                consultation.getConsultationId(),
-                truncatedPatient,
-                truncatedDoctor,
-                dateStr,
-                truncatedDiagnosis
+                    i + 1,
+                    consultation.getConsultationId(),
+                    truncatedPatient,
+                    truncatedDoctor,
+                    dateStr,
+                    truncatedDiagnosis
             );
         }
 
@@ -332,7 +332,7 @@ public class TreatmentMaintenanceUI {
 
     public String getTreatmentType() {
         String[] types = {"OUTPATIENT", "INPATIENT", "EMERGENCY", "FOLLOW_UP"};
-        
+
         System.out.println("\n┌" + "─".repeat(40) + "┐");
         printCenteredTableHeader("SELECT TREATMENT TYPE", 40);
         System.out.println("├" + "─".repeat(3) + "┬" + "─".repeat(36) + "┤");
@@ -354,7 +354,7 @@ public class TreatmentMaintenanceUI {
         return types[choice - 1];
     }
 
-    /** 
+    /**
      * Display all treatments with interactive options
      */
     public void displayAllTreatments() {
@@ -366,15 +366,15 @@ public class TreatmentMaintenanceUI {
 
         // Use our reusable display function
         displayTreatmentList(treatments, "All Treatments");
-        
+
         // Option to view details or update
         System.out.println("\nOptions:");
         System.out.println("1. View Treatment Details");
         System.out.println("2. Update Treatment");
         System.out.println("0. Back to View Menu");
-        
+
         int actionChoice = InputHandler.getInt("Select action", 0, 2);
-        
+
         switch (actionChoice) {
             case 1:
                 viewSelectedTreatmentDetails(treatments);
@@ -392,42 +392,42 @@ public class TreatmentMaintenanceUI {
      */
     public void updateTreatment() {
         System.out.println("\n=== UPDATE TREATMENT ===");
-        
+
         CustomADT<String, Treatment> treatments = treatmentController.getAllTreatments();
         if (treatments.isEmpty()) {
             System.out.println("No treatments available to update.");
             return;
         }
-        
+
         displayTreatmentList(treatments, "Select Treatment to Update");
 
         String treatmentID = InputHandler.getString("Enter Treatment ID to update (0 to cancel)");
         if (treatmentID.equals("0")) {
             return; // Cancelled
         }
-        Treatment treatment = treatmentController.getTreatmentByID(treatmentID);        
+        Treatment treatment = treatmentController.getTreatmentByID(treatmentID);
         if (treatment == null) {
             System.out.println("Treatment not found.");
             return;
         }
-        
+
         updateSpecificTreatment(treatment);
     }
 
-     /*
-      * Remove treatment functionality
-      */
-      public void removeTreatment() {
+    /*
+     * Remove treatment functionality
+     */
+    public void removeTreatment() {
         System.out.println("\n=== REMOVE TREATMENT ===");
-        
+
         CustomADT<String, Treatment> treatments = treatmentController.getAllTreatments();
         if (treatments.isEmpty()) {
             System.out.println("No treatments available to remove.");
             return;
         }
-        
+
         displayTreatmentList(treatments, "Select Treatment to Remove");
-        
+
         String treatmentID = InputHandler.getString("Enter Treatment ID to remove (0 to cancel)");
         if (treatmentID.equals("0")) {
             return; // Cancelled
@@ -439,21 +439,21 @@ public class TreatmentMaintenanceUI {
         } else {
             System.out.println("❌ Failed to remove treatment. It may not exist.");
         }
-      }
+    }
 
 
-      /*
-       * View treatments by patient functionality
-       */
-      public void viewTreatmentsByPatient() {
-        
+    /*
+     * View treatments by patient functionality
+     */
+    public void viewTreatmentsByPatient() {
+
         System.out.println("\n=== VIEW TREATMENTS BY PATIENT ===");
         CustomADT<String, Patient> patients = treatmentController.getPatientsWithTreatments();
         if (patients.isEmpty()) {
             System.out.println("No patients with treatments found.");
             return;
         }
-        
+
         displayPatientsWithTreatments(patients);
         int choice = InputHandler.getInt(0, patients.size());
         if (choice == 0) {
@@ -464,23 +464,23 @@ public class TreatmentMaintenanceUI {
 
         // Get treatments for selected patient
         CustomADT<String, Treatment> patientTreatments = treatmentController.getTreatmentsByPatient(chosenPatient);
-        
+
         if (patientTreatments.isEmpty()) {
             System.out.println("No treatments found for selected patient.");
             return;
         }
-        
+
         // Display treatments using our reusable function
         displayTreatmentList(patientTreatments, "Treatments for Patient: " + chosenPatient.getName());
-        
+
         // Option to view details or update
         System.out.println("\nOptions:");
         System.out.println("1. View Treatment Details");
         System.out.println("2. Update Treatment");
         System.out.println("0. Back to Treatment Menu");
-        
+
         int actionChoice = InputHandler.getInt("Select action", 0, 2);
-        
+
         switch (actionChoice) {
             case 1:
                 viewSelectedTreatmentDetails(patientTreatments);
@@ -491,73 +491,73 @@ public class TreatmentMaintenanceUI {
             case 0:
                 return; // Back to menu
         }
-      }
+    }
 
-      /**
-         * View treatments by status functionality
-         */
-        public void viewTreatmentsByStatus() {
-            System.out.println("\n=== VIEW TREATMENTS BY STATUS ===");
-            
-            // Status options
-            String[] statusOptions = {
-                "SCHEDULED", 
-                "IN_PROGRESS", 
+    /**
+     * View treatments by status functionality
+     */
+    public void viewTreatmentsByStatus() {
+        System.out.println("\n=== VIEW TREATMENTS BY STATUS ===");
+
+        // Status options
+        String[] statusOptions = {
+                "SCHEDULED",
+                "IN_PROGRESS",
                 "COMPLETED"
-            };
-            
-            System.out.println("\n┌" + "─".repeat(40) + "┐");
-            System.out.println("│          VIEW TREATMENTS MENU          │");
-            System.out.println("├" + "─".repeat(40) + "┤");
-            System.out.println("│ 1. Scheduled                           │");
-            System.out.println("│ 2. In Progress                         │");
-            System.out.println("│ 3. Completed                           │");
-            System.out.println("│ 0. Back to Treatment Menu              │");
-            System.out.println("└" + "─".repeat(40) + "┘");
+        };
 
-            
-            int choice = InputHandler.getInt("Select status", 0, statusOptions.length);
-            if (choice == 0) {
-                return; // Back to menu
-            }
-            
-            String selectedStatus = statusOptions[choice - 1];
-            
-            // Get treatments by status from controller
-            CustomADT<String, Treatment> statusTreatments = treatmentController.getTreatmentsByStatus(selectedStatus);
-            
-            if (statusTreatments.isEmpty()) {
-                System.out.println("No treatments found with status: " + selectedStatus);
-                return;
-            }
-            
-            // Display the treatments using our reusable function
-            displayTreatmentList(statusTreatments, "Treatments with Status: " + selectedStatus);
-            
-            // Option to view details or update
-            System.out.println("\nOptions:");
-            System.out.println("1. View Treatment Details");
-            System.out.println("2. Update Treatment");
-            System.out.println("0. Back to Treatment Menu");
-            
-            int actionChoice = InputHandler.getInt("Select action", 0, 2);
-            
-            switch (actionChoice) {
-                case 1:
-                    viewSelectedTreatmentDetails(statusTreatments);
-                    break;
-                case 2:
-                    updateSelectedTreatment(statusTreatments);
-                    break;
-                case 0:
-                    return; // Back to menu
-            }
+        System.out.println("\n┌" + "─".repeat(40) + "┐");
+        System.out.println("│          VIEW TREATMENTS MENU          │");
+        System.out.println("├" + "─".repeat(40) + "┤");
+        System.out.println("│ 1. Scheduled                           │");
+        System.out.println("│ 2. In Progress                         │");
+        System.out.println("│ 3. Completed                           │");
+        System.out.println("│ 0. Back to Treatment Menu              │");
+        System.out.println("└" + "─".repeat(40) + "┘");
+
+
+        int choice = InputHandler.getInt("Select status", 0, statusOptions.length);
+        if (choice == 0) {
+            return; // Back to menu
         }
 
-      /**
-       * Display patients with existing treatments
-       */
-      public void displayPatientsWithTreatments(CustomADT<String, Patient> patients) {
+        String selectedStatus = statusOptions[choice - 1];
+
+        // Get treatments by status from controller
+        CustomADT<String, Treatment> statusTreatments = treatmentController.getTreatmentsByStatus(selectedStatus);
+
+        if (statusTreatments.isEmpty()) {
+            System.out.println("No treatments found with status: " + selectedStatus);
+            return;
+        }
+
+        // Display the treatments using our reusable function
+        displayTreatmentList(statusTreatments, "Treatments with Status: " + selectedStatus);
+
+        // Option to view details or update
+        System.out.println("\nOptions:");
+        System.out.println("1. View Treatment Details");
+        System.out.println("2. Update Treatment");
+        System.out.println("0. Back to Treatment Menu");
+
+        int actionChoice = InputHandler.getInt("Select action", 0, 2);
+
+        switch (actionChoice) {
+            case 1:
+                viewSelectedTreatmentDetails(statusTreatments);
+                break;
+            case 2:
+                updateSelectedTreatment(statusTreatments);
+                break;
+            case 0:
+                return; // Back to menu
+        }
+    }
+
+    /**
+     * Display patients with existing treatments
+     */
+    public void displayPatientsWithTreatments(CustomADT<String, Patient> patients) {
         if (patients.isEmpty()) {
             System.out.println("\n┌" + "─".repeat(50) + "┐");
             printCenteredTableHeader("NO PATIENTS FOUND", 50);
@@ -572,29 +572,29 @@ public class TreatmentMaintenanceUI {
         System.out.println("├─────┬──────────────┬─────────────────────────┬─────┬──────────┬────────────────────────┤");
         System.out.println("│ No. │ Patient ID   │ Patient Name            │ Age │ Gender   │ Contact Number         │");
         System.out.println("├─────┼──────────────┼─────────────────────────┼─────┼──────────┼────────────────────────┤");
-        
+
         for (int i = 0; i < patients.size(); i++) {
             Patient patient = patients.get(i);
-            
+
             String name = patient.getName();
             String contact = patient.getContactNumber();
             String gender = patient.getGender();
-            
+
             // Truncate long text for table formatting
             if (name.length() > 24) name = name.substring(0, 21) + "...";
             if (contact.length() > 23) contact = contact.substring(0, 20) + "...";
             if (gender.length() > 9) gender = gender.substring(0, 6) + "...";
-            
+
             System.out.printf("│ %2d. │ %-12s │ %-23s │ %3d │ %-8s │ %-22s │\n",
-                i + 1, 
-                patient.getPatientId(), 
-                name,
-                patient.getAge(),
-                gender,
-                contact
+                    i + 1,
+                    patient.getPatientId(),
+                    name,
+                    patient.getAge(),
+                    gender,
+                    contact
             );
         }
-        
+
         System.out.println("├─────┴──────────────┴─────────────────────────┴─────┴──────────┴────────────────────────┤");
         System.out.println("│ 0. Back to Menu                                                                        │");
         System.out.println("├" + "─".repeat(88) + "┤");
@@ -617,12 +617,12 @@ public class TreatmentMaintenanceUI {
         }
 
         int tableWidth = TableWidths.EXTRA_WIDE;
-        
+
         // Main header
         System.out.println("\n┌" + "─".repeat(tableWidth + 2) + "┐");
         printCenteredTableHeader("TREATMENT DETAILS", tableWidth + 2);
         System.out.println("├" + "─".repeat(tableWidth + 2) + "┤");
-        
+
         // Basic Information Section
         printCenteredTableHeader("BASIC INFORMATION", tableWidth + 2);
         System.out.println("├" + "─".repeat(tableWidth + 2) + "┤");
@@ -632,12 +632,12 @@ public class TreatmentMaintenanceUI {
         System.out.printf("│ %-20s : %-66s │\n", "Status", treatment.getStatus());
         System.out.printf("│ %-20s : %-66s │\n", "Critical Priority", treatment.isCritical() ? "⚠ YES" : "No");
         System.out.printf("│ %-20s : %-66s │\n", "Date/Time", DateTimeFormatterUtil.formatForDisplay(treatment.getTreatmentDate()));
-        
+
         // Patient Information Section
         System.out.println("├" + "─".repeat(tableWidth + 2) + "┤");
         printCenteredTableHeader("PATIENT INFORMATION", tableWidth + 2);
         System.out.println("├" + "─".repeat(tableWidth + 2) + "┤");
-        
+
         if (treatment.getPatient() != null) {
             Patient patient = treatment.getPatient();
             System.out.printf("│ %-20s : %-66s │\n", "Patient ID", patient.getPatientId());
@@ -648,12 +648,12 @@ public class TreatmentMaintenanceUI {
         } else {
             System.out.println("│" + centerText("Patient information not available", tableWidth) + "│");
         }
-        
+
         // Doctor Information Section
         System.out.println("├" + "─".repeat(tableWidth + 2) + "┤");
         printCenteredTableHeader("DOCTOR INFORMATION", tableWidth + 2);
         System.out.println("├" + "─".repeat(tableWidth + 2) + "┤");
-        
+
         if (treatment.getDoctor() != null) {
             Doctor doctor = treatment.getDoctor();
             System.out.printf("│ %-20s : %-66s │\n", "Doctor ID", doctor.getDoctorID());
@@ -663,7 +663,7 @@ public class TreatmentMaintenanceUI {
         } else {
             System.out.println("│" + centerText("Doctor information not available", tableWidth) + "│");
         }
-        
+
         // Diagnosis Information Section
         System.out.println("├" + "─".repeat(tableWidth + 2) + "┤");
         printCenteredTableHeader("DIAGNOSIS INFORMATION", tableWidth + 2);
@@ -678,7 +678,7 @@ public class TreatmentMaintenanceUI {
         if (treatment.hasProcedures()) {
             System.out.printf("│ %-20s : %-66s │\n", "Number of Procedures", String.valueOf(treatment.getProcedures().size()));
             System.out.printf("│ %-20s : RM %-63.2f │\n", "Total Procedure Cost", treatment.getTotalProcedureCost());
-            
+
             // Display individual procedures if available
             if (treatment.getProcedures().size() > 0) {
                 System.out.println("├" + "─".repeat(tableWidth + 2) + "┤");
@@ -686,21 +686,21 @@ public class TreatmentMaintenanceUI {
                 System.out.println("├─────┬──────────────────────────┬──────────────────────────────────┬───────────────────────┤");
                 System.out.println("│ No. │ Procedure Code           │ Procedure Name                   │ Cost (RM)             │");
                 System.out.println("├─────┼──────────────────────────┼──────────────────────────────────┼───────────────────────┤");
-                
+
                 int count = 1;
                 for (Procedure procedure : treatment.getProcedures()) {
                     String procName = procedure.getProcedureName();
                     String procCode = procedure.getProcedureCode();
-                    
+
                     // Truncate long names for proper table formatting
                     if (procName.length() > 25) procName = procName.substring(0, 22) + "...";
                     if (procCode.length() > 19) procCode = procCode.substring(0, 16) + "...";
-                    
-                    System.out.printf("│ %2d. │ %-24s │ %-32s │ %21.2f │\n", 
-                        count++, 
-                        procCode,
-                        procName,
-                        procedure.getCost()
+
+                    System.out.printf("│ %2d. │ %-24s │ %-32s │ %21.2f │\n",
+                            count++,
+                            procCode,
+                            procName,
+                            procedure.getCost()
                     );
                 }
                 System.out.println("├─────┴──────────────────────────┴──────────────────────────────────┴───────────────────────┤");
@@ -709,47 +709,47 @@ public class TreatmentMaintenanceUI {
         } else {
             System.out.println("│" + centerText("No procedures recorded for this treatment", tableWidth + 2) + "│");
         }
-        
+
         // Prescriptions Section
         System.out.println("├" + "─".repeat(tableWidth + 2) + "┤");
         printCenteredTableHeader("PRESCRIPTIONS", tableWidth + 2);
         System.out.println("├" + "─".repeat(tableWidth + 2) + "┤");
-        
+
         if (treatment.hasPrescription()) {
             Prescription prescription = treatment.getPrescription();
             System.out.printf("│ %-20s : %-66s │\n", "Prescription ID", prescription.getPrescriptionID());
             System.out.printf("│ %-20s : %-66s │\n", "Number of Medicines", String.valueOf(prescription.getMedicines().size()));
             // System.out.printf("│ %-20s : RM %-63.2f │\n", "Total Price", prescription.getTotalPrice());
-            
+
             // Display individual medicines if available
             if (prescription.getMedicines().size() > 0) {
                 System.out.println("├" + "─".repeat(tableWidth + 2) + "┤");
                 printCenteredTableHeader("MEDICINE LIST", tableWidth + 2);
                 System.out.println("├" + "─".repeat(tableWidth + 2) + "┤");
-                
+
                 int count = 1;
                 for (PrescribedMedicine prescribed : prescription.getMedicines()) {
                     Medicine medicine = prescribed.getMedicine();
                     String medName = prescribed.getMedicine().getName();
                     if (medName.length() > 30) medName = medName.substring(0, 27) + "...";
-                    
-                    System.out.printf("│ %2d. %-55s - Qty: %-10s RM %8.2f │\n", 
-                        count++, 
-                        medName,
-                        prescribed.getQuantity(),
-                        medicine.getPrice()
+
+                    System.out.printf("│ %2d. %-55s - Qty: %-10s RM %8.2f │\n",
+                            count++,
+                            medName,
+                            prescribed.getQuantity(),
+                            medicine.getPrice()
                     );
                 }
             }
         } else {
             System.out.println("│" + centerText("No prescriptions for this treatment", tableWidth + 2) + "│");
         }
-        
+
         // Treatment Notes Section
         System.out.println("├" + "─".repeat(tableWidth + 2) + "┤");
         printCenteredTableHeader("TREATMENT NOTES", tableWidth + 2);
         System.out.println("├" + "─".repeat(tableWidth + 2) + "┤");
-        
+
         if (treatment.getNotes() != null && !treatment.getNotes().trim().isEmpty()) {
             // Wrap long notes text
             String[] noteLines = wrapText(treatment.getNotes(), tableWidth - 4);
@@ -759,7 +759,7 @@ public class TreatmentMaintenanceUI {
         } else {
             System.out.println("│" + centerText("No additional notes", tableWidth + 2) + "│");
         }
-        
+
         // Footer
         System.out.println("└" + "─".repeat(tableWidth + 2) + "┘");
     }
@@ -774,7 +774,7 @@ public class TreatmentMaintenanceUI {
             System.out.println("No treatments found.");
             return;
         }
-        
+
         System.out.println("\n┌" + "─".repeat(104) + "┐");
         printCenteredTableHeader(title, 104);
         System.out.println("├─────┬──────────────┬─────────────────┬─────────────────┬─────────────────┬──────────────┬──────────────┤");
@@ -784,32 +784,32 @@ public class TreatmentMaintenanceUI {
         for (int i = 0; i < treatments.size(); i++) {
             Treatment treatment = treatments.get(i);
             if (treatment != null) {
-                String patientName = treatment.getPatient() != null ? 
-                    treatment.getPatient().getName() : "N/A";
-                String doctorName = treatment.getDoctor() != null ? 
-                    treatment.getDoctor().getName() : "N/A";
+                String patientName = treatment.getPatient() != null ?
+                        treatment.getPatient().getName() : "N/A";
+                String doctorName = treatment.getDoctor() != null ?
+                        treatment.getDoctor().getName() : "N/A";
                 String dateTime = DateTimeFormatterUtil.formatForDisplay(treatment.getTreatmentDate());
                 String status = treatment.getStatus();
                 String critical = treatment.isCritical() ? "⚠ YES" : "No";
-                
+
                 // Truncate long names for table formatting
                 if (patientName.length() > 15) patientName = patientName.substring(0, 12) + "...";
                 if (doctorName.length() > 15) doctorName = doctorName.substring(0, 12) + "...";
                 if (dateTime.length() > 15) dateTime = dateTime.substring(0, 12) + "...";
                 if (status.length() > 12) status = status.substring(0, 9) + "...";
-                
+
                 System.out.printf("│ %2d. │ %-12s │ %-15s │ %-15s │ %-15s │ %-12s │ %-12s │\n",
-                    i + 1,
-                    treatment.getTreatmentID(),
-                    patientName,
-                    doctorName,
-                    dateTime,
-                    status,
-                    critical
+                        i + 1,
+                        treatment.getTreatmentID(),
+                        patientName,
+                        doctorName,
+                        dateTime,
+                        status,
+                        critical
                 );
             }
         }
-        
+
         System.out.println("├─────┴──────────────┴─────────────────┴─────────────────┴─────────────────┴──────────────┴──────────────┤");
         System.out.printf("│ Total treatments: %-84d │\n", treatments.size());
         System.out.println("└" + "─".repeat(104) + "┘");
@@ -823,17 +823,17 @@ public class TreatmentMaintenanceUI {
             System.out.println("No treatments available.");
             return;
         }
-        
+
         int choice = InputHandler.getInt("Select treatment to view", 1, treatments.size());
         Treatment selectedTreatment = treatments.get(choice - 1);
-        
+
         if (selectedTreatment != null) {
             displayTreatmentDetails(selectedTreatment);
         } else {
             System.out.println("Treatment not found.");
         }
     }
-    
+
     /**
      * Helper method to update a selected treatment from a list
      */
@@ -842,17 +842,17 @@ public class TreatmentMaintenanceUI {
             System.out.println("No treatments available.");
             return;
         }
-        
+
         int choice = InputHandler.getInt("Select treatment to update", 1, treatments.size());
         Treatment selectedTreatment = treatments.get(choice - 1);
-        
+
         if (selectedTreatment != null) {
             updateSpecificTreatment(selectedTreatment);
         } else {
             System.out.println("Treatment not found.");
         }
     }
-    
+
     /**
      * Helper function to update a specific treatment
      */
@@ -867,9 +867,9 @@ public class TreatmentMaintenanceUI {
         System.out.println("│ 0. Back to Treatment Menu              │");
         System.out.println("└" + "─".repeat(40) + "┘");
 
-        
+
         int choice = InputHandler.getInt("Select field", 0, 3);
-        
+
         switch (choice) {
             case 1:
                 String notes = InputHandler.getOptionalString("Enter new notes");
@@ -901,7 +901,7 @@ public class TreatmentMaintenanceUI {
      */
     public void processTreatmentsMenu() {
         int choice;
-        do { 
+        do {
             printProcessMenu();
             choice = InputHandler.getInt("Select an option", 0, 4);
 
@@ -966,13 +966,13 @@ public class TreatmentMaintenanceUI {
             System.out.println("│ 🚨 Emergency treatment processed successfully!             │");
             System.out.println("│ ⏰ Processing Time: " + centerText(DateTimeFormatterUtil.getCurrentTimestamp(), 38) + " │");
             System.out.println("└" + "─".repeat(60) + "┘");
-            
+
             // Display brief treatment info
             System.out.println("\n┌" + "─".repeat(40) + "┐");
             System.out.println("\n--- PROCESSED TREATMENT ---");
             System.out.println("Treatment ID: " + treatment.getTreatmentID());
-            System.out.println("Patient: " + (treatment.getPatient() != null ? 
-                                            treatment.getPatient().getName() : "N/A"));
+            System.out.println("Patient: " + (treatment.getPatient() != null ?
+                    treatment.getPatient().getName() : "N/A"));
             System.out.println("Type: " + treatment.getType());
             System.out.println("Status: " + treatment.getStatus());
 
@@ -1002,12 +1002,12 @@ public class TreatmentMaintenanceUI {
         if (treatment != null) {
             System.out.println("📋 Regular treatment processed successfully!");
             System.out.println("⏰ Processing Time: " + DateTimeFormatterUtil.getCurrentTimestamp());
-            
+
             // Display brief treatment info
             System.out.println("\n--- PROCESSED TREATMENT ---");
             System.out.println("Treatment ID: " + treatment.getTreatmentID());
-            System.out.println("Patient: " + (treatment.getPatient() != null ? 
-                                            treatment.getPatient().getName() : "N/A"));
+            System.out.println("Patient: " + (treatment.getPatient() != null ?
+                    treatment.getPatient().getName() : "N/A"));
             System.out.println("Type: " + treatment.getType());
             System.out.println("Status: " + treatment.getStatus());
 
@@ -1066,7 +1066,7 @@ public class TreatmentMaintenanceUI {
     }
 
     /**
-     * Display processing statistics 
+     * Display processing statistics
      */
     /**
      * Display processing statistics using StringBuilder for better performance and file export capability
@@ -1074,7 +1074,7 @@ public class TreatmentMaintenanceUI {
     public void displayProcessingStatistics() {
         // Get all treatments for analysis
         CustomADT<String, Treatment> allTreatments = treatmentController.getAllTreatments();
-        
+
         if (allTreatments.isEmpty()) {
             System.out.println("\n┌" + "─".repeat(50) + "┐");
             printCenteredTableHeader("NO DATA AVAILABLE", 50);
@@ -1083,17 +1083,17 @@ public class TreatmentMaintenanceUI {
             System.out.println("└" + "─".repeat(50) + "┘");
             return;
         }
-        
+
         // Build report using StringBuilder
         StringBuilder report = buildProcessingStatisticsReport(allTreatments);
-        
+
         // Display the report
         System.out.print(report.toString());
-        
+
         // Ask if user wants to save the report
         System.out.println("\nWould you like to save this report to a file?");
         boolean saveReport = InputHandler.getYesNo("Save report");
-        
+
         if (saveReport) {
             // Create a plain text version without table formatting for file export
             StringBuilder plainReport = buildPlainProcessingStatisticsReport(allTreatments);
@@ -1109,11 +1109,11 @@ public class TreatmentMaintenanceUI {
      */
     private StringBuilder buildProcessingStatisticsReport(CustomADT<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
-        
+
         // Count treatments by various criteria
         int scheduledCount = 0, inProgressCount = 0, completedCount = 0;
         int emergencyCount = 0, regularCount = 0, criticalCount = 0;
-        
+
         for (Treatment treatment : allTreatments) {
             // Count by status
             switch (treatment.getStatus().toUpperCase()) {
@@ -1127,27 +1127,27 @@ public class TreatmentMaintenanceUI {
                     completedCount++;
                     break;
             }
-            
+
             // Count by type
             if ("EMERGENCY".equals(treatment.getType())) {
                 emergencyCount++;
             } else {
                 regularCount++;
             }
-            
+
             // Count critical treatments
             if (treatment.isCritical()) {
                 criticalCount++;
             }
         }
-        
+
         // Calculate processing progress
-        double completionRate = allTreatments.size() > 0 ? 
-            (double) completedCount / allTreatments.size() * 100 : 0;
-        
+        double completionRate = allTreatments.size() > 0 ?
+                (double) completedCount / allTreatments.size() * 100 : 0;
+
         // Get recent activities count
         CustomADT<String, String> recentActivities = treatmentController.getRecentTreatments();
-        
+
         // Build formatted report
         report.append("\n┌").append("─".repeat(60)).append("┐\n");
         report.append("│").append(centerText("TREATMENT PROCESSING STATISTICS", 60)).append("│\n");
@@ -1158,7 +1158,7 @@ public class TreatmentMaintenanceUI {
         report.append(String.format("│ %-30s : %24.1f%% │\n", "Completion Rate", completionRate));
         report.append(String.format("│ %-30s : %25d │\n", "Pending Treatments", scheduledCount + inProgressCount));
         report.append(String.format("│ %-30s : %25d │\n", "Recent Activities", recentActivities.size()));
-        
+
         // Status Breakdown Section
         report.append("├").append("─".repeat(60)).append("┤\n");
         report.append("│").append(centerText("📋 STATUS BREAKDOWN", 60)).append("│\n");
@@ -1166,49 +1166,49 @@ public class TreatmentMaintenanceUI {
         report.append(String.format("│ %-30s : %25d │\n", "Scheduled", scheduledCount));
         report.append(String.format("│ %-30s : %25d │\n", "In Progress", inProgressCount));
         report.append(String.format("│ %-30s : %25d │\n", "Completed", completedCount));
-        
+
         // Type Breakdown Section
         report.append("├").append("─".repeat(60)).append("┤\n");
         report.append("│").append(centerText("🏥 TYPE BREAKDOWN", 60)).append("│\n");
         report.append("├").append("─".repeat(60)).append("┤\n");
         report.append(String.format("│ %-30s : %25d │\n", "Emergency Treatments", emergencyCount));
         report.append(String.format("│ %-30s : %25d │\n", "Regular Treatments", regularCount));
-        
+
         // Priority Breakdown Section
         report.append("├").append("─".repeat(60)).append("┤\n");
         report.append("│").append(centerText("⚠️ PRIORITY BREAKDOWN", 61)).append("│\n");
         report.append("├").append("─".repeat(60)).append("┤\n");
         report.append(String.format("│ %-30s : %25d │\n", "Critical Treatments", criticalCount));
         report.append(String.format("│ %-30s : %25d │\n", "Non-Critical Treatments", allTreatments.size() - criticalCount));
-        
+
         report.append("└").append("─".repeat(60)).append("┘\n");
-        
+
         // Action Recommendations Table
         if (emergencyCount > 0 || criticalCount > 0) {
             report.append("\n┌").append("─".repeat(70)).append("┐\n");
             report.append("│").append(centerText("💡 RECOMMENDATIONS & ALERTS", 70)).append("│\n");
             report.append("├").append("─".repeat(70)).append("┤\n");
-            
+
             if (criticalCount > 0) {
-                report.append(String.format("│ ⚠️  ATTENTION: %-54s │\n", 
-                    criticalCount + " critical treatments require immediate attention."));
+                report.append(String.format("│ ⚠️  ATTENTION: %-54s │\n",
+                        criticalCount + " critical treatments require immediate attention."));
             }
-            
+
             if (emergencyCount > 0 && scheduledCount > 0) {
-                report.append(String.format("│ 💡 RECOMMENDATION: %-49s │\n", 
-                    "Process emergency treatments first"));
+                report.append(String.format("│ 💡 RECOMMENDATION: %-49s │\n",
+                        "Process emergency treatments first"));
             }
-            
+
             if (emergencyCount > 0) {
-                report.append(String.format("│ 🚨 PRIORITY: %-55s │\n", 
-                    emergencyCount + " emergency treatments pending"));
+                report.append(String.format("│ 🚨 PRIORITY: %-55s │\n",
+                        emergencyCount + " emergency treatments pending"));
             }
-            
+
             if (completionRate < 50) {
-                report.append(String.format("│ 📈 PERFORMANCE: %-52s │\n", 
-                    "Low completion rate - consider workflow review"));
+                report.append(String.format("│ 📈 PERFORMANCE: %-52s │\n",
+                        "Low completion rate - consider workflow review"));
             }
-            
+
             report.append("└").append("─".repeat(70)).append("┘\n");
         }
 
@@ -1217,7 +1217,7 @@ public class TreatmentMaintenanceUI {
             report.append("\n┌").append("─".repeat(65)).append("┐\n");
             report.append("│").append(centerText("📈 PERFORMANCE INDICATORS", 65)).append("│\n");
             report.append("├").append("─".repeat(65)).append("┤\n");
-            
+
             // Efficiency rating
             String efficiencyRating;
             if (completionRate >= 80) {
@@ -1229,9 +1229,9 @@ public class TreatmentMaintenanceUI {
             } else {
                 efficiencyRating = "🔴 NEEDS IMPROVEMENT";
             }
-            
+
             report.append(String.format("│ %-30s : %-30s │\n", "Efficiency Rating", efficiencyRating));
-            
+
             // Workload status
             int totalPending = scheduledCount + inProgressCount;
             String workloadStatus;
@@ -1244,9 +1244,9 @@ public class TreatmentMaintenanceUI {
             } else {
                 workloadStatus = "🔴 HIGH";
             }
-            
+
             report.append(String.format("│ %-30s : %-30s │\n", "Current Workload", workloadStatus));
-            
+
             // Priority status
             String priorityStatus;
             if (criticalCount == 0) {
@@ -1256,12 +1256,12 @@ public class TreatmentMaintenanceUI {
             } else {
                 priorityStatus = "🔴 HIGH PRIORITY";
             }
-            
+
             report.append(String.format("│ %-30s : %-30s │\n", "Priority Status", priorityStatus));
-            
+
             report.append("└").append("─".repeat(65)).append("┘\n");
         }
-        
+
         return report;
     }
 
@@ -1270,11 +1270,11 @@ public class TreatmentMaintenanceUI {
      */
     private StringBuilder buildPlainProcessingStatisticsReport(CustomADT<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
-        
+
         // Count treatments by various criteria
         int scheduledCount = 0, inProgressCount = 0, completedCount = 0;
         int emergencyCount = 0, regularCount = 0, criticalCount = 0;
-        
+
         for (Treatment treatment : allTreatments) {
             // Count by status
             switch (treatment.getStatus().toUpperCase()) {
@@ -1282,62 +1282,62 @@ public class TreatmentMaintenanceUI {
                 case "IN_PROGRESS": inProgressCount++; break;
                 case "COMPLETED": completedCount++; break;
             }
-            
+
             // Count by type
             if ("EMERGENCY".equals(treatment.getType())) {
                 emergencyCount++;
             } else {
                 regularCount++;
             }
-            
+
             // Count critical treatments
             if (treatment.isCritical()) {
                 criticalCount++;
             }
         }
-        
+
         // Calculate metrics
-        double completionRate = allTreatments.size() > 0 ? 
-            (double) completedCount / allTreatments.size() * 100 : 0;
-        double criticalPercentage = allTreatments.size() > 0 ? 
-            (double) criticalCount / allTreatments.size() * 100 : 0;
-        double emergencyPercentage = allTreatments.size() > 0 ? 
-            (double) emergencyCount / allTreatments.size() * 100 : 0;
-        
+        double completionRate = allTreatments.size() > 0 ?
+                (double) completedCount / allTreatments.size() * 100 : 0;
+        double criticalPercentage = allTreatments.size() > 0 ?
+                (double) criticalCount / allTreatments.size() * 100 : 0;
+        double emergencyPercentage = allTreatments.size() > 0 ?
+                (double) emergencyCount / allTreatments.size() * 100 : 0;
+
         CustomADT<String, String> recentActivities = treatmentController.getRecentTreatments();
-        
+
         // Build plain text report
         report.append("TREATMENT PROCESSING STATISTICS REPORT\n");
         report.append("=====================================\n\n");
-        
+
         report.append("OVERALL SUMMARY:\n");
         report.append("---------------\n");
         report.append("Total Treatments: ").append(allTreatments.size()).append("\n");
         report.append("Completion Rate: ").append(String.format("%.1f%%", completionRate)).append("\n");
         report.append("Pending Treatments: ").append(scheduledCount + inProgressCount).append("\n");
         report.append("Recent Activities: ").append(recentActivities.size()).append("\n\n");
-        
+
         report.append("STATUS BREAKDOWN:\n");
         report.append("----------------\n");
         report.append("Scheduled: ").append(scheduledCount).append("\n");
         report.append("In Progress: ").append(inProgressCount).append("\n");
         report.append("Completed: ").append(completedCount).append("\n\n");
-        
+
         report.append("TREATMENT TYPE BREAKDOWN:\n");
         report.append("------------------------\n");
         report.append("Emergency Treatments: ").append(emergencyCount).append("\n");
         report.append("Regular Treatments: ").append(regularCount).append("\n\n");
-        
+
         report.append("PRIORITY ANALYSIS:\n");
         report.append("-----------------\n");
         report.append("Critical Treatments: ").append(criticalCount).append("\n");
         report.append("Non-Critical Treatments: ").append(allTreatments.size() - criticalCount).append("\n\n");
-        
+
         report.append("PERFORMANCE INDICATORS:\n");
         report.append("----------------------\n");
         report.append("Critical Treatment Rate: ").append(String.format("%.1f%%", criticalPercentage)).append("\n");
         report.append("Emergency Treatment Rate: ").append(String.format("%.1f%%", emergencyPercentage)).append("\n");
-        
+
         return report;
     }
 
@@ -1349,38 +1349,38 @@ public class TreatmentMaintenanceUI {
      */
     private void addProceduresToNewTreatment(Treatment treatment) {
         System.out.println("Adding procedures to treatment: " + treatment.getTreatmentID());
-        
+
         while (true) {
             // Display available procedures
             CustomADT<String, Procedure> availableProcedures = getAvailableProcedures();
-            
+
             if (availableProcedures.isEmpty()) {
                 System.out.println("No procedures available to add.");
                 break;
             }
-            
+
             System.out.println("\n--- Available Procedures ---");
             displayProcedureSelectionList(availableProcedures);
-            
+
             System.out.println("0. Finish adding procedures");
             int choice = InputHandler.getInt("Select procedure number", 0, availableProcedures.size());
-            
+
             if (choice == 0) {
                 break; // Finish adding procedures
             }
-            
+
             // Get selected procedure
             Procedure selectedProcedure = availableProcedures.get(choice - 1);
-            
+
             if (selectedProcedure == null) {
                 System.out.println("Invalid selection. Please try again.");
                 continue;
             }
-            
+
             // Show procedure details and confirm
             displayProcedureDetails(selectedProcedure, treatment);
             boolean confirm = InputHandler.getYesNo("Add this procedure to the treatment?");
-            
+
             if (confirm) {
                 boolean success = treatmentController.addProcedure(treatment.getTreatmentID(), selectedProcedure);
                 if (success) {
@@ -1390,7 +1390,7 @@ public class TreatmentMaintenanceUI {
                     System.out.println("❌ Failed to add procedure.");
                 }
             }
-            
+
             // Ask if user wants to add another procedure
             boolean addAnother = InputHandler.getYesNo("Add another procedure?");
             if (!addAnother) {
@@ -1404,12 +1404,12 @@ public class TreatmentMaintenanceUI {
      */
     private void addPrescriptionToNewTreatment(Treatment treatment) {
         System.out.println("Adding prescription to treatment: " + treatment.getTreatmentID());
-        
+
         try {
             // Create new prescription
             String prescriptionID = IDGenerator.generatePrescriptionID();
             Prescription prescription = new Prescription(prescriptionID, treatment.getTreatmentID());
-            
+
             // Add medicines to prescription
             while (true) {
                 CustomADT<String, Medicine> availableMedicines = pharmacyController.getMedicineMap();
@@ -1417,21 +1417,21 @@ public class TreatmentMaintenanceUI {
                     System.out.println("No medicines available.");
                     break;
                 }
-                
+
                 displayMedicineList(availableMedicines);
                 System.out.println("0. Finish adding medicines");
-                
+
                 int choice = InputHandler.getInt("Select medicine", 0, availableMedicines.size());
                 if (choice == 0) break;
-                
+
                 Medicine selectedMedicine = availableMedicines.get(choice - 1);
-                
+
                 // Get prescription details
                 int quantity = InputHandler.getInt("Enter quantity", 1, 100);
                 String dosage = InputHandler.getString("Enter dosage (e.g., '2 tablets')", 1, 50);
                 String frequency = InputHandler.getString("Enter frequency (e.g., 'Twice daily')", 1, 50);
                 String description = InputHandler.getString("Enter description (optional)");
-                
+
                 // Add medicine to prescription
                 try {
                     prescription.addMedicine(selectedMedicine, quantity, dosage, frequency, description);
@@ -1439,15 +1439,15 @@ public class TreatmentMaintenanceUI {
                 } catch (IllegalArgumentException e) {
                     System.out.println("❌ Error adding medicine: " + e.getMessage());
                 }
-                
+
                 boolean addAnother = InputHandler.getYesNo("Add another medicine?");
                 if (!addAnother) break;
             }
-            
+
             if (prescription.getMedicines().size() > 0) {
                 prescription.calculateTotalPrice();
                 boolean confirm = InputHandler.getYesNo("Confirm prescription creation?");
-                
+
                 if (confirm) {
                     boolean success = treatmentController.addPrescriptionToTreatment(treatment.getTreatmentID(), prescription);
                     if (success) {
@@ -1460,7 +1460,7 @@ public class TreatmentMaintenanceUI {
             } else {
                 System.out.println("No medicines added to prescription.");
             }
-            
+
         } catch (Exception e) {
             System.out.println("❌ Error creating prescription: " + e.getMessage());
         }
@@ -1482,18 +1482,18 @@ public class TreatmentMaintenanceUI {
         System.out.println("├" + "─".repeat(70) + "┤");
         System.out.printf("│ %-3s │ %-25s │ %-20s │ %-11s │\n", "#", "Procedure Name", "Code", "Cost (RM)");
         System.out.println("├" + "─".repeat(70) + "┤");
-        
+
         for (int i = 0; i < procedures.size(); i++) {
             Procedure procedure = procedures.get(i);
             String name = procedure.getProcedureName();
             String code = procedure.getProcedureCode();
-            
+
             // Truncate long names for display
             if (name.length() > 24) name = name.substring(0, 21) + "...";
             if (code.length() > 19) code = code.substring(0, 16) + "...";
-            
+
             System.out.printf("│ %-3d │ %-25s │ %-20s │ %11.2f │\n",
-                i + 1, name, code, procedure.getCost());
+                    i + 1, name, code, procedure.getCost());
         }
         System.out.println("└" + "─".repeat(70) + "┘");
     }
@@ -1512,8 +1512,8 @@ public class TreatmentMaintenanceUI {
         System.out.printf("│ Cost            : RM %-37.2f │\n", procedure.getCost());
         System.out.println("├" + "─".repeat(60) + "┤");
         System.out.printf("│ Current Total   : RM %-37.2f │\n", treatment.getTotalProcedureCost());
-        System.out.printf("│ New Total       : RM %-37.2f │\n", 
-                         treatment.getTotalProcedureCost() + procedure.getCost());
+        System.out.printf("│ New Total       : RM %-37.2f │\n",
+                treatment.getTotalProcedureCost() + procedure.getCost());
         System.out.println("└" + "─".repeat(60) + "┘");
     }
 
@@ -1526,17 +1526,17 @@ public class TreatmentMaintenanceUI {
         System.out.println("├" + "─".repeat(70) + "┤");
         System.out.printf("│ %-3s │ %-15s │ %-20s │ %-21s │\n", "#", "Name", "Description", "Price (RM)");
         System.out.println("├" + "─".repeat(70) + "┤");
-        
+
         for (int i = 0; i < medicines.size(); i++) {
             Medicine medicine = medicines.get(i);
             String name = medicine.getName();
             String desc = medicine.getDescription();
-            
+
             if (name.length() > 14) name = name.substring(0, 11) + "...";
             if (desc.length() > 19) desc = desc.substring(0, 16) + "...";
-            
+
             System.out.printf("│ %-3d │ %-15s │ %-20s │ RM %18.2f │\n",
-                i + 1, name, desc, medicine.getPrice());
+                    i + 1, name, desc, medicine.getPrice());
         }
         System.out.println("└" + "─".repeat(70) + "┘");
     }
@@ -1564,27 +1564,27 @@ public class TreatmentMaintenanceUI {
         System.out.println("\n" + "=".repeat(70));
         System.out.println(" ".repeat(22) + "FINAL TREATMENT SUMMARY");
         System.out.println("=".repeat(70));
-        
+
         // Basic treatment info
         System.out.printf("Treatment ID    : %s\n", treatment.getTreatmentID());
         System.out.printf("Patient         : %s\n", treatment.getPatient() != null ? treatment.getPatient().getName() : "N/A");
         System.out.printf("Doctor          : %s\n", treatment.getDoctor() != null ? treatment.getDoctor().getName() : "N/A");
         System.out.printf("Status          : %s\n", treatment.getStatus());
         System.out.printf("Priority        : %s\n", treatment.isCritical() ? "CRITICAL" : "REGULAR");
-        
+
         // Procedures
         if (treatment.hasProcedures()) {
             System.out.println("\nPROCEDURES:");
             int count = 1;
             for (Procedure proc : treatment.getProcedures()) {
-                System.out.printf("  %d. %s - RM %.2f\n", 
-                    count++, proc.getProcedureName(), proc.getCost());
+                System.out.printf("  %d. %s - RM %.2f\n",
+                        count++, proc.getProcedureName(), proc.getCost());
             }
             System.out.printf("Total Procedure Cost: RM %.2f\n", treatment.getTotalProcedureCost());
         } else {
             System.out.println("\nPROCEDURES: None added");
         }
-        
+
         // Prescription
         if (treatment.hasPrescription()) {
             Prescription prescription = treatment.getPrescription();
@@ -1594,7 +1594,7 @@ public class TreatmentMaintenanceUI {
         } else {
             System.out.println("\nPRESCRIPTION: None added");
         }
-        
+
         System.out.println("=".repeat(70));
     }
 
@@ -1606,7 +1606,7 @@ public class TreatmentMaintenanceUI {
         do {
             printSearchMenu();
             choice = InputHandler.getInt("Select search option", 0, 5);
-            
+
             switch(choice) {
                 case 1:
                     searchByPatientName();
@@ -1626,11 +1626,11 @@ public class TreatmentMaintenanceUI {
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
-            
+
             if (choice != 0) {
                 InputHandler.pauseForUser();
             }
-            
+
         } while (choice != 0);
     }
 
@@ -1642,7 +1642,7 @@ public class TreatmentMaintenanceUI {
         do {
             printSortMenu();
             choice = InputHandler.getInt("Select sort option", 0, 4);
-            
+
             switch(choice) {
                 case 1:
                     sortByDate();
@@ -1662,11 +1662,11 @@ public class TreatmentMaintenanceUI {
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
-            
+
             if (choice != 0) {
                 InputHandler.pauseForUser();
             }
-            
+
         } while (choice != 0);
     }
 
@@ -1678,7 +1678,7 @@ public class TreatmentMaintenanceUI {
         do {
             printReportsMenu();
             choice = InputHandler.getInt("Select sort option", 0, 3);
-            
+
             switch(choice) {
                 case 1:
                     displayProcessingStatistics();
@@ -1695,11 +1695,11 @@ public class TreatmentMaintenanceUI {
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
-            
+
             if (choice != 0) {
                 InputHandler.pauseForUser();
             }
-            
+
         } while (choice != 0);
     }
 
@@ -1708,7 +1708,7 @@ public class TreatmentMaintenanceUI {
      */
     private void generatePatientTreatmentSummary() {
         CustomADT<String, Treatment> allTreatments = treatmentController.getAllTreatments();
-        
+
         if (allTreatments.isEmpty()) {
             System.out.println("\n┌" + "─".repeat(50) + "┐");
             printCenteredTableHeader("NO DATA AVAILABLE", 50);
@@ -1717,17 +1717,17 @@ public class TreatmentMaintenanceUI {
             System.out.println("└" + "─".repeat(50) + "┘");
             return;
         }
-        
+
         // Build report using StringBuilder
         StringBuilder report = buildPatientTreatmentSummaryReport(allTreatments);
-        
+
         // Display the report
         System.out.print(report.toString());
-        
+
         // Ask if user wants to save the report
         System.out.println("\nWould you like to save this report to a file?");
         boolean saveReport = InputHandler.getYesNo("Save report");
-        
+
         if (saveReport) {
             // Create a plain text version for file export
             StringBuilder plainReport = buildPlainPatientTreatmentSummaryReport(allTreatments);
@@ -1743,51 +1743,51 @@ public class TreatmentMaintenanceUI {
      */
     private StringBuilder buildPatientTreatmentSummaryReport(CustomADT<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
-        
+
         // Group treatments by patient using a separate ADT to track patient IDs
         CustomADT<String, CustomADT<String, Treatment>> patientTreatments = new CustomADT<>();
         CustomADT<String, String> patientIds = new CustomADT<>(); // Track unique patient IDs
-        
+
         // Iterate through all treatments and group by patient
         for (Treatment treatment : allTreatments) {
             if (treatment.getPatient() != null) {
                 String patientId = treatment.getPatient().getPatientId();
-                
+
                 // Add patient ID to our tracking collection
                 patientIds.put(patientId, patientId);
-                
+
                 if (!patientTreatments.containsKey(patientId)) {
                     patientTreatments.put(patientId, new CustomADT<>());
                 }
-                
+
                 patientTreatments.get(patientId).put(treatment.getTreatmentID(), treatment);
             }
         }
-        
+
         report.append("\n┌").append("─".repeat(90)).append("┐\n");
         report.append("│").append(centerText("PATIENT TREATMENT SUMMARY REPORT", 90)).append("│\n");
         report.append("├").append("─".repeat(90)).append("┤\n");
         report.append(String.format("│ Report Generated: %-70s │\n", DateTimeFormatterUtil.getCurrentTimestamp()));
         report.append("├").append("─".repeat(90)).append("┤\n");
-        
+
         // Iterate through patient IDs
         for (String patientId : patientIds) {
             CustomADT<String, Treatment> treatments = patientTreatments.get(patientId);
             if (treatments != null && !treatments.isEmpty()) {
                 Treatment firstTreatment = treatments.get(0);
-                
+
                 if (firstTreatment.getPatient() != null) {
                     Patient patient = firstTreatment.getPatient();
-                    
+
                     // Patient header
                     report.append("├").append("─".repeat(90)).append("┤\n");
                     report.append(String.format("│ PATIENT: %-79s │\n", patient.getName() + " (ID: " + patientId + ")"));
                     report.append("├").append("─".repeat(90)).append("┤\n");
-                    
+
                     // Treatment statistics
                     int completed = 0, inProgress = 0, scheduled = 0, critical = 0;
                     double totalCost = 0.0;
-                    
+
                     for (Treatment t : treatments) {
                         switch (t.getStatus().toUpperCase()) {
                             case "COMPLETED": completed++; break;
@@ -1797,23 +1797,23 @@ public class TreatmentMaintenanceUI {
                         if (t.isCritical()) critical++;
                         totalCost += t.getTotalProcedureCost();
                     }
-                    
-                    report.append(String.format("│ %-25s : %2d │ %-25s : %2d │ %-12s : %7.2f │\n", 
-                                    "Total Treatments", treatments.size(),
-                                    "Critical Treatments", critical,
-                                    "Total Cost", totalCost));
+
+                    report.append(String.format("│ %-25s : %2d │ %-25s : %2d │ %-12s : %7.2f │\n",
+                            "Total Treatments", treatments.size(),
+                            "Critical Treatments", critical,
+                            "Total Cost", totalCost));
                     report.append(String.format("│ %-25s : %2d │ %-25s : %2d │ %-13s : %6d │\n",
-                                    "Completed", completed,
-                                    "In Progress", inProgress,
-                                    "Scheduled", scheduled));
+                            "Completed", completed,
+                            "In Progress", inProgress,
+                            "Scheduled", scheduled));
                 }
             }
         }
-        
+
         report.append("├").append("─".repeat(90)).append("┤\n");
         report.append(String.format("│ Total Patients with Treatments: %-56d │\n", patientTreatments.size()));
         report.append("└").append("─".repeat(90)).append("┘\n");
-        
+
         return report;
     }
 
@@ -1822,42 +1822,42 @@ public class TreatmentMaintenanceUI {
      */
     private StringBuilder buildPlainPatientTreatmentSummaryReport(CustomADT<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
-        
+
         // Group treatments by patient
         CustomADT<String, CustomADT<String, Treatment>> patientTreatments = new CustomADT<>();
         CustomADT<String, String> patientIds = new CustomADT<>();
-        
+
         for (Treatment treatment : allTreatments) {
             if (treatment.getPatient() != null) {
                 String patientId = treatment.getPatient().getPatientId();
                 patientIds.put(patientId, patientId);
-                
+
                 if (!patientTreatments.containsKey(patientId)) {
                     patientTreatments.put(patientId, new CustomADT<>());
                 }
-                
+
                 patientTreatments.get(patientId).put(treatment.getTreatmentID(), treatment);
             }
         }
-        
+
         report.append("PATIENT TREATMENT SUMMARY REPORT\n");
         report.append("================================\n\n");
-        
+
         for (String patientId : patientIds) {
             CustomADT<String, Treatment> treatments = patientTreatments.get(patientId);
             if (treatments != null && !treatments.isEmpty()) {
                 Treatment firstTreatment = treatments.get(0);
-                
+
                 if (firstTreatment.getPatient() != null) {
                     Patient patient = firstTreatment.getPatient();
-                    
+
                     report.append("PATIENT: ").append(patient.getName()).append(" (ID: ").append(patientId).append(")\n");
                     report.append("-".repeat(50)).append("\n");
-                    
+
                     // Calculate statistics
                     int completed = 0, inProgress = 0, scheduled = 0, critical = 0;
                     double totalCost = 0.0;
-                    
+
                     for (Treatment t : treatments) {
                         switch (t.getStatus().toUpperCase()) {
                             case "COMPLETED": completed++; break;
@@ -1867,7 +1867,7 @@ public class TreatmentMaintenanceUI {
                         if (t.isCritical()) critical++;
                         totalCost += t.getTotalProcedureCost();
                     }
-                    
+
                     report.append("Total Treatments: ").append(treatments.size()).append("\n");
                     report.append("Completed: ").append(completed).append("\n");
                     report.append("In Progress: ").append(inProgress).append("\n");
@@ -1877,11 +1877,11 @@ public class TreatmentMaintenanceUI {
                 }
             }
         }
-        
+
         report.append("SUMMARY:\n");
         report.append("--------\n");
         report.append("Total Patients with Treatments: ").append(patientTreatments.size()).append("\n");
-        
+
         return report;
     }
 
@@ -1890,7 +1890,7 @@ public class TreatmentMaintenanceUI {
      */
     private void generateFinancialSummaryReport() {
         CustomADT<String, Treatment> allTreatments = treatmentController.getAllTreatments();
-        
+
         if (allTreatments.isEmpty()) {
             System.out.println("\n┌" + "─".repeat(50) + "┐");
             printCenteredTableHeader("NO DATA AVAILABLE", 50);
@@ -1899,17 +1899,17 @@ public class TreatmentMaintenanceUI {
             System.out.println("└" + "─".repeat(50) + "┘");
             return;
         }
-        
+
         // Build report using StringBuilder
         StringBuilder report = buildFinancialSummaryReport(allTreatments);
-        
+
         // Display the report
         System.out.print(report.toString());
-        
+
         // Ask if user wants to save the report
         System.out.println("\nWould you like to save this report to a file?");
         boolean saveReport = InputHandler.getYesNo("Save report");
-        
+
         if (saveReport) {
             // Create a plain text version for file export
             StringBuilder plainReport = buildPlainFinancialSummaryReport(allTreatments);
@@ -1925,7 +1925,7 @@ public class TreatmentMaintenanceUI {
      */
     private StringBuilder buildFinancialSummaryReport(CustomADT<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
-        
+
         // Financial calculations
         double totalRevenue = 0.0;
         double completedRevenue = 0.0;
@@ -1933,21 +1933,21 @@ public class TreatmentMaintenanceUI {
         double averageTreatmentCost = 0.0;
         double highestTreatmentCost = 0.0;
         double lowestTreatmentCost = Double.MAX_VALUE;
-        
+
         CustomADT<String, Double> monthlyRevenue = new CustomADT<>();
         CustomADT<String, Integer> treatmentsByType = new CustomADT<>();
-        
+
         int totalTreatments = 0;
         int completedTreatments = 0;
         int pendingTreatments = 0;
-        
+
         // Process all treatments
         for (Treatment treatment : allTreatments) {
             if (treatment != null) {
                 totalTreatments++;
                 double cost = treatment.getTotalProcedureCost();
                 totalRevenue += cost;
-                
+
                 // Track highest and lowest costs
                 if (cost > highestTreatmentCost) {
                     highestTreatmentCost = cost;
@@ -1955,7 +1955,7 @@ public class TreatmentMaintenanceUI {
                 if (cost < lowestTreatmentCost && cost > 0) {
                     lowestTreatmentCost = cost;
                 }
-                
+
                 // Revenue by status
                 String status = treatment.getStatus().toUpperCase();
                 if ("COMPLETED".equals(status)) {
@@ -1965,17 +1965,17 @@ public class TreatmentMaintenanceUI {
                     pendingRevenue += cost;
                     pendingTreatments++;
                 }
-                
+
                 // Monthly revenue tracking
-                String month = treatment.getTreatmentDate().getYear() + "-" + 
-                              String.format("%02d", treatment.getTreatmentDate().getMonthValue());
+                String month = treatment.getTreatmentDate().getYear() + "-" +
+                        String.format("%02d", treatment.getTreatmentDate().getMonthValue());
                 Double currentMonthRevenue = monthlyRevenue.get(month);
                 if (currentMonthRevenue == null) {
                     monthlyRevenue.put(month, cost);
                 } else {
                     monthlyRevenue.put(month, currentMonthRevenue + cost);
                 }
-                
+
                 // Treatment type tracking
                 String type = treatment.getType();
                 Integer typeCount = treatmentsByType.get(type);
@@ -1986,7 +1986,7 @@ public class TreatmentMaintenanceUI {
                 }
             }
         }
-        
+
         // Calculate averages
         if (totalTreatments > 0) {
             averageTreatmentCost = totalRevenue / totalTreatments;
@@ -1994,40 +1994,40 @@ public class TreatmentMaintenanceUI {
         if (lowestTreatmentCost == Double.MAX_VALUE) {
             lowestTreatmentCost = 0.0;
         }
-        
+
         // Build the report
         report.append("\n┌").append("─".repeat(90)).append("┐\n");
         report.append("│").append(centerText("FINANCIAL SUMMARY REPORT", 90)).append("│\n");
         report.append("├").append("─".repeat(90)).append("┤\n");
-        report.append(String.format("│ Report Generated: %-70s │\n", 
-            java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
+        report.append(String.format("│ Report Generated: %-70s │\n",
+                java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
         report.append("├").append("─".repeat(90)).append("┤\n");
-        
+
         // Revenue Summary Section
         report.append("│").append(centerText("REVENUE SUMMARY", 90)).append("│\n");
         report.append("├").append("─".repeat(90)).append("┤\n");
-        report.append(String.format("│ %-28s : RM %9.2f │ %-28s : RM %8.2f │\n", 
-                        "Total Revenue", totalRevenue, "Completed Revenue", completedRevenue));
-        report.append(String.format("│ %-28s : RM %9.2f │ %-28s : RM %8.2f │\n", 
-                        "Pending Revenue", pendingRevenue, "Average Treatment Cost", averageTreatmentCost));
-        report.append(String.format("│ %-28s : RM %9.2f │ %-28s : RM %8.2f │\n", 
-                        "Highest Treatment Cost", highestTreatmentCost, "Lowest Treatment Cost", lowestTreatmentCost));
-        
+        report.append(String.format("│ %-28s : RM %9.2f │ %-28s : RM %8.2f │\n",
+                "Total Revenue", totalRevenue, "Completed Revenue", completedRevenue));
+        report.append(String.format("│ %-28s : RM %9.2f │ %-28s : RM %8.2f │\n",
+                "Pending Revenue", pendingRevenue, "Average Treatment Cost", averageTreatmentCost));
+        report.append(String.format("│ %-28s : RM %9.2f │ %-28s : RM %8.2f │\n",
+                "Highest Treatment Cost", highestTreatmentCost, "Lowest Treatment Cost", lowestTreatmentCost));
+
         // Treatment Statistics Section
         report.append("├").append("─".repeat(90)).append("┤\n");
         report.append("│").append(centerText("TREATMENT STATISTICS", 90)).append("│\n");
         report.append("├").append("─".repeat(90)).append("┤\n");
-        report.append(String.format("│ %-30s : %8d │ %-30s : %11d │\n", 
-                        "Total Treatments", totalTreatments, "Completed Treatments", completedTreatments));
-        report.append(String.format("│ %-30s : %8d │ %-30s : %10.1f%% │\n", 
-                        "Pending Treatments", pendingTreatments, "Completion Rate", 
-                        totalTreatments > 0 ? (completedTreatments * 100.0 / totalTreatments) : 0.0));
-        
+        report.append(String.format("│ %-30s : %8d │ %-30s : %11d │\n",
+                "Total Treatments", totalTreatments, "Completed Treatments", completedTreatments));
+        report.append(String.format("│ %-30s : %8d │ %-30s : %10.1f%% │\n",
+                "Pending Treatments", pendingTreatments, "Completion Rate",
+                totalTreatments > 0 ? (completedTreatments * 100.0 / totalTreatments) : 0.0));
+
         // Treatment Types Section
         report.append("├").append("─".repeat(90)).append("┤\n");
         report.append("│").append(centerText("REVENUE BY TREATMENT TYPE", 90)).append("│\n");
         report.append("├").append("─".repeat(90)).append("┤\n");
-        
+
         // Create a list to track unique treatment types
         CustomADT<String, String> uniqueTypes = new CustomADT<>();
         for (Treatment treatment : allTreatments) {
@@ -2035,7 +2035,7 @@ public class TreatmentMaintenanceUI {
                 uniqueTypes.put(treatment.getType(), treatment.getType());
             }
         }
-        
+
         for (String type : uniqueTypes) {
             Integer count = treatmentsByType.get(type);
             double typeRevenue = 0.0;
@@ -2044,12 +2044,12 @@ public class TreatmentMaintenanceUI {
                     typeRevenue += treatment.getTotalProcedureCost();
                 }
             }
-            report.append(String.format("│ %-30s : %8d treatments │ Revenue: RM %21.2f │\n", 
-                            type, count, typeRevenue));
+            report.append(String.format("│ %-30s : %8d treatments │ Revenue: RM %21.2f │\n",
+                    type, count, typeRevenue));
         }
-        
+
         report.append("└").append("─".repeat(90)).append("┘\n");
-        
+
         return report;
     }
 
@@ -2058,7 +2058,7 @@ public class TreatmentMaintenanceUI {
      */
     private StringBuilder buildPlainFinancialSummaryReport(CustomADT<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
-        
+
         // Financial calculations (same as above but simplified output)
         double totalRevenue = 0.0;
         double completedRevenue = 0.0;
@@ -2066,27 +2066,27 @@ public class TreatmentMaintenanceUI {
         double averageTreatmentCost = 0.0;
         double highestTreatmentCost = 0.0;
         double lowestTreatmentCost = Double.MAX_VALUE;
-        
+
         CustomADT<String, Integer> treatmentsByType = new CustomADT<>();
-        
+
         int totalTreatments = 0;
         int completedTreatments = 0;
         int pendingTreatments = 0;
-        
+
         // Process all treatments
         for (Treatment treatment : allTreatments) {
             if (treatment != null) {
                 totalTreatments++;
                 double cost = treatment.getTotalProcedureCost();
                 totalRevenue += cost;
-                
+
                 if (cost > highestTreatmentCost) {
                     highestTreatmentCost = cost;
                 }
                 if (cost < lowestTreatmentCost && cost > 0) {
                     lowestTreatmentCost = cost;
                 }
-                
+
                 String status = treatment.getStatus().toUpperCase();
                 if ("COMPLETED".equals(status)) {
                     completedRevenue += cost;
@@ -2095,7 +2095,7 @@ public class TreatmentMaintenanceUI {
                     pendingRevenue += cost;
                     pendingTreatments++;
                 }
-                
+
                 String type = treatment.getType();
                 Integer typeCount = treatmentsByType.get(type);
                 if (typeCount == null) {
@@ -2105,18 +2105,18 @@ public class TreatmentMaintenanceUI {
                 }
             }
         }
-        
+
         if (totalTreatments > 0) {
             averageTreatmentCost = totalRevenue / totalTreatments;
         }
         if (lowestTreatmentCost == Double.MAX_VALUE) {
             lowestTreatmentCost = 0.0;
         }
-        
+
         // Build plain text report
         report.append("FINANCIAL SUMMARY REPORT\n");
         report.append("========================\n\n");
-        
+
         report.append("REVENUE SUMMARY\n");
         report.append("---------------\n");
         report.append("Total Revenue: RM ").append(String.format("%.2f", totalRevenue)).append("\n");
@@ -2125,18 +2125,18 @@ public class TreatmentMaintenanceUI {
         report.append("Average Treatment Cost: RM ").append(String.format("%.2f", averageTreatmentCost)).append("\n");
         report.append("Highest Treatment Cost: RM ").append(String.format("%.2f", highestTreatmentCost)).append("\n");
         report.append("Lowest Treatment Cost: RM ").append(String.format("%.2f", lowestTreatmentCost)).append("\n\n");
-        
+
         report.append("TREATMENT STATISTICS\n");
         report.append("--------------------\n");
         report.append("Total Treatments: ").append(totalTreatments).append("\n");
         report.append("Completed Treatments: ").append(completedTreatments).append("\n");
         report.append("Pending Treatments: ").append(pendingTreatments).append("\n");
-        report.append("Completion Rate: ").append(String.format("%.1f", 
-            totalTreatments > 0 ? (completedTreatments * 100.0 / totalTreatments) : 0.0)).append("%\n\n");
-        
+        report.append("Completion Rate: ").append(String.format("%.1f",
+                totalTreatments > 0 ? (completedTreatments * 100.0 / totalTreatments) : 0.0)).append("%\n\n");
+
         report.append("REVENUE BY TREATMENT TYPE\n");
         report.append("-------------------------\n");
-        
+
         // Create a list to track unique treatment types
         CustomADT<String, String> uniqueTypes = new CustomADT<>();
         for (Treatment treatment : allTreatments) {
@@ -2144,7 +2144,7 @@ public class TreatmentMaintenanceUI {
                 uniqueTypes.put(treatment.getType(), treatment.getType());
             }
         }
-        
+
         for (String type : uniqueTypes) {
             Integer count = treatmentsByType.get(type);
             double typeRevenue = 0.0;
@@ -2154,9 +2154,9 @@ public class TreatmentMaintenanceUI {
                 }
             }
             report.append(type).append(": ").append(count).append(" treatments, Revenue: RM ")
-                  .append(String.format("%.2f", typeRevenue)).append("\n");
+                    .append(String.format("%.2f", typeRevenue)).append("\n");
         }
-        
+
         return report;
     }
 
@@ -2219,19 +2219,19 @@ public class TreatmentMaintenanceUI {
     private void searchByPatientName() {
         System.out.println("\n=== SEARCH BY PATIENT NAME ===");
         String patientName = InputHandler.getString("Enter patient name to search");
-        
+
         if (patientName == null || patientName.trim().isEmpty()) {
             System.out.println("Invalid patient name.");
             return;
         }
-        
+
         CustomADT<String, Treatment> results = treatmentController.searchTreatmentsByPatientName(patientName);
-        
+
         if (results.isEmpty()) {
             System.out.println("No treatments found for patient name containing: " + patientName);
         } else {
             displayTreatmentList(results, "Treatments for Patient Name: " + patientName);
-            
+
             // Option to view details
             boolean viewDetails = InputHandler.getYesNo("View treatment details?");
             if (viewDetails && !results.isEmpty()) {
@@ -2246,33 +2246,33 @@ public class TreatmentMaintenanceUI {
      */
     private void searchByDateRange() {
         System.out.println("\n=== SEARCH BY DATE RANGE ===");
-        
+
         try {
             System.out.println("Enter start date:");
             LocalDateTime startDate = InputHandler.getDateTime("Start date and time");
-            
+
             System.out.println("Enter end date:");
             LocalDateTime endDate = InputHandler.getDateTime("End date and time");
-            
+
             if (startDate.isAfter(endDate)) {
                 System.out.println("Start date cannot be after end date.");
                 return;
             }
-            
+
             CustomADT<String, Treatment> results = treatmentController.getTreatmentsByDateRange(startDate, endDate);
-            
+
             if (results.isEmpty()) {
                 System.out.println("No treatments found in the specified date range.");
             } else {
                 displayTreatmentList(results, "Treatments from " + startDate.toLocalDate() + " to " + endDate.toLocalDate());
-                
+
                 // Option to view details
                 boolean viewDetails = InputHandler.getYesNo("View treatment details?");
                 if (viewDetails && !results.isEmpty()) {
                     viewSelectedTreatmentDetails(results);
                 }
             }
-            
+
         } catch (Exception e) {
             System.out.println("Error parsing date: " + e.getMessage());
         }
@@ -2284,19 +2284,19 @@ public class TreatmentMaintenanceUI {
     private void searchByNotes() {
         System.out.println("\n=== SEARCH BY NOTES ===");
         String keyword = InputHandler.getString("Enter keyword to search in notes");
-        
+
         if (keyword == null || keyword.trim().isEmpty()) {
             System.out.println("Invalid keyword.");
             return;
         }
-        
+
         CustomADT<String, Treatment> results = treatmentController.searchTreatmentByNotes(keyword);
-        
+
         if (results.isEmpty()) {
             System.out.println("No treatments found with notes containing: " + keyword);
         } else {
             displayTreatmentList(results, "Treatments with Notes containing: " + keyword);
-            
+
             // Option to view details
             boolean viewDetails = InputHandler.getYesNo("View treatment details?");
             if (viewDetails && !results.isEmpty()) {
@@ -2311,19 +2311,19 @@ public class TreatmentMaintenanceUI {
     private void searchByProcedure() {
         System.out.println("\n=== SEARCH BY PROCEDURE ===");
         String procedureName = InputHandler.getString("Enter procedure name to search");
-        
+
         if (procedureName == null || procedureName.trim().isEmpty()) {
             System.out.println("Invalid procedure name.");
             return;
         }
-        
+
         CustomADT<String, Treatment> results = treatmentController.searchTreatmentsByProcedure(procedureName);
-        
+
         if (results.isEmpty()) {
             System.out.println("No treatments found with procedure containing: " + procedureName);
         } else {
             displayTreatmentList(results, "Treatments with Procedure: " + procedureName);
-            
+
             // Option to view details
             boolean viewDetails = InputHandler.getYesNo("View treatment details?");
             if (viewDetails && !results.isEmpty()) {
@@ -2337,17 +2337,17 @@ public class TreatmentMaintenanceUI {
      */
     private void sortByDate() {
         System.out.println("\n=== SORT BY DATE ===");
-        
+
         boolean ascending = InputHandler.getYesNo("Sort in ascending order? (No for descending)");
-        
+
         CustomADT<String, Treatment> sortedTreatments = treatmentController.sortTreatmentsByDate(ascending);
-        
+
         if (sortedTreatments.isEmpty()) {
             System.out.println("No treatments available to sort.");
         } else {
             String order = ascending ? "Ascending" : "Descending";
             displayTreatmentList(sortedTreatments, "Treatments Sorted by Date (" + order + ")");
-            
+
             // Option to view details
             boolean viewDetails = InputHandler.getYesNo("View treatment details?");
             if (viewDetails && !sortedTreatments.isEmpty()) {
@@ -2361,17 +2361,17 @@ public class TreatmentMaintenanceUI {
      */
     private void sortByPatientName() {
         System.out.println("\n=== SORT BY PATIENT NAME ===");
-        
+
         boolean ascending = InputHandler.getYesNo("Sort in ascending order? (No for descending)");
-        
+
         CustomADT<String, Treatment> sortedTreatments = treatmentController.sortTreatmentsByPatientName(ascending);
-        
+
         if (sortedTreatments.isEmpty()) {
             System.out.println("No treatments available to sort.");
         } else {
             String order = ascending ? "Ascending" : "Descending";
             displayTreatmentList(sortedTreatments, "Treatments Sorted by Patient Name (" + order + ")");
-            
+
             // Option to view details
             boolean viewDetails = InputHandler.getYesNo("View treatment details?");
             if (viewDetails && !sortedTreatments.isEmpty()) {
@@ -2385,17 +2385,17 @@ public class TreatmentMaintenanceUI {
      */
     private void sortByStatus() {
         System.out.println("\n=== SORT BY STATUS ===");
-        
+
         boolean ascending = InputHandler.getYesNo("Sort in ascending order? (No for descending)");
-        
+
         CustomADT<String, Treatment> sortedTreatments = treatmentController.sortTreatmentsByStatus(ascending);
-        
+
         if (sortedTreatments.isEmpty()) {
             System.out.println("No treatments available to sort.");
         } else {
             String order = ascending ? "Ascending" : "Descending";
             displayTreatmentList(sortedTreatments, "Treatments Sorted by Status (" + order + ")");
-            
+
             // Option to view details
             boolean viewDetails = InputHandler.getYesNo("View treatment details?");
             if (viewDetails && !sortedTreatments.isEmpty()) {
@@ -2409,17 +2409,17 @@ public class TreatmentMaintenanceUI {
      */
     private void sortByCriticalPriority() {
         System.out.println("\n=== SORT BY CRITICAL PRIORITY ===");
-        
+
         boolean criticalFirst = InputHandler.getYesNo("Show critical treatments first? (No for regular first)");
-        
+
         CustomADT<String, Treatment> sortedTreatments = treatmentController.sortTreatmentsByCriticalPriority(criticalFirst);
-        
+
         if (sortedTreatments.isEmpty()) {
             System.out.println("No treatments available to sort.");
         } else {
             String order = criticalFirst ? "Critical First" : "Regular First";
             displayTreatmentList(sortedTreatments, "Treatments Sorted by Priority (" + order + ")");
-            
+
             // Option to view details
             boolean viewDetails = InputHandler.getYesNo("View treatment details?");
             if (viewDetails && !sortedTreatments.isEmpty()) {
@@ -2464,15 +2464,15 @@ public class TreatmentMaintenanceUI {
      */
     public static String centerText(String text, int totalWidth) {
         if (text == null) text = "";
-        
+
         // If text is longer than available width, truncate it
         if (text.length() > totalWidth) {
             text = text.substring(0, totalWidth - 3) + "...";
         }
-        
+
         int padding = (totalWidth - text.length()) / 2;
         int rightPadding = totalWidth - text.length() - padding;
-        
+
         return String.format("%" + (padding + text.length()) + "s%" + rightPadding + "s", text, "");
     }
 
@@ -2500,7 +2500,7 @@ public class TreatmentMaintenanceUI {
      */
     public static class TableWidths {
         public static final int NARROW = 40;    // For small tables
-        public static final int MEDIUM = 60;    // For medium tables  
+        public static final int MEDIUM = 60;    // For medium tables
         public static final int WIDE = 80;      // For wide tables
         public static final int EXTRA_WIDE = 89; // For pharmacy-style tables
         public static final int FULL_WIDTH = 100; // For very wide tables
