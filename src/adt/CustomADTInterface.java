@@ -240,6 +240,13 @@ public interface CustomADTInterface<K, V> {
     void sort(Comparator<V> comparator);
 
     /**
+     * Check if the collection is sorted according to the given comparator
+     * @param comparator the comparator to check ordering
+     * @return true if sorted, false otherwise
+     */
+    boolean isSorted(Comparator<V> comparator);
+
+    /**
      * Filters the elements in this collection based on the specified condition and reference value.
      *
      * @param referenceValue the value to compare each element against

@@ -203,8 +203,8 @@ public class TreatmentMaintenance {
 
             if (removed.hasPrescription()) {
                 prescriptions.remove(removed.getPrescription().getPrescriptionID());
+                prescriptionController.removePrescription(removed.getPrescription().getPrescriptionID());
             }
-
             saveAllData();
             System.out.println("Treatment " + treatmentID + " removed successfully.");
             return true;
@@ -666,17 +666,6 @@ public class TreatmentMaintenance {
     public Procedure getProcedureByID(String procedureID) {
         CustomADT<String, Procedure> procedures = procedureDAO.retrieveFromFile();
         return procedures.get(procedureID);
-    }
-
-    // TODO: add reporting features
-    public String generateTreatmentPerformanceReport() {
-        StringBuilder report = new StringBuilder();
-        report.append("Treatment Performance Report\n");
-        report.append("=============================\n");
-        report.append("Total Treatments: ").append(treatments.size()).append("\n");
-        report.append("Total Prescriptions: ").append(prescriptions.size()).append("\n");
-        report.append("Average Treatment Duration: ").append(calculateAverageTreatmentDuration()).append(" days\n");
-        return report.toString();
     }
 
     /**

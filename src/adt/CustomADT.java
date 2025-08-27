@@ -471,23 +471,6 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
         this.size = 0;
     }
 
-    /**
-     * Returns an array of all values in insertion order
-     * @return array of values
-     */
-//    @SuppressWarnings("unchecked")
-//    @Override
-//    public V[] toArray() {
-//        V[] array = (V[]) new Object[size];
-//        Node<K, V> current = head;
-//        int index = 0;
-//        while (current != null) {
-//            array[index++] = current.value;
-//            current = current.next;
-//        }
-//        return array;
-//    }
-
     @SuppressWarnings("unchecked")
     @Override
     public V[] toArray(V[] array) {
@@ -589,85 +572,10 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
     }
 
     /**
-     * Smart search for a value through the collection
-     * @param target the value to search for
-     * @param comparator the comparator for matching
-     * @return true if a matching element is found, false otherwise
-     */
-    public boolean containsValue(V target, Comparator<V> comparator) {
-        if (target == null) return false;
-
-        // For small collections, use linear search
-        if (size <= 10) {
-            return linearContains(target, comparator);
-        }
-
-        if (isSorted(comparator)) {
-            return binaryContains(target, comparator);
-        }
-
-        // Fall back to linear search
-        return linearContains(target, comparator);
-    }
-
-    /** 
-     * Linear search through the collection
-     * @param target the value to search for
-     * @param comparator the comparator for equality checking
-     * @return the first matching value, or null if not found
-     */
-    public boolean linearContains(V target, Comparator<V> comparator) {
-        Node<K, V> current = head;
-        while (current != null) {
-            if (comparator.compare(current.value, target) == 0) {
-                return true;
-            }
-            current = current.next;
-        }
-        return false;
-    }
-
-    /**
-     * Binary search that returns boolean indicating if target exists
-     * Requires data to be sorted first
-     * @param target the value to search for
-     * @param comparator the comparator for comparison
-     * @return true if target exists, false otherwise
-     */
-    public boolean binaryContains(V target, Comparator<V> comparator) {
-        if (isEmpty() || target == null || comparator == null) return false;
-
-        // convert linked list to array for binary search
-        Node<K, V>[] nodeArray = createNodeArray();
-        int left = 0;
-        int right = size - 1;
-
-        while (left <= right) {
-            int mid = left + (right - left) / 2;
-            if (nodeArray[mid].value == null) {
-                // Handle null values in array
-                left = mid + 1;
-                continue;
-            }
-            int comparison = comparator.compare(nodeArray[mid].value, target);
-
-            if (comparison == 0) {
-                return true; // Target found
-            } else if (comparison < 0) {
-                // Target value is greater than mid, search the right half
-                left = mid + 1;
-            } else {
-                // Target value is less than mid, search the left half
-                right = mid - 1;
-            }
-        }
-        return false; // Target not found
-    }
-
-    /**
      * Sort the collection using merge sort algorithm
      * @param comparator the comparator to determine the order of elements
      */
+    @Override
     public void sort(Comparator<V> comparator) {
         if (size <= 1) return;
 
@@ -695,8 +603,8 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
         Node <K, V>[] rightArray = new Node[rightSize];
 
         // Copy data to temporary arrays
-        System.arraycopy(array, left, leftArray, 0, leftSize);
-        System.arraycopy(array, mid + 1, rightArray, 0, rightSize);
+        arraycopy(array, left, leftArray, 0, leftSize);
+        arraycopy(array, mid + 1, rightArray, 0, rightSize);
 
         int i = 0, j = 0, k = left;
 
@@ -723,6 +631,39 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
             array[k] = rightArray[j];
             j++;
             k++;
+        }
+    }
+
+    /**
+     * Private method to copy elements from source array to destination array
+     * This replaces System.arraycopy for better encapsulation
+     * @param src the source array
+     * @param srcPos starting position in the source array
+     * @param dest the destination array
+     * @param destPos starting position in the destination data
+     * @param length the number of array elements to be copied
+     */
+    private void arraycopy(Node<K, V>[] src, int srcPos, Node<K, V>[] dest, int destPos, int length) {
+        // Validate parameters
+        if (src == null || dest == null) {
+            throw new NullPointerException("Source or destination array is null");
+        }
+        
+        if (srcPos < 0 || destPos < 0 || length < 0) {
+            throw new IndexOutOfBoundsException("Negative array index");
+        }
+        
+        if (srcPos + length > src.length) {
+            throw new IndexOutOfBoundsException("Source array index out of bounds");
+        }
+        
+        if (destPos + length > dest.length) {
+            throw new IndexOutOfBoundsException("Destination array index out of bounds");
+        }
+        
+        // Copy elements one by one
+        for (int i = 0; i < length; i++) {
+            dest[destPos + i] = src[srcPos + i];
         }
     }
 
@@ -757,6 +698,7 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
      * @param condition a comparator that returns 0 for elements to keep
      * @return a new CustomADT containing filtered elements
      */
+    @Override
     public CustomADT<K, V> filter(V referenceValue, Comparator<V> condition) {
         CustomADT<K, V> filtered = new CustomADT<>();
         Node<K, V> current = head;
@@ -779,6 +721,7 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
      * @param comparator the comparator for range checking
      * @return a new CustomADT containing elements within the range
      */
+    @Override
     public CustomADT<K, V> rangeSearch(V min, V max, Comparator<V> comparator) {
         CustomADT<K, V> results = new CustomADT<>();
         Node<K, V> current = head;
@@ -798,6 +741,7 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
      * @param comparator the comparator to check ordering
      * @return true if sorted, false otherwise
      */
+    @Override
     public boolean isSorted(Comparator<V> comparator) {
         if (size <= 1) return true;
 
@@ -811,70 +755,6 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
         return true;
     }
 
-    /**
-     * Sort by keys 
-     * @param keyComparator comparator for keys
-     */
-    public void sortByKeys(Comparator<K> keyComparator) {
-        if (size <= 1) return;
-
-        Node<K, V>[] nodeArray = createNodeArray();
-        mergeSortByKeys(nodeArray, 0, size - 1, keyComparator);
-        rebuildLinkedList(nodeArray);
-    }
-
-    /**
-     * Recursive merge sort for keys
-     */
-    private void mergeSortByKeys(Node<K,V>[] array, int left, int right, Comparator<K> keyComparator) {
-        if (left < right) {
-            int mid = left + (right - left) / 2;
-
-            mergeSortByKeys(array, left, mid, keyComparator);
-            mergeSortByKeys(array, mid + 1, right, keyComparator);
-            mergeByKeys(array, left, mid, right, keyComparator);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void mergeByKeys(Node<K, V>[] array, int left, int mid, int right, Comparator<K> keyComparator) {
-        int leftSize = mid - left + 1;
-        int rightSize = right - mid;
-
-        Node<K, V>[] leftArray = new Node[leftSize];
-        Node<K, V>[] rightArray = new Node[rightSize];
-
-        // Copy data to temp arrays
-        System.arraycopy(array, left, leftArray, 0, leftSize);
-        System.arraycopy(array, mid + 1, rightArray, 0, rightSize);
-
-        int i = 0, j = 0, k = left;
-
-        // Merge back by comparing keys
-        while (i < leftSize && j < rightSize) {
-            if (keyComparator.compare(leftArray[i].key, rightArray[j].key) <= 0) {
-                array[k] = leftArray[i];
-                i++;
-            } else {
-                array[k] = rightArray[j];
-                j++;
-            }
-            k++;
-        }
-        
-        // Copy remaining elements
-        while (i < leftSize) {
-            array[k] = leftArray[i];
-            i++;
-            k++;
-        }
-
-        while (j < rightSize) {
-            array[k] = rightArray[j];
-            j++;
-            k++;
-        }
-    }
 
     /**
      * Returns a string representation of this collection
