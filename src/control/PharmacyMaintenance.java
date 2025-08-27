@@ -150,6 +150,32 @@ public class PharmacyMaintenance {
         return pendingPrescriptionMap.poll();
     }
 
+    public boolean removePrescription(String prescID) {
+        if (pendingPrescriptionMap.containsKey(prescID)) {
+            pendingPrescriptionMap.remove(prescID);
+            pendingPrescriptionDAO.saveToFile(pendingPrescriptionMap);
+        } else if (processedPrescriptionMap.containsKey(prescID)) {
+            processedPrescriptionMap.remove(prescID);
+            processedPrescriptionDAO.saveToFile(processedPrescriptionMap);
+        } else {
+            return false;
+        }
+        return true;
+    }
+
+    public boolean removePrescribedMedicine(Prescription prescription, PrescribedMedicine pm){
+        PrescribedMedicine removed = prescription.getMedicines().remove(pm.getMedicineID());
+
+        if (removed != null) {
+            double totalPrice = prescription.getTotalPrice();
+            totalPrice -= removed.calculateSubtotal();
+            prescription.setTotalPrice(totalPrice);
+            savePrescriptionFile(prescription);
+            return true;
+        }
+        return false;
+    }
+
     public boolean processPrescription(Prescription prescription) {
         boolean allProcessed = true;
         Transaction transaction = new Transaction(getPatientIdFromPrescription(prescription));

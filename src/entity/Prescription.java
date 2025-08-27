@@ -62,6 +62,10 @@ public class Prescription implements Serializable {
         this.status = status;
     }
 
+    public void setTotalPrice(double totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

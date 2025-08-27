@@ -294,53 +294,112 @@ public class PharmacyUI {
 
     public void viewPrescriptionDetails() {
         String prescId = InputHandler.getString("Enter Prescription ID to view details");
-        Prescription presc = pharmacyMaintenance.getPrescriptionById(prescId);
+        Prescription presc = pharmacyMaintenance.getPrescriptionById(prescId.toUpperCase());
         if (presc == null) {
             System.out.println("Prescription not found.");
             return;
         }
-        System.out.println("┌─────────────────────────────────────┐");
-        System.out.println("│         Prescription Details        │");
-        System.out.println("└─────────────────────────────────────┘");
-        System.out.println(presc);
-        if (presc.getStatus().equals("PENDING")) {
-            System.out.println("Prescription Options:");
-            System.out.println("1. Process this Prescription");
-            System.out.println("2. Edit Prescribed Medicine");
-            System.out.println("3. Add Prescribed Medicine");
-            System.out.println("4. Back to Prescription Management Menu");
-            int choice = InputHandler.getInt("Enter your choice", 1, 4);
-            switch (choice) {
-                case 1:
-                    // Process this Prescription
-                    boolean allProcessed = pharmacyMaintenance.processPrescription(presc);
-                    if (!allProcessed) {
-                        System.out.println("-- Some medicines could not be processed. --");
-                    } else {
-                        System.out.println("-- All medicines processed successfully --");
-                    }
-                    break;
-                case 2:
-                    // Edit Prescribed Medicine
-                    editPrescribedMedicine(presc);
-                    break;
-                case 3:
-                    // Add Prescribed Medicine
-                    addPrescribedMedicine(presc);
-                    pharmacyMaintenance.savePrescriptionFile(presc);
-                    break;
-                case 4:
-                    // Back to Prescription Management Menu
-                    return;
-            }
+        int choice = 0;
+        do {
+            System.out.println("┌─────────────────────────────────────┐");
+            System.out.println("│         Prescription Details        │");
+            System.out.println("└─────────────────────────────────────┘");
+            System.out.println(presc);
+            if (presc.getStatus().equals("PENDING")) {
+                System.out.println("Prescription Options:");
+                System.out.println("1. Process this Prescription");
+                System.out.println("2. Edit Prescribed Medicine");
+                System.out.println("3. Add Prescribed Medicine");
+                System.out.println("4. Delete Prescription");
+                System.out.println("5. Delete Prescribed Medicine");
+                System.out.println("6. Back to Prescription Management Menu");
+                choice = InputHandler.getInt("Enter your choice", 1, 6);
+                switch (choice) {
+                    case 1:
+                        // Process this Prescription
+                        boolean allProcessed = pharmacyMaintenance.processPrescription(presc);
+                        if (!allProcessed) {
+                            System.out.println("-- Some medicines could not be processed. --");
+                        } else {
+                            System.out.println("-- All medicines processed successfully --");
+                        }
+                        break;
+                    case 2:
+                        // Edit Prescribed Medicine
+                        editPrescribedMedicine(presc);
+                        break;
+                    case 3:
+                        // Add Prescribed Medicine
+                        addPrescribedMedicine(presc);
+                        pharmacyMaintenance.savePrescriptionFile(presc);
+                        break;
+                    case 4:
+                        deletePrescription(presc);
+                        return;
+                    case 5:
+                        deletePrescribedMedicine(presc);
+                        break;
+                    case 6:
+                        System.out.println("Returning to Prescription Management Menu...");
+                        return;
+                    default:
+                        System.out.println("Invalid choice. Please try again.");
+                        break;
+                }
 
-        } else {
-            System.out.println("-- This prescription has already been processed. --");
-            System.out.println("\nPress Enter to continue...");
-            scanner.nextLine();
-        }
+            } else {
+                System.out.println("-- This prescription has already been processed. --");
+                System.out.println("\nPrescription options:");
+                System.out.println("1. Delete prescription");
+                System.out.println("2. Back to Prescription Management Menu");
+                choice = InputHandler.getInt("Enter your choice", 1, 2);
+                switch (choice) {
+                    case 1:
+                        deletePrescription(presc);
+                        break;
+                    case 2:
+                        System.out.println("\nReturning to Prescription Management Menu...");
+                        return;
+                    default:
+                        System.out.println("\nInvalid choice. Please try again.");
+                        break;
+                }
+            }
+        } while (choice != 6);
     }
 
+    public void deletePrescription(Prescription presc) {
+        System.out.print(" ");
+        boolean confirmation = InputHandler.getYesNo("Are you sure you want to delete this prescription?");
+        if (!confirmation) {
+            System.out.println("Deletion cancelled.\n");
+            return;
+        }
+        boolean deleteSuccess = pharmacyMaintenance.removePrescription(presc.getPrescriptionID());
+        if (!deleteSuccess) {
+            System.out.println("Failed to delete prescription.\n");
+            return;
+        }
+        System.out.println("Prescription deleted successfully!\n");
+    }
+
+    public void deletePrescribedMedicine(Prescription presc){
+        System.out.println("Editing Prescription: " + presc.getPrescriptionID());
+        int pmChoice = InputHandler.getInt("Enter Prescribed Medicine number to delete", 1, presc.getMedicines().size());
+        PrescribedMedicine pm = presc.getMedicines().get(pmChoice - 1);
+        System.out.print(" ");
+        boolean confirmation = InputHandler.getYesNo("Are you sure you want to delete this prescribed medicine?");
+        if (!confirmation) {
+            System.out.println("Deletion cancelled.\n");
+            return;
+        }
+        boolean isDeleted = pharmacyMaintenance.removePrescribedMedicine(presc, pm);
+        if (isDeleted) {
+            System.out.println("-- Prescribed Medicine deleted successfully. --");
+        } else {
+            System.out.println("-- Failed to delete Prescribed Medicine. --");
+        }
+    }
 
     public void editPrescribedMedicine(Prescription presc) {
         // Implementation for editing the prescription
