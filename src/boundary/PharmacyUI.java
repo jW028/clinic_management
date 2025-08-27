@@ -515,26 +515,31 @@ public class PharmacyUI {
         int totalStock = 0;
         int descWidth = 30;
         int lowStockCount = 0;
+        double totalStockValue = 0.0;
         for (Medicine med : medicineMap) {
             String[] descLines = wrapText(med.getDescription(), descWidth);
+            int quantity = med.getQuantity();
+            double price = med.getPrice();
             String qtyDisplay;
-            if (med.getQuantity() < 10) {
-                qtyDisplay = "⚠ " + med.getQuantity();
+            if (quantity < 10) {
+                qtyDisplay = "⚠ " + quantity;
                 lowStockCount++;
             } else {
-                qtyDisplay = String.valueOf(med.getQuantity());
+                qtyDisplay = String.valueOf(quantity);
             }
             report.append(String.format("│ %2d. │ %-8s │ %-14s │ %8s │ %9.2f │ %-30s │\n",
-                    count++, med.getId(), med.getName(), qtyDisplay, med.getPrice(), descLines[0]));
+                    count++, med.getId(), med.getName(), qtyDisplay, price, descLines[0]));
             for (int i = 1; i < descLines.length; i++) {
                 report.append(String.format("│     │          │                │          │           │ %-30s │\n", descLines[i]));
             }
-            totalStock += med.getQuantity();
+            totalStock += quantity;
+            totalStockValue += quantity * price;
         }
         report.append("├─────┴──────────┴────────────────┴──────────┴───────────┴────────────────────────────────┤\n");
         report.append(String.format("│ Total number of medicines: %-60d │\n", medicineMap.size()));
         report.append(String.format("│ Total stock quantity: %-65d │\n", totalStock));
         report.append(String.format("│ Total low stock medicines: %-60d │\n", lowStockCount));
+        report.append(String.format("│ Total stock value (RM): %-62.2f │\n", totalStockValue));
         report.append("└─────────────────────────────────────────────────────────────────────────────────────────┘\n");
 
         System.out.print(report.toString());
@@ -560,9 +565,9 @@ public class PharmacyUI {
     }
 
     private void generateMonthlySalesReport() {
-        System.out.println("=== Monthly Sales Report ===");
+        System.out.println("\n=== Monthly Sales Report ===");
 
-        int year = InputHandler.getInt("Enter year ", 2000, 2100);
+        int year = InputHandler.getInt("Enter year ", 2000, 2025);
         int month = InputHandler.getInt("Enter month ", 1, 12);
 
         StringBuilder salesReport = new StringBuilder();
@@ -602,7 +607,7 @@ public class PharmacyUI {
         salesReport.append(String.format("│ %88s │ %12.2f │\n", "Total Sales(RM)", totalSales));
         salesReport.append(String.format("│ Total Number of Transactions in the Month: %-45d └──────────────┤\n", transactionInMonth.size()));
         salesReport.append(String.format("│ Total Number of Medicines Sold: %-71d │\n", totalMedicinesSold));
-        // salesReport.append(String.format("│ The Most Sold Medicine: %-71s │\n", getMostSoldMedicine(transactionInMonth)));
+        salesReport.append(String.format("│ The Most Sold Medicine: %-79s │\n", pharmacyMaintenance.getMostSoldMedicine(transactionInMonth)));
         salesReport.append("└─────────────────────────────────────────────────────────────────────────────────────────────────────────┘\n");
         System.out.print(salesReport.toString());
 
@@ -647,9 +652,11 @@ public class PharmacyUI {
         System.out.print("Enter medicine name to search: ");
         String name = scanner.nextLine();
 
-        CustomADT<String, Medicine> results = pharmacyMaintenance.searchMedicinesByName(name);
+        CustomADT<String, Medicine> results = pharmacyMaintenance.searchMedicinesByName(name.toUpperCase());
         if (results.isEmpty()) {
             System.out.println("No medicines found matching the name: " + name);
+            System.out.println("Press Enter to continue ...");
+            scanner.nextLine();
             return;
         }
         System.out.println("\nSearch Results:");
@@ -709,7 +716,7 @@ public class PharmacyUI {
             System.out.println("├─────┼──────────┼────────────────┼──────────┼───────────┼────────────────────────────────┤");
             CustomADT<String, Medicine> lowStockMedicines = pharmacyMaintenance.getLowStockMedicines();
             if (lowStockMedicines.isEmpty()) {
-                System.out.println("No low stock medicines found.");
+                printCenteredText("No low stock medicines found.");
                 System.out.println("└─────┴──────────┴────────────────┴──────────┴───────────┴────────────────────────────────┘");
 
                 System.out.println("Press Enter to continue ...");

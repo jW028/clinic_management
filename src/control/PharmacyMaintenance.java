@@ -3,7 +3,6 @@ package control;
 import adt.CustomADT;
 import dao.*;
 import entity.*;
-
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import utility.IDGenerator;
@@ -19,6 +18,9 @@ public class PharmacyMaintenance {
     private final PrescriptionDAO pendingPrescriptionDAO = new PrescriptionDAO(1);
     private final TransactionDAO transactionDAO = new TransactionDAO();
     private final PrescriptionDAO processedPrescriptionDAO = new PrescriptionDAO(2);
+    public static final String STATUS_PENDING = "PENDING";
+    public static final String STATUS_COMPLETED = "COMPLETED";
+    public static final String STATUS_PARTIALLY_COMPLETED = "PARTIALLY_COMPLETED";
 
     public PharmacyMaintenance() {
         this.medicineMap = medicineDAO.retrieveFromFile();
@@ -145,15 +147,13 @@ public class PharmacyMaintenance {
     }
 
     public Prescription dequeuePrescription() {
-        Prescription nextPrescription = pendingPrescriptionMap.poll();
-        return nextPrescription;
+        return pendingPrescriptionMap.poll();
     }
 
     public boolean processPrescription(Prescription prescription) {
         boolean allProcessed = true;
-        Transaction transaction = new Transaction(getPatientIdFromPrescription(prescription, treatmentMap));
-        for (int i = 0; i < prescription.getMedicines().size(); i++) {
-            PrescribedMedicine pm = prescription.getMedicines().get(i);
+        Transaction transaction = new Transaction(getPatientIdFromPrescription(prescription));
+        for (PrescribedMedicine pm : prescription.getMedicines()) {
             Medicine medInPrescription = pm.getMedicine();
             Medicine med = null;
             if (medInPrescription != null) {
@@ -176,14 +176,13 @@ public class PharmacyMaintenance {
         }
 
         if (allProcessed) {
-            prescription.setStatus("COMPLETED");
+            prescription.setStatus(STATUS_COMPLETED);
         } else {
-            prescription.setStatus("PARTIALLY COMPLETED");
+            prescription.setStatus(STATUS_PARTIALLY_COMPLETED);
         }
 
         if (pendingPrescriptionMap.containsKey(prescription.getPrescriptionID())) {
             pendingPrescriptionMap.remove(prescription.getPrescriptionID());
-            processedPrescriptionMap.put(prescription.getPrescriptionID(), prescription);
         }
 
         processedPrescriptionMap.put(prescription.getPrescriptionID(), prescription);
@@ -199,9 +198,9 @@ public class PharmacyMaintenance {
         transactionDAO.saveToFile(transactionMap);
     }
 
-    public String getPatientIdFromPrescription(Prescription prescription, CustomADT<String, Treatment> treatmentMap) {
+    public String getPatientIdFromPrescription(Prescription prescription) {
         String treatmentId = prescription.getTreatmentID();
-        Treatment treatment = treatmentMap.get(treatmentId);
+        Treatment treatment = this.treatmentMap.get(treatmentId);
         if (treatment != null) {
             return treatment.getPatient().getPatientId();
         }
@@ -239,11 +238,10 @@ public class PharmacyMaintenance {
     }
 
     public CustomADT<String, Medicine> searchMedicinesByName(String name) {
-        CustomADT<String, Medicine> results = medicineMap.filter(
+        return medicineMap.filter(
                 new Medicine(null, name, 0, 0.0, null),
                 (med1, med2) -> med1.getName().toLowerCase().contains(med2.getName().toLowerCase()) ? 0 : 1
         );
-        return results;
     }
 
     public CustomADT<String, Transaction> getTransactionsInMonth(int year, int month) {
@@ -254,8 +252,7 @@ public class PharmacyMaintenance {
         Transaction max = new Transaction();
         max.setDate(end);
         Comparator<Transaction> dateComparator = (t1, t2) -> t1.getDate().compareTo(t2.getDate());
-        CustomADT<String, Transaction> results = transactionMap.rangeSearch(min, max, dateComparator);
-        return results;
+        return transactionMap.rangeSearch(min, max, dateComparator);
     }
 
     public CustomADT<String, Medicine> getLowStockMedicines() {
@@ -279,4 +276,46 @@ public class PharmacyMaintenance {
         return true;
     }
 
+    public String getMostSoldMedicine(CustomADT<String, Transaction> transactions) {
+        class MedStat{
+            Medicine med;
+            int qty;
+            MedStat(Medicine med, int qty) {
+                this.med = med;
+                this.qty = qty;
+            }
+        }
+        MedStat[] stats = new MedStat[100];
+        int statCount = 0;
+
+        for (Transaction transaction : transactions){
+            for (PrescribedMedicine pm : transaction.getMedicines()) {
+                Medicine med = pm.getMedicine();
+                int idx = -1;
+                for (int j = 0; j < statCount; j++) {
+                    if (stats[j].med.getId().equals(med.getId())) {
+                        idx = j;
+                        break;
+                    }
+                }
+                if (idx != -1) {
+                    stats[idx].qty += pm.getQuantity();
+                } else {
+                    stats[statCount++] = new MedStat(med, pm.getQuantity());
+                }
+            }
+        }
+        int maxQty = -1;
+        Medicine mostSold = null;
+        for (int i = 0; i < statCount; i++) {
+            if (stats[i].qty > maxQty) {
+                maxQty = stats[i].qty;
+                mostSold = stats[i].med;
+            }
+        }
+        if (mostSold == null) {
+            return "N/A";
+        }
+        return mostSold.getName() + "(ID: " + mostSold.getId() + ", Qty: " + maxQty + ")";
+    }
 }
