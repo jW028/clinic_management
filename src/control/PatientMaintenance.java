@@ -109,9 +109,10 @@ public class PatientMaintenance {
         Patient newPatient = new Patient(patientId, name, age, gender, contactNumber, address, isEmergency);
         patientRegistry.put(patientId, newPatient);
         saveChanges();
-
         String visitReason = isEmergency ? "Emergency Registration" : "Regular Registration";
+        IDGenerator.saveCounters("counter.dat");
         return true;
+
     }
 
     /**
@@ -431,26 +432,6 @@ public class PatientMaintenance {
     // ===============================
 
     /**
-     * Create initial visit history when registering patient
-     */
-    private void createInitialVisitHistory(String patientId, String visitReason) {
-        Patient patient = patientRegistry.get(patientId);
-        if (patient == null) return;
-
-        String visitId = IDGenerator.generateVisitID();
-        VisitHistory initialVisit = new VisitHistory(
-                visitId,
-                patient,
-                LocalDateTime.now(),
-                visitReason != null ? visitReason : "Initial Registration",
-                "COMPLETED"
-        );
-
-        visitHistoryMap.put(visitId, initialVisit);
-        visitHistoryDAO.saveToFile(visitHistoryMap);
-    }
-
-    /**
      * Add visit history record
      */
     public boolean addVisitHistory(String patientId, String visitReason, String status) {
@@ -470,6 +451,7 @@ public class PatientMaintenance {
 
         visitHistoryMap.put(visitId, visitHistory);
         visitHistoryDAO.saveToFile(visitHistoryMap);
+        IDGenerator.saveCounters("counter.dat");
         return true;
     }
 
@@ -529,39 +511,34 @@ public class PatientMaintenance {
     /**
      * Update visit history with comprehensive validation
      */
-    public boolean updateVisitHistory(String visitId, String visitReason, String status) {
-        if (visitId == null || visitId.trim().isEmpty()) {
+    public boolean updateVisitHistory(String patientId,
+                                      String visitId,
+                                      String visitReason,
+                                      String status) {
+        if (patientId == null || patientId.isBlank() ||
+                visitId == null || visitId.isBlank()) {
+            return false;
+        }
+        VisitHistory vh = visitHistoryMap.get(visitId);
+        if (vh == null) return false;
+        if (vh.getPatient() == null ||
+                !vh.getPatient().getPatientId().equalsIgnoreCase(patientId)) {
             return false;
         }
 
-        VisitHistory visitHistory = visitHistoryMap.get(visitId);
-        if (visitHistory == null) {
-            return false;
+        boolean updated = false;
+        if (visitReason != null && !visitReason.isBlank()) {
+            vh.setVisitReason(visitReason.trim());
+            updated = true;
         }
-
-        try {
-            boolean updated = false;
-
-            if (visitReason != null && !visitReason.trim().isEmpty()) {
-                visitHistory.setVisitReason(visitReason.trim());
-                updated = true;
-            }
-
-            if (status != null && !status.trim().isEmpty()) {
-                visitHistory.setStatus(status.trim().toUpperCase());
-                updated = true;
-            }
-
-            if (updated) {
-                visitHistoryDAO.saveToFile(visitHistoryMap);
-                return true;
-            }
-
-            return false;
-        } catch (Exception e) {
-            System.err.println("Error updating visit history: " + e.getMessage());
-            return false;
+        if (status != null && !status.isBlank()) {
+            vh.setStatus(status.trim().toUpperCase());
+            updated = true;
         }
+        if (updated) {
+            visitHistoryDAO.saveToFile(visitHistoryMap);
+        }
+        return updated;
     }
 
     /**
@@ -594,8 +571,6 @@ public class PatientMaintenance {
 
         // Total counts
         reportData.put("totalPatients", patientRegistry.size());
-        reportData.put("emergencyPatients", getEmergencyQueueSize());
-        reportData.put("normalPatients", patientRegistry.size() - getEmergencyQueueSize());
 
         // Queue statistics
         reportData.put("patientsInQueue", getTotalQueueSize());
@@ -659,5 +634,61 @@ public class PatientMaintenance {
         reportData.put("ageGroupBreakdown", ageGroups);
 
         return reportData;
+    }
+
+    // Java
+    public CustomADT<String, Object> generatePatientVisitSummaryReport() {
+        CustomADT<String, Object> report = new CustomADT<>();
+        int totalVisits = visitHistoryMap.size();
+        CustomADT<String, Integer> statusCounts = new CustomADT<>();
+        CustomADT<String, Integer> visitsPerPatient = new CustomADT<>();
+        CustomADT<String, Integer> visitsPerMonth = new CustomADT<>();
+
+        for (VisitHistory vh : visitHistoryMap) {
+            // Status breakdown
+            String status = vh.getStatus();
+            statusCounts.put(status, statusCounts.get(status) == null ? 1 : statusCounts.get(status) + 1);
+
+            // Visits per patient
+            String pid = vh.getPatient().getPatientId();
+            visitsPerPatient.put(pid, visitsPerPatient.get(pid) == null ? 1 : visitsPerPatient.get(pid) + 1);
+
+            // Visits per month (format: yyyy-MM)
+            String month = vh.getVisitDate().getYear() + "-" + String.format("%02d", vh.getVisitDate().getMonthValue());
+            visitsPerMonth.put(month, visitsPerMonth.get(month) == null ? 1 : visitsPerMonth.get(month) + 1);
+        }
+
+        // Average visits per patient
+        double avgVisits = visitsPerPatient.size() == 0 ? 0.0 : (double) totalVisits / visitsPerPatient.size();
+
+        // Top 3 patients by visit count
+        CustomADT<String, Integer> topPatients = new CustomADT<>();
+        String[] patientIds = new String[visitsPerPatient.size()];
+        Integer[] visitCounts = new Integer[visitsPerPatient.size()];
+        for (int i = 0; i < visitsPerPatient.size(); i++) {
+            patientIds[i] = visitsPerPatient.get(i) != null ? visitsPerPatient.get(i).toString() : null;
+            visitCounts[i] = visitsPerPatient.get(visitsPerPatient.get(i).toString());
+        }
+        for (int i = 0; i < 3 && i < visitsPerPatient.size(); i++) {
+            int maxIdx = -1, maxVal = -1;
+            for (int j = 0; j < visitCounts.length; j++) {
+                if (visitCounts[j] != null && visitCounts[j] > maxVal) {
+                    maxVal = visitCounts[j];
+                    maxIdx = j;
+                }
+            }
+            if (maxIdx != -1 && patientIds[maxIdx] != null) {
+                topPatients.put(patientIds[maxIdx], visitCounts[maxIdx]);
+                visitCounts[maxIdx] = -1; // Mark as used
+            }
+        }
+
+        report.put("totalVisits", totalVisits);
+        report.put("statusCounts", statusCounts);
+        report.put("averageVisitsPerPatient", avgVisits);
+        report.put("topPatients", topPatients);
+        report.put("visitsPerMonth", visitsPerMonth);
+
+        return report;
     }
 }

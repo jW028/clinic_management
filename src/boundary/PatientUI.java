@@ -230,71 +230,22 @@ public class PatientUI {
             System.out.println("\n" + "=".repeat(40));
             System.out.println("     RECORD MANAGEMENT MENU");
             System.out.println("=".repeat(40));
-            System.out.println("1. View Patient Records");
-            System.out.println("2. Search Patient Records");
-            System.out.println("3. Visit History Management");
+            System.out.println("1. Search Patient Records");
+            System.out.println("2. View Patient Records");
             System.out.println("0. Back to Patient Menu");
             System.out.println("=".repeat(40));
 
-            choice = InputHandler.getInt("Select an option", 0, 3);
+            choice = InputHandler.getInt("Select an option", 0, 2);
 
             switch(choice) {
                 case 1:
-                    viewPatientRecordsWithHistory();
-                    break;
-                case 2:
                     searchPatientRecords();
                     break;
-                case 3:
-                    viewVisitHistoryMenu();
+                case 2:
+                    viewPatientRecordsWithHistory();
                     break;
                 case 0:
                     System.out.println("Returning to patient menu...");
-                    break;
-                default:
-                    System.out.println("Invalid choice. Please try again.");
-            }
-
-            if (choice != 0) {
-                InputHandler.pauseForUser();
-            }
-
-        } while (choice != 0);
-    }
-
-    /**
-     * Visit History Management submenu
-     */
-    public void viewVisitHistoryMenu() {
-        int choice;
-        do {
-            System.out.println("\n" + "=".repeat(40));
-            System.out.println("    VISIT HISTORY MANAGEMENT");
-            System.out.println("=".repeat(40));
-            System.out.println("1. Add Visit History");
-            System.out.println("2. Update Visit History");
-            System.out.println("3. Remove Visit History");
-            System.out.println("4. View All Visit Histories");
-            System.out.println("0. Back to Records Menu");
-            System.out.println("=".repeat(40));
-
-            choice = InputHandler.getInt("Select an option", 0, 4);
-
-            switch(choice) {
-                case 1:
-                    addVisitHistory();
-                    break;
-                case 2:
-                    updateVisitHistory();
-                    break;
-                case 3:
-                    removeVisitHistory();
-                    break;
-                case 4:
-                    viewAllVisitHistories();
-                    break;
-                case 0:
-                    System.out.println("Returning to records menu...");
                     break;
                 default:
                     System.out.println("Invalid choice. Please try again.");
@@ -506,13 +457,12 @@ public class PatientUI {
      */
     private void clearAllQueues() {
         System.out.println("\n=== CLEAR ALL QUEUES ===");
-
         if (!InputHandler.getYesNo("Confirm clear all queues")) {
-            patientMaintenance.clearAllQueues();
             System.out.println("Operation cancelled.");
             return;
         }
-
+        patientMaintenance.clearAllQueues();
+        System.out.println("✅ All queues cleared.");
         displayCurrentStatus();
     }
 
@@ -638,10 +588,42 @@ public class PatientUI {
             System.out.println("Current Status: REGISTERED (Not in queue or waitlist)");
         }
 
-        // Display visit history
+        CustomADT<String, VisitHistory> visitHistories = patientMaintenance.getPatientVisitHistory(id);
         displayPatientVisitHistory(id);
         displayConsultationsForPatient(id);
         displayTreatmentsForPatient(id);
+        // Visit history actions menu
+        String[] options = {"Add", "Update", "Remove", "Exit"};
+        int action = InputHandler.displayMenu("Visit History Actions", options);
+
+        switch (action) {
+            case 0: // Add
+                addVisitHistory(id);
+                break;
+            case 1: // Update
+                if (visitHistories.isEmpty()) {
+                    System.out.println("No visit histories to update.");
+                    break;
+                }
+                int updateChoice = InputHandler.getInt("Select visit to update (0 to cancel)", 0, visitHistories.size());
+                if (updateChoice == 0) return;
+                VisitHistory selectedUpdate = visitHistories.get(updateChoice - 1);
+                updateVisitHistory(id, selectedUpdate.getVisitId());
+                break;
+            case 2: // Remove
+                if (visitHistories.isEmpty()) {
+                    System.out.println("No visit histories to remove.");
+                    break;
+                }
+                int removeChoice = InputHandler.getInt("Select visit to remove (0 to cancel)", 0, visitHistories.size());
+                if (removeChoice == 0) return;
+                VisitHistory selectedRemove = visitHistories.get(removeChoice - 1);
+                removeVisitHistory(id, selectedRemove.getVisitId());
+                break;
+            case 3: // Exit
+                System.out.println("Returning...");
+                break;
+        }
     }
 
     private void displayConsultationsForPatient(String patientId) {
@@ -952,40 +934,23 @@ public class PatientUI {
         }
         System.out.println("=".repeat(80));
         System.out.println("Total visits: " + visitHistories.size());
-
-        // Option to view details
-        if (visitHistories.size() > 0) {
-            boolean viewDetails = InputHandler.getYesNo("View detailed visit history?");
-            if (viewDetails) {
-                viewSelectedVisitDetails(visitHistories);
-            }
-        }
     }
 
     /**
      * Add visit history
      */
-    public void addVisitHistory() {
+    public void addVisitHistory(String patientId) {
         System.out.println("\n=== ADD VISIT HISTORY ===");
-
-        String patientId = InputHandler.getString("Enter Patient ID");
         Patient patient = patientMaintenance.getPatientById(patientId.toUpperCase());
-
         if (patient == null) {
             System.out.println("❌ Patient not found!");
             return;
         }
-
         String visitReason = InputHandler.getString("Enter visit reason");
-
+        System.out.println("New status (SCHEDULED / IN_PROGRESS / COMPLETED / CANCELLED)");
         String[] statusOptions = {"SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"};
-        System.out.println("Select status:");
-        for (int i = 0; i < statusOptions.length; i++) {
-            System.out.println((i + 1) + ". " + statusOptions[i]);
-        }
         int statusChoice = InputHandler.getInt("Select status", 1, statusOptions.length);
         String status = statusOptions[statusChoice - 1];
-
         if (patientMaintenance.addVisitHistory(patientId, visitReason, status)) {
             System.out.println("✅ Visit history added successfully!");
         } else {
@@ -996,121 +961,59 @@ public class PatientUI {
     /**
      * Update visit history
      */
-    public void updateVisitHistory() {
-        System.out.println("\n=== UPDATE VISIT HISTORY ===");
-
-        String visitId = InputHandler.getString("Enter Visit ID to update");
-        VisitHistory visitHistory = patientMaintenance.getVisitHistory(visitId);
-
-        if (visitHistory == null) {
-            System.out.println("❌ Visit history not found!");
+    public void updateVisitHistory(String patientId, String visitId) {
+        VisitHistory visit = patientMaintenance.getVisitHistory(visitId);
+        if (visit == null || !visit.getPatient().getPatientId().equalsIgnoreCase(patientId)) {
+            System.out.println("❌ Visit history not found for this patient.");
             return;
         }
 
-        displayVisitDetails(visitHistory);
+        System.out.println("\nCurrent details:");
+        displayVisitDetails(visit);
 
-        System.out.println("\n--- ENTER NEW DETAILS (leave empty to keep current) ---");
-        String visitReason = InputHandler.getOptionalString("Enter new visit reason");
-        String status = InputHandler.getOptionalString("Enter new status");
+        System.out.println("\n--- ENTER NEW VALUES (leave blank to keep) ---");
+        String newReason = InputHandler.getOptionalString("New visit reason");
+        System.out.println("New status (SCHEDULED / IN_PROGRESS / COMPLETED / CANCELLED)");
+        String[] statusOptions = {"SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"};
+        int statusChoice = InputHandler.getInt("Select status", 1, statusOptions.length);
+        String status = statusOptions[statusChoice - 1];
 
-        if (patientMaintenance.updateVisitHistory(visitId, visitReason, status)) {
-            System.out.println("✅ Visit history updated successfully!");
-        } else {
-            System.out.println("❌ Failed to update visit history.");
+        if ((newReason == null || newReason.isBlank()) &&
+                (status == null || status.isBlank())) {
+            System.out.println("No changes entered. Aborting.");
+            return;
         }
+
+        boolean ok = patientMaintenance.updateVisitHistory(
+                patientId,
+                visitId,
+                newReason,
+                status
+        );
+
+        System.out.println(ok ? "✅ Visit history updated." : "❌ Update failed.");
     }
 
     /**
      * Remove visit history
      */
-    public void removeVisitHistory() {
-        System.out.println("\n=== REMOVE VISIT HISTORY ===");
-
-        String visitId = InputHandler.getString("Enter Visit ID to remove");
+    public void removeVisitHistory(String patientId, String visitId) {
         VisitHistory visitHistory = patientMaintenance.getVisitHistory(visitId);
-
-        if (visitHistory == null) {
-            System.out.println("❌ Visit history not found!");
+        if (visitHistory == null || !visitHistory.getPatient().getPatientId().equalsIgnoreCase(patientId)) {
+            System.out.println("❌ Visit history not found for this patient!");
             return;
         }
-
         displayVisitDetails(visitHistory);
-
         boolean confirm = InputHandler.getYesNo("Are you sure you want to remove this visit history?");
         if (!confirm) {
             System.out.println("Operation cancelled.");
             return;
         }
-
         if (patientMaintenance.removeVisitHistory(visitId)) {
             System.out.println("✅ Visit history removed successfully!");
         } else {
             System.out.println("❌ Failed to remove visit history.");
         }
-    }
-
-    /**
-     * View all visit histories
-     */
-    public void viewAllVisitHistories() {
-        System.out.println("\n=== ALL VISIT HISTORIES ===");
-
-        CustomADT<String, VisitHistory> allVisits = patientMaintenance.getAllVisitHistories();
-
-        if (allVisits.isEmpty()) {
-            System.out.println("No visit histories found.");
-            return;
-        }
-
-        displayVisitHistoryList(allVisits, "All Visit Histories");
-
-        // Option to view details
-        System.out.println("\nOptions:");
-        System.out.println("1. View Visit Details");
-        System.out.println("0. Back to Visit History Menu");
-
-        int actionChoice = InputHandler.getInt("Select action", 0, 1);
-
-        if (actionChoice == 1) {
-            viewSelectedVisitDetails(allVisits);
-        }
-    }
-
-    /**
-     * Display visit history list
-     */
-    public void displayVisitHistoryList(CustomADT<String, VisitHistory> visits, String title) {
-        if (visits.isEmpty()) {
-            System.out.println("No visit histories found.");
-            return;
-        }
-
-        System.out.println("\n" + "=".repeat(90));
-        System.out.println("  " + title.toUpperCase());
-        System.out.println("=".repeat(90));
-        System.out.printf("%-4s %-12s %-15s %-20s %-15s %-8s\n",
-                "#", "Visit ID", "Patient", "Visit Date", "Reason", "Status");
-        System.out.println("-".repeat(90));
-
-        for (int i = 0; i < visits.size(); i++) {
-            VisitHistory visit = visits.get(i);
-            String patientName = visit.getPatient().getName();
-            String reason = visit.getVisitReason();
-
-            if (patientName.length() > 14) patientName = patientName.substring(0, 11) + "...";
-            if (reason.length() > 19) reason = reason.substring(0, 16) + "...";
-
-            System.out.printf("%-4d %-12s %-15s %-20s %-15s %-8s\n",
-                    i + 1,
-                    visit.getVisitId(),
-                    patientName,
-                    DateTimeFormatterUtil.formatForDisplay(visit.getVisitDate()),
-                    reason,
-                    visit.getStatus()
-            );
-        }
-        System.out.println("=".repeat(90));
-        System.out.println("Total visit histories: " + visits.size());
     }
 
     /**
@@ -1207,11 +1110,14 @@ public class PatientUI {
             System.out.println("0. Back to Main Menu");
             System.out.println("=".repeat(40));
 
-            choice = InputHandler.getInt("Select report type", 0, 1);
+            choice = InputHandler.getInt("Select report type", 0, 2);
 
             switch (choice) {
                 case 1:
                     displayPatientRegistrationReport();
+                    break;
+                case 2:
+                    displayPatientVisitSummaryReport();
                     break;
                 case 0:
                     System.out.println("Returning to main menu...");
@@ -1240,8 +1146,6 @@ public class PatientUI {
         // Overall statistics
         System.out.println("📊 OVERALL PATIENT STATISTICS:");
         System.out.println("   Total Registered Patients: " + reportData.get("totalPatients"));
-        System.out.println("   Emergency Patients: " + reportData.get("emergencyPatients"));
-        System.out.println("   Normal Patients: " + reportData.get("normalPatients"));
 
         // Queue status
         System.out.println("\n🏥 CURRENT QUEUE STATUS:");
@@ -1253,7 +1157,7 @@ public class PatientUI {
         // Gender breakdown
         System.out.println("\n👥 GENDER DISTRIBUTION:");
         CustomADT<String, Integer> genderStats = (CustomADT<String, Integer>) reportData.get("genderBreakdown");
-        for (String gender : new String[]{"Male", "Female", "Other"}) {
+        for (String gender : new String[]{"Male", "Female"}) {
             if (genderStats.containsKey(gender)) {
                 Integer count = genderStats.get(gender);
                 double percentage = (count.doubleValue() / (Integer) reportData.get("totalPatients")) * 100;
@@ -1271,6 +1175,70 @@ public class PatientUI {
             System.out.printf("   %-8s: %d patients (%.1f%%)\n", ageGroup, count, percentage);
         }
 
+        System.out.println("=".repeat(60));
+    }
+
+    public void displayPatientVisitSummaryReport() {
+        CustomADT<String, Object> report = patientMaintenance.generatePatientVisitSummaryReport();
+
+        System.out.println("\n" + "=".repeat(60));
+        System.out.println("         PATIENT VISIT SUMMARY REPORT");
+        System.out.println("=".repeat(60));
+        System.out.println("Total Visits: " + report.get("totalVisits"));
+        System.out.println("Average Visits per Patient: " + String.format("%.2f", report.get("averageVisitsPerPatient")));
+
+        System.out.println("\nVisits by Status:");
+        CustomADT<String, Integer> statusCounts = (CustomADT<String, Integer>) report.get("statusCounts");
+        for (String status : new String[]{"SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"}) {
+            System.out.printf("  %-12s: %d\n", status, statusCounts.get(status) != null ? statusCounts.get(status) : 0);
+        }
+
+        System.out.println("\nTop 3 Patients by Visit Count:");
+        CustomADT<String, Integer> topPatients = (CustomADT<String, Integer>) report.get("topPatients");
+        // Iterate over all possible patient IDs in topPatients
+        for (int i = 0, printed = 0; i < topPatients.size() && printed < topPatients.size(); i++) {
+            // Find the key at index i
+            for (Patient p : patientMaintenance.getAllPatientsArray()) {
+                if (topPatients.containsKey(p.getPatientId())) {
+                    Integer count = topPatients.get(p.getPatientId());
+                    System.out.printf("  %s: %d visits\n", p.getPatientId(), count);
+                    printed++;
+                    if (printed >= topPatients.size()) break;
+                }
+            }
+        }
+
+        System.out.println("\nVisits per Month:");
+        CustomADT<String, Integer> visitsPerMonth = (CustomADT<String, Integer>) report.get("visitsPerMonth");
+        // Collect all possible month keys
+        for (int i = 0, printed = 0; i < visitsPerMonth.size() && printed < visitsPerMonth.size(); i++) {
+            // Find the key at index i
+            for (int j = 0; j < visitsPerMonth.size(); j++) {
+                String[] months = new String[visitsPerMonth.size()];
+                int idx = 0;
+                // Collect keys by iterating over all VisitHistory entries
+                for (VisitHistory vh : patientMaintenance.getAllVisitHistories()) {
+                    String month = vh.getVisitDate().getYear() + "-" + String.format("%02d", vh.getVisitDate().getMonthValue());
+                    if (visitsPerMonth.containsKey(month)) {
+                        boolean alreadyPrinted = false;
+                        for (int k = 0; k < idx; k++) {
+                            if (months[k].equals(month)) {
+                                alreadyPrinted = true;
+                                break;
+                            }
+                        }
+                        if (!alreadyPrinted) {
+                            months[idx++] = month;
+                            Integer count = visitsPerMonth.get(month);
+                            System.out.printf("  %s: %d visits\n", month, count);
+                            printed++;
+                            if (printed >= visitsPerMonth.size()) break;
+                        }
+                    }
+                }
+                break;
+            }
+        }
         System.out.println("=".repeat(60));
     }
 
