@@ -1,5 +1,7 @@
 package dao;
 
+import adt.CustomADT;
+import entity.Prescription;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -7,13 +9,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import adt.CustomADT;
-import entity.Prescription;
-
 public class PrescriptionDAO {
     private String fileName;
-    private final String fileName1 = "pending_prescriptions.dat";
-    private final String fileName2 = "processed_prescriptions.dat";
+    private final String fileName1 = "src/data/pending_prescriptions.dat";
+    private final String fileName2 = "src/data/processed_prescriptions.dat";
 
     public PrescriptionDAO(int type) {
         if (type == 1) {

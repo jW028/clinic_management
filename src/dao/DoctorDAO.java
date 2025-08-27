@@ -2,11 +2,10 @@ package dao;
 
 import adt.CustomADT;
 import entity.Doctor;
-
 import java.io.*;
 
 public class DoctorDAO {
-    private static final String FILE_NAME = "doctors.dat";
+    private static final String FILE_NAME = "src/data/doctors.dat";
 
     public static void saveDoctors(CustomADT<String, Doctor> doctors) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {

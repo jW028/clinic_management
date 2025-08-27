@@ -5,7 +5,7 @@ import entity.Medicine;
 import java.io.*;
 
 public class MedicineDAO {
-    private final String fileName = "medicine.dat";
+    private final String fileName = "src/data/medicine.dat";
 
     public void saveToFile(CustomADT<String, Medicine> medicines) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName))){

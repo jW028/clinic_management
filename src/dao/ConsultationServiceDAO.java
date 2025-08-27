@@ -2,11 +2,10 @@ package dao;
 
 import adt.CustomADT;
 import entity.ConsultationService;
-
 import java.io.*;
 
 public class ConsultationServiceDAO {
-    private final String fileName = "service.dat";
+    private final String fileName = "src/data/service.dat";
 
     public void saveToFile(CustomADT<String, ConsultationService> services) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName))) {

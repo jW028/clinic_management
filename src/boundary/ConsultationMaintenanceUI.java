@@ -1,20 +1,18 @@
 package boundary;
 
+import adt.CustomADT;
 import control.ConsultationMaintenance;
 import entity.Appointment;
 import entity.Consultation;
 import entity.ConsultationService;
 import entity.Diagnosis;
-import entity.Payment;
-import entity.Patient;
 import entity.Doctor;
-import adt.CustomADT;
-import utility.InputHandler;
-import utility.MessageUI;
-import utility.DateTimeFormatterUtil;
-
+import entity.Patient;
+import entity.Payment;
 import java.time.LocalDateTime;
 import java.util.Scanner;
+import utility.DateTimeFormatterUtil;
+import utility.InputHandler;
 
 public class ConsultationMaintenanceUI {
     private final ConsultationMaintenance maintenance;
@@ -409,7 +407,7 @@ public class ConsultationMaintenanceUI {
                 continue;
             }
             if (!InputHandler.isValidId(diagnosisId, "diagnosis")) {
-                System.out.println("Invalid format. Must be D followed by 3 digits (Eg. D001).");
+                System.out.println("Invalid format. Must be D followed by 3 digits (Eg. DC001).");
                 continue;
             }
 
@@ -878,7 +876,7 @@ public class ConsultationMaintenanceUI {
         Doctor doctor = null;
         LocalDateTime appointmentTime = null;
         while (doctor == null || appointmentTime == null) {
-            System.out.print("\nEnter Doctor ID (Eg. DC001, or 0 to return): ");
+            System.out.print("\nEnter Doctor ID (Eg. D001, or 0 to return): ");
             String doctorId = scanner.nextLine().trim();
             if (doctorId.equals("0")) return;
             if (doctorId.isEmpty()) {

@@ -1,16 +1,17 @@
 package entity;
 
 import adt.CustomADT;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class Treatment {
+public class Treatment implements Serializable {
     // Core identifiers
     private String treatmentID;
     private String consultationID;
+
+    // Core entities
     private Patient patient;
     private Doctor doctor;
-    private Diagnosis diagnosis;
-    // Core entities
     private CustomADT<String, Procedure> procedures;
 
     // Treatment details
@@ -26,16 +27,14 @@ public class Treatment {
 
     // Constructors
 
-    public Treatment(String treatmentID, String consultationID, Patient patient, Doctor doctor, 
-                     Diagnosis diagnosis, LocalDateTime treatmentDate, String notes,
-                     boolean isCritical) {
+    public Treatment(String treatmentID, String consultationID, Patient patient, Doctor doctor,
+                     LocalDateTime treatmentDate, String notes, boolean isCritical) {
 
         // Initialize core identifiers and clinical information
         this.treatmentID = treatmentID;
         this.consultationID = consultationID;
         this.patient = patient;
         this.doctor = doctor;
-        this.diagnosis = diagnosis;
         this.treatmentDate = treatmentDate;
         this.notes = notes;
         this.isCritical = isCritical;
@@ -47,11 +46,16 @@ public class Treatment {
         this.type = "OUTPATIENT";
     }
 
-    public Treatment(String treatmentID, String consultationID, Patient patient, Doctor doctor, Diagnosis diagnosis,
+    public Treatment(String treatmentID, String consultationID, Patient patient,
                      Prescription prescription, LocalDateTime treatmentDate, String notes,
                      boolean isCritical) {
-        this(treatmentID, consultationID, patient, doctor, diagnosis,
-         treatmentDate, notes, isCritical);
+        this.treatmentID = treatmentID;
+        this.consultationID = consultationID;
+        this.patient = patient;
+        this.doctor = null; // No doctor specified in this constructor
+        this.treatmentDate = treatmentDate;
+        this.notes = notes;
+        this.isCritical = isCritical;
 
         this.prescription = prescription;
         // Initialize procedures as an empty CustomADT
@@ -62,7 +66,7 @@ public class Treatment {
     }
 
     // Prescription Management
-    public boolean hasPrescriptions() {
+    public boolean hasPrescription() {
         return prescription != null;
     }
 
@@ -96,8 +100,7 @@ public class Treatment {
     
     public double getTotalProcedureCost() {
         double totalCost = 0.0;
-        for (int i = 0; i < procedures.size(); i++) {
-            Procedure procedure = procedures.get(i);
+        for (Procedure procedure : procedures) {
             if (procedure != null) {
                 totalCost += procedure.getCost();
             }
@@ -117,7 +120,6 @@ public class Treatment {
     public String getConsultationID() { return consultationID; }
     public Patient getPatient() { return patient; }
     public Doctor getDoctor() { return doctor; }
-    public Diagnosis getDiagnosis() { return diagnosis; }
     public Prescription getPrescription() { return prescription; }
     public CustomADT<String, Procedure> getProcedures() { return procedures; }
     public LocalDateTime getTreatmentDate() { return treatmentDate; }
@@ -125,15 +127,14 @@ public class Treatment {
     public boolean isCritical() { return isCritical; }
     public String getStatus() { return status; }
     public String getType() { return type; }
-    //public String getOriginalTreatmentID() { return originalTreatmentID; }
 
 
     // Setters
     public void setNotes(String notes) { this.notes = notes; }
     public void setCritical(boolean critical) { isCritical = critical; }
     public void setType(String type) { this.type = type; }
-    //public void setOriginalTreatmentID(String originalTreatmentID) { this.originalTreatmentID = originalTreatmentID; }
     public void setPrescription(Prescription prescription) { this.prescription = prescription; }
+    public void setStatus(String status) { this.status = status; }
 
     // toString method for displaying treatment details
     @Override
@@ -142,11 +143,10 @@ public class Treatment {
         sb.append("=== TREATMENT DETAILS ===\n")
           .append("Treatment ID: ").append(treatmentID).append("\n")
           .append("Consultation ID: ").append(consultationID).append("\n")
-          .append("Status: ").append(status).append("\n")
-          .append("Type: ").append(type).append("\n")
           .append("Patient: ").append(patient != null ? patient.getName() : "N/A").append("\n")
           .append("Doctor: ").append(doctor != null ? doctor.getName() : "N/A").append("\n")
-          .append("Diagnosis: ").append(diagnosis != null ? diagnosis.getDescription() : "N/A").append("\n")
+          .append("Status: ").append(status).append("\n")
+          .append("Type: ").append(type).append("\n")
           .append("Treatment Date: ").append(treatmentDate != null ? treatmentDate.toString() : "N/A").append("\n");
 
 
@@ -156,7 +156,7 @@ public class Treatment {
         sb.append("\n=== PRESCRIPTIONS ===\n");
         if (prescription != null) {
             CustomADT<String, PrescribedMedicine> medicines = prescription.getMedicines();
-            if (medicines != null & medicines.size() > 0) {
+            if (medicines != null && medicines.size() > 0) {
                 medicines.forEach(medicine -> {
                     sb.append(medicine.toString()).append("\n");
                 });
@@ -168,10 +168,10 @@ public class Treatment {
         // Procedures
         sb.append("\n=== PROCEDURES ===\n");
         if (procedures != null && !procedures.isEmpty()) {
-            procedures.forEach(procedure -> {
+            for (Procedure procedure : procedures) {
                 sb.append("- ").append(procedure.getProcedureName())
                   .append(" (RM").append(String.format("%.2f", procedure.getCost())).append(")\n");
-            });
+            };
         } else {
             sb.append("None");
         }

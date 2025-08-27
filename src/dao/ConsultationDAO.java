@@ -2,11 +2,10 @@ package dao;
 
 import adt.CustomADT;
 import entity.Consultation;
-
 import java.io.*;
 
 public class ConsultationDAO {
-    private final String fileName = "consultation.dat";
+    private final String fileName = "src/data/consultation.dat";
 
     public void saveToFile(CustomADT<String, Consultation> consultations) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName))) {
@@ -20,6 +19,7 @@ public class ConsultationDAO {
         CustomADT<String, Consultation> consultations = new CustomADT<>();
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName))) {
             consultations = (CustomADT<String, Consultation>) ois.readObject();
+            System.out.println("Consultations loaded from file. ");
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("No existing consultaiton file found or error reading it. ");
         }

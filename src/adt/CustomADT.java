@@ -589,32 +589,56 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
     }
 
     /**
+     * Smart search for a value through the collection
+     * @param target the value to search for
+     * @param comparator the comparator for matching
+     * @return true if a matching element is found, false otherwise
+     */
+    public boolean containsValue(V target, Comparator<V> comparator) {
+        if (target == null) return false;
+
+        // For small collections, use linear search
+        if (size <= 10) {
+            return linearContains(target, comparator);
+        }
+
+        if (isSorted(comparator)) {
+            return binaryContains(target, comparator);
+        }
+
+        // Fall back to linear search
+        return linearContains(target, comparator);
+    }
+
+    /** 
      * Linear search through the collection
      * @param target the value to search for
      * @param comparator the comparator for equality checking
      * @return the first matching value, or null if not found
      */
-    public V linearSearch(V target, Comparator<V> comparator) {
+    public boolean linearContains(V target, Comparator<V> comparator) {
         Node<K, V> current = head;
         while (current != null) {
             if (comparator.compare(current.value, target) == 0) {
-                return current.value;
+                return true;
             }
             current = current.next;
         }
-        return null;
+        return false;
     }
 
     /**
-     * Binary search for sorted data 
+     * Binary search that returns boolean indicating if target exists
      * Requires data to be sorted first
+     * @param target the value to search for
+     * @param comparator the comparator for comparison
+     * @return true if target exists, false otherwise
      */
-    public V binarySearch(V target, Comparator<V> comparator) {
-        if (isEmpty() || target == null || comparator == null) return null;
+    public boolean binaryContains(V target, Comparator<V> comparator) {
+        if (isEmpty() || target == null || comparator == null) return false;
 
-        // Convert linked list to array for binary search 
+        // convert linked list to array for binary search
         Node<K, V>[] nodeArray = createNodeArray();
-
         int left = 0;
         int right = size - 1;
 
@@ -625,11 +649,10 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
                 left = mid + 1;
                 continue;
             }
-
             int comparison = comparator.compare(nodeArray[mid].value, target);
 
             if (comparison == 0) {
-                return nodeArray[mid].value;
+                return true; // Target found
             } else if (comparison < 0) {
                 // Target value is greater than mid, search the right half
                 left = mid + 1;
@@ -638,7 +661,7 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
                 right = mid - 1;
             }
         }
-        return null;
+        return false; // Target not found
     }
 
     /**
@@ -729,42 +752,6 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
     }
 
     /**
-     * Find the first element that matches the given target
-     * @param target the value to search for
-     * @param comparator the comparator for matching
-     * @return the first matching element, or null if not found
-     */
-    public V findFirst(Comparator<V> condition, V referenceValue) {
-        Node<K, V> current = head;
-        while (current != null) {
-            if (condition.compare(current.value, referenceValue) == 0) {
-                return current.value;
-            }
-            current = current.next;
-        }
-        return null;
-    }
-
-    /**
-     * Find all elements that match the given criteria
-     * @param target the value to search for
-     * @param comparator the comparator for matching
-     * @return a new CustomADT containing all elements
-     */
-    public CustomADT<K, V> findAll(V target, Comparator<V> comparator) {
-        CustomADT<K, V> results = new CustomADT<>();
-        Node<K, V> current = head;
-
-        while (current != null) {
-            if (comparator.compare(current.value, target) == 0) {
-                results.put(current.key, current.value);
-            }
-            current = current.next;
-        }
-        return results;
-    }
-
-    /**
      * Filter elements based on a condition using a predicate-style comparator
      * @param referenceValue the value to compare against
      * @param condition a comparator that returns 0 for elements to keep
@@ -773,6 +760,7 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
     public CustomADT<K, V> filter(V referenceValue, Comparator<V> condition) {
         CustomADT<K, V> filtered = new CustomADT<>();
         Node<K, V> current = head;
+
 
         while (current != null) {
             if (condition.compare(current.value, referenceValue) == 0) {
@@ -887,8 +875,6 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
             k++;
         }
     }
-
-
 
     /**
      * Returns a string representation of this collection

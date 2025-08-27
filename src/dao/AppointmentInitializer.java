@@ -2,7 +2,6 @@ package dao;
 
 import adt.CustomADT;
 import entity.Appointment;
-
 import java.time.LocalDateTime;
 
 public class AppointmentInitializer {

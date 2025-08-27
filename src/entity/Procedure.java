@@ -1,6 +1,7 @@
 package entity;
+import java.io.Serializable;
 
-public class Procedure {
+public class Procedure implements Serializable {
     // Core identifiers
     private String procedureID;
     private String procedureCode;
