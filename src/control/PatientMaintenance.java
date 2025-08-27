@@ -111,7 +111,6 @@ public class PatientMaintenance {
         saveChanges();
 
         String visitReason = isEmergency ? "Emergency Registration" : "Regular Registration";
-        createInitialVisitHistory(patientId, visitReason);
         return true;
     }
 

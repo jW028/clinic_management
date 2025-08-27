@@ -326,13 +326,6 @@ public class PatientUI {
         if (patientMaintenance.registerPatient(id, name, age, gender, contactNumber, address, isEmergency)) {
             System.out.println("✅ Patient registered successfully!");
             System.out.println("Patient ID: " + id);
-
-            if (isEmergency && InputHandler.getYesNo("Add to queue?")) {
-                patientMaintenance.enqueuePatient(id);
-                System.out.println("✅ Patient added to emergency queue.");
-            } else {
-                System.out.println("Patient registration complete. You can add them to the queue later.");
-            }
         } else {
             System.out.println("❌ Registration failed - ID already exists");
         }
