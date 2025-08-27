@@ -1,5 +1,9 @@
 package adt;
 
+import org.w3c.dom.Node;
+
+import java.util.Comparator;
+
 /**
  * Interface for a versatile Abstract Data Type that combines the functionality of:
  * - Map (HashMap-like key-value storage with O(1) average lookup)
@@ -226,4 +230,31 @@ public interface CustomADTInterface<K, V> {
      */
     @Override
     int hashCode();
+
+
+    /**
+     * Sorts the elements in this collection according to the order induced by the specified comparator.
+     *
+     * @param comparator the comparator to determine the order of the collection. A null value indicates that the elements' natural ordering should be used.
+     */
+    void sort(Comparator<V> comparator);
+
+    /**
+     * Filters the elements in this collection based on the specified condition and reference value.
+     *
+     * @param referenceValue the value to compare each element against
+     * @param condition the comparator that defines the filtering condition
+     * @return a new CustomADT containing only the elements that satisfy the filtering condition
+     */
+    CustomADT<K, V> filter(V referenceValue, Comparator<V> condition);
+
+    /**
+     * Performs a range search on the elements in this collection based on the specified minimum and maximum values.
+     *
+     * @param min the minimum value of the range (inclusive)
+     * @param max the maximum value of the range (inclusive)
+     * @param comparator the comparator that defines the ordering of the elements
+     * @return a new CustomADT containing only the elements that fall within the specified range
+     */
+    CustomADT<K, V> rangeSearch(V min, V max, Comparator<V> comparator);
 }
