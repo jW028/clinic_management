@@ -209,9 +209,7 @@ public class PharmacyUI {
         System.out.println("\n~> Adding new prescription...\n");
         String prescriptionID = IDGenerator.generatePrescriptionID();
         Prescription prescription = new Prescription(prescriptionID, treatmentID);
-        System.out.println("Enter number of medicines to add: ");
-        int numMedicines = Integer.parseInt(scanner.nextLine());
-        viewMedicine();
+        int numMedicines = InputHandler.getInt("Enter number of medicines to add", 1, 20);
         for (int i = 0; i < numMedicines; i++) {
             System.out.println("Adding Medicine " + (i + 1) + ":");
             addPrescribedMedicine(prescription);
@@ -220,41 +218,49 @@ public class PharmacyUI {
         System.out.println("Prescription added successfully!");
     }
 
+    // changed
     public void addPrescribedMedicine(Prescription prescription) {
         System.out.println("\n~> Adding prescribed medicine...\n");
-        String medicineID = InputHandler.getString("Enter Medicine ID");
-        int quantity = InputHandler.getInt("Enter Quantity", 1, 500);
+        Medicine med = null;
+        do {
+            String medicineID = InputHandler.getString("Enter Medicine ID");
+            med = pharmacyMaintenance.getMedicineById(medicineID);
+            if (med == null) {
+                System.out.println("Medicine with ID " + medicineID + " not found.");
+            }
+        } while (med == null);
+        int availableQty = pharmacyMaintenance.getMedicineStock(med.getId());
+        int quantity = InputHandler.getInt("Enter Quantity", 1, availableQty);
         String dosage = InputHandler.getString("Enter Dosage");
         String frequency = InputHandler.getString("Enter Frequency");
         String description = InputHandler.getString("Enter Description");
 
-        Medicine med = pharmacyMaintenance.getMedicineById(medicineID);
-        if (med != null) {
-            prescription.addMedicine(med, quantity, dosage, frequency, description);
-            System.out.println("Prescribed medicine added successfully!");
-        } else {
-            System.out.println("Medicine with ID " + medicineID + " not found.");
-        }
+        prescription.addMedicine(med, quantity, dosage, frequency, description);
+        System.out.println("Prescribed medicine added successfully!");
     }
 
     public void viewAllPrescriptions() {
+
         int choice = 0;
         do{
-            CustomADT<String, Prescription> pendingList = pharmacyMaintenance.getPendingPrescriptionMap();
-            CustomADT<String, Prescription> processedList = pharmacyMaintenance.getProcessedPrescriptionMap();
+            CustomADT<String, Prescription> pendingQueue = pharmacyMaintenance.getPendingPrescriptionMap();
+            CustomADT<String, Prescription> completedList = pharmacyMaintenance.getCompletedPrescriptionMap();
+            CustomADT<String, Prescription> rejectedList = pharmacyMaintenance.getRejectedPrescriptionMap();
             System.out.println("┌─────────────────────────────────────────────────────────────────────────────────────────┐");
             printCenteredText("Pending Prescriptions");
             System.out.println("├─────┬───────────────┬──────────────┬──────────────────┬───────────────────┬─────────────┤");
             System.out.println("│ No. │ Prescription  │ Treatment ID │ Total Price (RM) │ Status            │ Num of Meds │");
             System.out.println("├─────┼───────────────┼──────────────┼──────────────────┼───────────────────┼─────────────┤");
             int count = 1;
-            for (Prescription p : pendingList) {
-                System.out.printf("│ %2d. │ %-13s │ %-12s │ %16.2f │ %-17s │ %-11d │%n",
-                        count++, p.getPrescriptionID(), p.getTreatmentID(), p.getTotalPrice(), p.getStatus(), p.getMedicines().size());
-            }
-            if (pendingList.isEmpty()) {
+            if (pendingQueue.isEmpty()) {
                 printCenteredText("No pending prescriptions found.");
+            } else {
+                for (Prescription p : pendingQueue) {
+                    System.out.printf("│ %2d. │ %-13s │ %-12s │ %16.2f │ %-17s │ %-11d │%n",
+                            count++, p.getPrescriptionID(), p.getTreatmentID(), p.getTotalPrice(), p.getStatus(), p.getMedicines().size());
+                }
             }
+
             System.out.println("└─────────────────────────────────────────────────────────────────────────────────────────┘");
 
             // Display Processed Prescriptions
@@ -263,13 +269,33 @@ public class PharmacyUI {
             System.out.println("├─────┬───────────────┬──────────────┬──────────────────┬───────────────────┬─────────────┤");
             System.out.println("│ No. │ Prescription  │ Treatment ID │ Total Price (RM) │ Status            │ Num of Meds │");
             System.out.println("├─────┼───────────────┼──────────────┼──────────────────┼───────────────────┼─────────────┤");
-            count = 1;
-            for (Prescription p : processedList) {
-                System.out.printf("│ %2d. │ %-13s │ %-12s │ %16.2f │ %-17s │ %-11d │%n",
-                        count++, p.getPrescriptionID(), p.getTreatmentID(), p.getTotalPrice(), p.getStatus(), p.getMedicines().size());
-            }
-            if (processedList.isEmpty()) {
+            if (completedList.isEmpty()) {
                 printCenteredText("No processed prescriptions found.");
+            } else {
+                count = 1;
+                for (Prescription p : completedList) {
+                    System.out.printf("│ %2d. │ %-13s │ %-12s │ %16.2f │ %-17s │ %-11d │%n",
+                            count++, p.getPrescriptionID(), p.getTreatmentID(), p.getTotalPrice(), p.getStatus(), p.getMedicines().size());
+                }
+            }
+
+
+            System.out.println("└─────────────────────────────────────────────────────────────────────────────────────────┘");
+
+            // Display Rejected Prescriptions
+            System.out.println("┌─────────────────────────────────────────────────────────────────────────────────────────┐");
+            printCenteredText("Rejected Prescriptions");
+            System.out.println("├─────┬───────────────┬──────────────┬──────────────────┬───────────────────┬─────────────┤");
+            System.out.println("│ No. │ Prescription  │ Treatment ID │ Total Price (RM) │ Status            │ Num of Meds │");
+            System.out.println("├─────┼───────────────┼──────────────┼──────────────────┼───────────────────┼─────────────┤");
+            if (rejectedList.isEmpty()) {
+                printCenteredText("No rejected prescriptions found.");
+            } else {
+                count = 1;
+                for (Prescription p : rejectedList) {
+                    System.out.printf("│ %2d. │ %-13s │ %-12s │ %16.2f │ %-17s │ %-11d │%n",
+                            count++, p.getPrescriptionID(), p.getTreatmentID(), p.getTotalPrice(), p.getStatus(), p.getMedicines().size());
+                }
             }
             System.out.println("└─────────────────────────────────────────────────────────────────────────────────────────┘");
 
@@ -307,39 +333,29 @@ public class PharmacyUI {
             System.out.println(presc);
             if (presc.getStatus().equals("PENDING")) {
                 System.out.println("Prescription Options:");
-                System.out.println("1. Process this Prescription");
-                System.out.println("2. Edit Prescribed Medicine");
-                System.out.println("3. Add Prescribed Medicine");
-                System.out.println("4. Delete Prescription");
-                System.out.println("5. Delete Prescribed Medicine");
-                System.out.println("6. Back to Prescription Management Menu");
-                choice = InputHandler.getInt("Enter your choice", 1, 6);
+                System.out.println("1. Edit Prescribed Medicine");
+                System.out.println("2. Add Prescribed Medicine");
+                System.out.println("3. Delete Prescription");
+                System.out.println("4. Delete Prescribed Medicine");
+                System.out.println("5. Back to Prescription Management Menu");
+                choice = InputHandler.getInt("Enter your choice", 1, 5);
                 switch (choice) {
                     case 1:
-                        // Process this Prescription
-                        boolean allProcessed = pharmacyMaintenance.processPrescription(presc);
-                        if (!allProcessed) {
-                            System.out.println("-- Some medicines could not be processed. --");
-                        } else {
-                            System.out.println("-- All medicines processed successfully --");
-                        }
-                        break;
-                    case 2:
                         // Edit Prescribed Medicine
                         editPrescribedMedicine(presc);
                         break;
-                    case 3:
+                    case 2:
                         // Add Prescribed Medicine
                         addPrescribedMedicine(presc);
                         pharmacyMaintenance.savePrescriptionFile(presc);
                         break;
-                    case 4:
+                    case 3:
                         deletePrescription(presc);
                         return;
-                    case 5:
+                    case 4:
                         deletePrescribedMedicine(presc);
                         break;
-                    case 6:
+                    case 5:
                         System.out.println("Returning to Prescription Management Menu...");
                         return;
                     default:
@@ -347,7 +363,7 @@ public class PharmacyUI {
                         break;
                 }
 
-            } else {
+            } else if (presc.getStatus().equals("COMPLETED")){
                 System.out.println("-- This prescription has already been processed. --");
                 System.out.println("\nPrescription options:");
                 System.out.println("1. Delete prescription");
@@ -358,6 +374,39 @@ public class PharmacyUI {
                         deletePrescription(presc);
                         break;
                     case 2:
+                        System.out.println("\nReturning to Prescription Management Menu...");
+                        return;
+                    default:
+                        System.out.println("\nInvalid choice. Please try again.");
+                        break;
+                }
+            } else {
+                System.out.println("-- This prescription has been rejected. --");
+                System.out.println("-- Try edit and process again or delete the prescription. --");
+                System.out.println("\nPrescription options:");
+                System.out.println("1. Delete prescription");
+                System.out.println("2. Edit Prescribed Medicine");
+                System.out.println("3. Reprocess the Prescription");
+                System.out.println("4. Back to Prescription Management Menu");
+                choice = InputHandler.getInt("Enter your choice", 1, 4);
+                switch (choice) {
+                    case 1:
+                        deletePrescription(presc);
+                        break;
+                    case 2:
+                        editPrescribedMedicine(presc);
+                        break;
+                    case 3:
+                        boolean confirm = InputHandler.getYesNo("Are you sure the medicines are available to process this prescription?");
+                        if (confirm) {
+                            presc.setStatus("PENDING");
+                            pharmacyMaintenance.enqueuePrescription(presc);
+                            pharmacyMaintenance.removePrescriptionFromProcessed(prescId);
+                        } else {
+                            System.out.println("Reprocess cancelled.");
+                        }
+                        break;
+                    case 4:
                         System.out.println("\nReturning to Prescription Management Menu...");
                         return;
                     default:
@@ -412,7 +461,7 @@ public class PharmacyUI {
         int newIntValue = 0;
         switch (choice) {
             case 1:
-                newIntValue = InputHandler.getInt("Enter new quantity", 1, 500);
+                newIntValue = InputHandler.getInt("Enter new quantity", 1, pm.getMedicine().getQuantity());
                 break;
             case 2:
                 newStringValue = InputHandler.getString("Enter new dosage");
@@ -427,6 +476,10 @@ public class PharmacyUI {
                 System.out.println("Invalid choice.");
         }
         boolean isUpdated = pharmacyMaintenance.updatePrescribedMedicine(pm, newIntValue, newStringValue, choice);
+
+        if (choice == 1){
+            presc.calculateTotalPrice();
+        }
 
         if (isUpdated) {
             System.out.println("-- Prescribed Medicine updated successfully. --");
@@ -605,10 +658,10 @@ public class PharmacyUI {
         System.out.print(report.toString());
 
 
-        System.out.print("Would you like to save this report? (y/n):");
-        String choice = scanner.nextLine();
-        if (choice.equalsIgnoreCase("y")) {
-            pharmacyMaintenance.saveMedicineStockReport(report, reportDate);
+        boolean choice = InputHandler.getYesNo("Would you like to save this report?");
+        if (choice) {
+            String filename = pharmacyMaintenance.saveMedicineStockReport(report, reportDate);
+            System.out.println("Report saved successfully as " + filename);
         } else {
             System.out.println("Returning back to Main menu...");
         }
@@ -671,10 +724,10 @@ public class PharmacyUI {
         salesReport.append("└─────────────────────────────────────────────────────────────────────────────────────────────────────────┘\n");
         System.out.print(salesReport.toString());
 
-        System.out.print("Would you like to save this report? (y/n):");
-        String choice = scanner.nextLine();
-        if (choice.equalsIgnoreCase("y")) {
-            pharmacyMaintenance.saveMonthlySalesReport(salesReport, year, month);
+        boolean choice = InputHandler.getYesNo("Would you like to save this report?");
+        if (choice) {
+            String filename = pharmacyMaintenance.saveMonthlySalesReport(salesReport, year, month);
+            System.out.println("Report saved successfully as " + filename);
         } else {
             System.out.println("Returning back to Main menu...");
         }

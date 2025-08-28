@@ -10,7 +10,7 @@ import utility.IDGenerator;
 public class PharmacyMaintenance {
     private final CustomADT<String, Medicine> medicineMap;
     private final CustomADT<String, Prescription> pendingPrescriptionMap;
-    private final CustomADT<String, Prescription> processedPrescriptionMap;
+    private CustomADT<String, Prescription> processedPrescriptionMap;
     private final CustomADT<String, Transaction> transactionMap;
     private final CustomADT<String, Treatment> treatmentMap;
     private final TreatmentDAO treatmentDAO = new TreatmentDAO();
@@ -104,8 +104,9 @@ public class PharmacyMaintenance {
         return pendingPrescriptionMap;
     }
 
-    public CustomADT<String, Prescription> getProcessedPrescriptionMap() {
-        return processedPrescriptionMap;
+    public CustomADT<String, Prescription> getCompletedPrescriptionMap() {
+        return processedPrescriptionMap.filter( new Prescription(null,null),
+                (p1, p2) -> p1.getStatus().equals(STATUS_COMPLETED) ? 0 : 1);
     }
 
     public Prescription getPrescriptionById(String id) {
@@ -179,32 +180,26 @@ public class PharmacyMaintenance {
     public boolean processPrescription(Prescription prescription) {
         boolean allProcessed = true;
         Transaction transaction = new Transaction(getPatientIdFromPrescription(prescription));
-        for (PrescribedMedicine pm : prescription.getMedicines()) {
-            Medicine medInPrescription = pm.getMedicine();
-            Medicine med = null;
-            if (medInPrescription != null) {
-                med = medicineMap.get(medInPrescription.getId());
-            }
-            if (med == null) {
-                System.out.println("Medicine not found in system for prescription: " + (medInPrescription != null ? medInPrescription.getId() : "null"));
+
+        for (PrescribedMedicine pm : prescription.getMedicines()){
+            Medicine med = medicineMap.get(pm.getMedicineID());
+            if (med == null || med.getQuantity() < pm.getQuantity()) {
                 allProcessed = false;
-                continue;
-            }
-            if (med.getQuantity() < pm.getQuantity()) {
-                System.out.println("Insufficient stock for " + med.getName());
-                allProcessed = false;
-            } else {
-                med.setQuantity(med.getQuantity() - pm.getQuantity());
-                System.out.println("Processed " + pm.getQuantity() + " of " + med.getName() + " for prescription: " + prescription.getPrescriptionID());
-                transaction.addMedicine(pm);
-                addTransaction(transaction.getTransactionID(), transaction);
+                break;
             }
         }
 
-        if (allProcessed) {
-            prescription.setStatus(STATUS_COMPLETED);
+        if (!allProcessed) {
+            prescription.setStatus("REJECTED");
         } else {
-            prescription.setStatus(STATUS_PARTIALLY_COMPLETED);
+            for (PrescribedMedicine pm : prescription.getMedicines()){
+                Medicine med = medicineMap.get(pm.getMedicineID());
+                med.setQuantity(med.getQuantity() - pm.getQuantity());
+                transaction.addMedicine(pm);
+                addTransaction(transaction.getTransactionID(),transaction);
+            }
+
+            prescription.setStatus(STATUS_COMPLETED);
         }
 
         if (pendingPrescriptionMap.containsKey(prescription.getPrescriptionID())) {
@@ -242,25 +237,25 @@ public class PharmacyMaintenance {
         medicineMap.sort(Comparator.comparingInt(Medicine::getQuantity));
     }
 
-    public void saveMedicineStockReport(StringBuilder report, String date) {
+    public String saveMedicineStockReport(StringBuilder report, String date) {
         String dateStr = date.replace(" ", "_").replace(":", "-").replace("/", "-");
         String filename = String.format("medicine_stock_report_%s.txt", dateStr);
         try (java.io.FileWriter writer = new java.io.FileWriter(filename)) {
             writer.write(report.toString());
-            System.out.println("Report saved successfully as " + filename + ".");
         } catch (java.io.IOException e) {
             System.out.println("Failed to save report: " + e.getMessage());
         }
+        return filename;
     }
 
-    public void saveMonthlySalesReport(StringBuilder report, int year, int month) {
+    public String saveMonthlySalesReport(StringBuilder report, int year, int month) {
         String filename = String.format("monthly_sales_report_%04d-%02d.txt", year, month);
         try (java.io.FileWriter writer = new java.io.FileWriter(filename)) {
             writer.write(report.toString());
-            System.out.println("Report saved successfully as " + filename + ".");
         } catch (java.io.IOException e) {
             System.out.println("Failed to save report: " + e.getMessage());
         }
+        return filename;
     }
 
     public CustomADT<String, Medicine> searchMedicinesByName(String name) {
@@ -343,5 +338,26 @@ public class PharmacyMaintenance {
             return "N/A";
         }
         return mostSold.getName() + "(ID: " + mostSold.getId() + ", Qty: " + maxQty + ")";
+    }
+
+    public int getMedicineStock(String medId) {
+        Medicine medicine = medicineMap.get(medId);
+        if (medicine != null) {
+            return medicine.getQuantity();
+        }
+        return -1; // Medicine not found
+    }
+
+    public CustomADT<String, Prescription> getRejectedPrescriptionMap(){
+        return processedPrescriptionMap.filter( new Prescription(null,null),
+                (p1, p2) -> p1.getStatus().equals("REJECTED") ? 0 : 1);
+    }
+
+    public void removePrescriptionFromProcessed(String prescID){
+        if (processedPrescriptionMap.containsKey(prescID)) {
+            processedPrescriptionMap.remove(prescID);
+            processedPrescriptionDAO.saveToFile(processedPrescriptionMap);
+            processedPrescriptionMap = processedPrescriptionDAO.retrieveFromFile();
+        }
     }
 }
