@@ -30,15 +30,13 @@ public class PatientMaintenance {
         this.consultationMaintenance = new ConsultationMaintenance();
         this.treatmentMaintenance = new TreatmentMaintenance();
 
-        // Load existing patients with proper casting
         CustomADT<String, Patient> loadedPatients = patientDAO.retrieveFromFile();
-        if (loadedPatients instanceof CustomADT) {
+        if (loadedPatients != null) {
             this.patientRegistry = (CustomADT<String, Patient>) loadedPatients;
         } else {
             this.patientRegistry = new CustomADT<>();
         }
 
-        // Initialize visit history
         CustomADT<String, VisitHistory> loadedVisitHistory = visitHistoryDAO.retrieveFromFile();
         if (loadedVisitHistory != null) {
             this.visitHistoryMap = (CustomADT<String, VisitHistory>) loadedVisitHistory;
@@ -63,7 +61,6 @@ public class PatientMaintenance {
         IDGenerator.loadCounter("counter.dat");
     }
 
-    // Fetch consultations for a patient
     public CustomADT<String, Consultation> getConsultationsByPatient(String patientId) {
         CustomADT<String, Consultation> result = new CustomADT<>();
         if (consultationMaintenance == null) return result;
@@ -76,7 +73,7 @@ public class PatientMaintenance {
         }
         return result;
     }
-    // Fetch treatments for a patient
+
     public CustomADT<String, Treatment> getTreatmentsForPatient(String patientId) {
         CustomADT<String, Treatment> result = new CustomADT<>();
         if (patientId == null) return result;
@@ -445,44 +442,35 @@ public class PatientMaintenance {
      */
     public CustomADT<String, Object> generatePatientRegistrationReport() {
         CustomADT<String, Object> reportData = new CustomADT<>();
-
         // Total counts
         reportData.put("totalPatients", patientRegistry.size());
-
         // Queue statistics
         reportData.put("patientsInQueue", getTotalQueueSize());
         reportData.put("emergencyQueueSize", getEmergencyQueueSize());
         reportData.put("normalQueueSize", getNormalQueueSize());
-
         // Gender breakdown using filter
         CustomADT<String, Integer> genderStats = new CustomADT<>();
-
         // Filter for males
         CustomADT<String, Patient> malePatients = patientRegistry.filter(
                 new Patient("", "", 0, "Male", "", "", false),
                 (p1, p2) -> p1.getGender().equalsIgnoreCase(p2.getGender()) ? 0 : -1
         );
         genderStats.put("Male", malePatients.size());
-
         // Filter for females
         CustomADT<String, Patient> femalePatients = patientRegistry.filter(
                 new Patient("", "", 0, "Female", "", "", false),
                 (p1, p2) -> p1.getGender().equalsIgnoreCase(p2.getGender()) ? 0 : -1
         );
         genderStats.put("Female", femalePatients.size());
-
         reportData.put("genderBreakdown", genderStats);
-
         // Age group breakdown using filter
         CustomADT<String, Integer> ageGroups = new CustomADT<>();
-
         // Filter for each age group
         CustomADT<String, Patient> group0to18 = patientRegistry.filter(
                 new Patient("", "", 18, "", "", "", false),
                 (p1, p2) -> p1.getAge() <= 18 ? 0 : -1
         );
         ageGroups.put("0-18", group0to18.size());
-
         CustomADT<String, Patient> group19to35 = patientRegistry.filter(
                 new Patient("", "", 35, "", "", "", false),
                 (p1, p2) -> (p1.getAge() >= 19 && p1.getAge() <= 35) ? 0 : -1
@@ -494,7 +482,6 @@ public class PatientMaintenance {
                 (p1, p2) -> (p1.getAge() >= 36 && p1.getAge() <= 50) ? 0 : -1
         );
         ageGroups.put("36-50", group36to50.size());
-
         CustomADT<String, Patient> group51to65 = patientRegistry.filter(
                 new Patient("", "", 65, "", "", "", false),
                 (p1, p2) -> (p1.getAge() >= 51 && p1.getAge() <= 65) ? 0 : -1
@@ -506,9 +493,7 @@ public class PatientMaintenance {
                 (p1, p2) -> p1.getAge() > 65 ? 0 : -1
         );
         ageGroups.put("65+", group65Plus.size());
-
         reportData.put("ageGroupBreakdown", ageGroups);
-
         return reportData;
     }
 
@@ -549,18 +534,15 @@ public class PatientMaintenance {
             countByPatient.put(pid, countByPatient.get(pid) + 1);
         }
 
-        // 2) compute average
         int patientDenom = Math.max(1, getAllPatients().size());
         double avgPerPatient = (double) total / patientDenom;
 
-        // 3) top patients (pick top 3 without collections)
         CustomADT<String, Integer> topPatients = new CustomADT<>();
         int picks = Math.min(3, countByPatient.size());
         for (int pick = 0; pick < picks; pick++) {
             String bestId = null;
             int bestCnt = -1;
 
-            // scan over all known patients to find the current max
             Patient[] arr = getAllPatientsArray();
             for (int i = 0; i < arr.length; i++) {
                 Patient p = arr[i];
@@ -580,8 +562,6 @@ public class PatientMaintenance {
                 topPatients.put(bestId, bestCnt);
             }
         }
-
-        // 4) pack report
         report.put("totalVisits", total);
         report.put("averageVisitsPerPatient", avgPerPatient);
         report.put("statusCounts", statusCounts);

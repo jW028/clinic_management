@@ -182,16 +182,10 @@ public class StudentUI {
             System.out.println("Already in queue.");
             return;
         }
-        if (patientMaintenance.isPatientInWaitlist(currentPatient.getPatientId())) {
-            System.out.println("Already in waitlist.");
-            return;
-        }
         patientMaintenance.enqueuePatient(currentPatient.getPatientId());
         if (patientMaintenance.isPatientInQueue(currentPatient.getPatientId())) {
             System.out.println("Added to active queue.");
-        } else if (patientMaintenance.isPatientInWaitlist(currentPatient.getPatientId())) {
-            System.out.println("Main queue full. Added to waitlist.");
-        } else {
+        }  else {
             System.out.println("Failed to enqueue.");
         }
     }
@@ -202,8 +196,6 @@ public class StudentUI {
         if (patientMaintenance.isPatientInQueue(pid)) {
             int position = computeQueuePosition(pid);
             System.out.println("Status: In Queue. Position: " + position);
-        } else if (patientMaintenance.isPatientInWaitlist(pid)) {
-            System.out.println("Status: In Waitlist. Position (waitlist): " + computeWaitlistPosition(pid));
         } else {
             System.out.println("No active appointment (not queued).");
         }
@@ -221,14 +213,6 @@ public class StudentUI {
             Patient p = patientMaintenance.getNormalQueue().get(i);
             if (p.getPatientId().equals(pid)) return pos;
             pos++;
-        }
-        return -1;
-    }
-
-    private int computeWaitlistPosition(String pid) {
-        for (int i = 0; i < patientMaintenance.getWaitlistSize(); i++) {
-            Patient p = patientMaintenance.getWaitlist().get(i);
-            if (p.getPatientId().equals(pid)) return i + 1;
         }
         return -1;
     }

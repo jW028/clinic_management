@@ -201,7 +201,13 @@ public class PatientUI {
         String id = IDGenerator.generatePatientID();
         System.out.println("Generated Patient ID: " + id);
 
-        String name = InputHandler.getString("Enter Name");
+        String name;
+        while (true) {
+            name = InputHandler.getString("Enter Name");
+            if (name.matches("[A-Za-z ]+")) break;
+            System.out.println("❌ Name must contain only letters and spaces. Please try again.");
+        }
+
         int age = InputHandler.getInt("Enter Age", 1, 120);
         String gender = InputHandler.getGender("Select Gender");
         String contactNumber = InputHandler.getPhoneNumber("Enter Contact Number");
@@ -357,11 +363,7 @@ public class PatientUI {
             System.out.println("❌ Patient not found!");
             return;
         }
-
-        // Display patient details
         displayPatientDetails(patient);
-
-        // Show current status
         if (patientMaintenance.isPatientInQueue(id)) {
             System.out.println("Current Status: IN QUEUE (" +
                     (patient.isEmergency() ? "Emergency" : "Normal") + ")");
@@ -373,15 +375,17 @@ public class PatientUI {
         displayPatientVisitHistory(id);
         displayConsultationsForPatient(id);
         displayTreatmentsForPatient(id);
-        // Visit history actions menu
-        String[] options = {"Add", "Update", "Remove", "Exit"};
+        String[] options = {"View", "Add", "Update", "Remove", "Exit"};
         int action = InputHandler.displayMenu("Visit History Actions", options);
 
         switch (action) {
-            case 0: // Add
+            case 0:
+                viewSelectedVisitDetails(visitHistories);
+                break;
+            case 1:
                 addVisitHistory(id);
                 break;
-            case 1: // Update
+            case 2:
                 if (visitHistories.isEmpty()) {
                     System.out.println("No visit histories to update.");
                     break;
@@ -391,7 +395,7 @@ public class PatientUI {
                 VisitHistory selectedUpdate = visitHistories.get(updateChoice - 1);
                 updateVisitHistory(id, selectedUpdate.getVisitId());
                 break;
-            case 2: // Remove
+            case 3:
                 if (visitHistories.isEmpty()) {
                     System.out.println("No visit histories to remove.");
                     break;
@@ -401,7 +405,7 @@ public class PatientUI {
                 VisitHistory selectedRemove = visitHistories.get(removeChoice - 1);
                 removeVisitHistory(id, selectedRemove.getVisitId());
                 break;
-            case 3: // Exit
+            case 4: // Exit
                 System.out.println("Returning...");
                 break;
         }
@@ -1018,7 +1022,7 @@ public class PatientUI {
             String t = (i < topRows.length)   ? topRows[i]    : "";
             System.out.printf("  %-"+col1+"s │ %-"+col2+"s │ %-"+col3+"s │ %-"+col4+"s%n", o, s, m, t);
         }
-
+        dash();
         System.out.println(center("VISITS PER MONTH HISTOGRAM", W));
         dash();
         int maxMonthCount = 0;
