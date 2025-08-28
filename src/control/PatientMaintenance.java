@@ -10,12 +10,10 @@ public class PatientMaintenance {
     private final CustomADT<String, Patient> normalQueue;
     private final CustomADT<String, Patient> emergencyQueue;
     private final CustomADT<String, Patient> patientRegistry;
-    private final CustomADT<String, Patient> waitlist;
     private final CustomADT<String, VisitHistory> visitHistoryMap;
     private final PatientDAO patientDAO;
     private final VisitHistoryDAO visitHistoryDAO;
     private static final int MAX_QUEUE_SIZE = 20;
-    private static final int MAX_WAITLIST_SIZE = 30;
     private CustomADT<String, Consultation> consultationMap;
     private CustomADT<String, Treatment> treatmentMap;
     private final ConsultationDAO consultationDAO;
@@ -27,7 +25,6 @@ public class PatientMaintenance {
         this.emergencyQueue = new CustomADT<>();
         this.patientDAO = new PatientDAO();
         this.visitHistoryDAO = new VisitHistoryDAO();
-        this.waitlist = new CustomADT<>();
         this.consultationDAO = new ConsultationDAO();
         this.treatmentDAO = new TreatmentDAO();
         this.consultationMaintenance = new ConsultationMaintenance();
@@ -153,8 +150,6 @@ public class PatientMaintenance {
 
         emergencyQueue.remove(patientId);
         normalQueue.remove(patientId);
-        waitlist.remove(patientId);
-
         patientRegistry.remove(patientId);
         saveChanges();
         return true;
@@ -211,11 +206,6 @@ public class PatientMaintenance {
             return;
         }
 
-        // Check if patient is already in queue or waitlist
-        if (isPatientInQueue(patientId) || isPatientInWaitlist(patientId)) {
-            return;
-        }
-
         if (getTotalQueueSize() < MAX_QUEUE_SIZE) {
             if (patient.isEmergency()) {
                 emergencyQueue.offer(patientId, patient);
@@ -223,8 +213,7 @@ public class PatientMaintenance {
                 normalQueue.offer(patientId, patient);
             }
         } else {
-            // Queue is full, add to waitlist
-            addToWaitlist(patientId);
+            System.out.println("Queue is full. Cannot enqueue patient.");
         }
     }
 
@@ -236,11 +225,6 @@ public class PatientMaintenance {
         Patient nextPatient = emergencyQueue.poll();
         if (nextPatient == null) {
             nextPatient = normalQueue.poll();
-        }
-
-        // If a patient was served, try to move someone from waitlist to queue
-        if (nextPatient != null) {
-            processWaitlistToQueue();
         }
 
         return nextPatient;
@@ -255,85 +239,6 @@ public class PatientMaintenance {
             nextPatient = normalQueue.peek();
         }
         return nextPatient;
-    }
-
-    /**
-     * Add patient to waitlist
-     */
-    public boolean addToWaitlist(String patientId) {
-        Patient patient = patientRegistry.get(patientId);
-        if (patient == null || isPatientInWaitlist(patientId)) {
-            return false;
-        }
-
-        if (waitlist.size() >= MAX_WAITLIST_SIZE) {
-            return false; // Waitlist is full
-        }
-
-        waitlist.offer(patientId, patient); // Use offer for proper queue behavior
-        return true;
-    }
-
-    /**
-     * Process waitlist to move patients to main queue
-     */
-    private void processWaitlistToQueue() {
-        if (waitlist.isEmpty() || getTotalQueueSize() >= MAX_QUEUE_SIZE) {
-            return;
-        }
-
-        // Optimized waitlist processing using iterator
-        String emergencyPatientId = null;
-        String normalPatientId = null;
-
-        // Find first emergency and first normal patient
-        for (int i = 0; i < waitlist.size(); i++) {
-            Patient patient = waitlist.get(i);
-            if (patient.isEmergency() && emergencyPatientId == null) {
-                emergencyPatientId = patient.getPatientId();
-            } else if (!patient.isEmergency() && normalPatientId == null) {
-                normalPatientId = patient.getPatientId();
-            }
-
-            // Break early if we found both types
-            if (emergencyPatientId != null && normalPatientId != null) {
-                break;
-            }
-        }
-
-        // Priority: Emergency patients first, then normal patients
-        String patientIdToMove = emergencyPatientId != null ? emergencyPatientId : normalPatientId;
-
-        if (patientIdToMove != null) {
-            Patient patient = waitlist.remove(patientIdToMove);
-            if (patient != null) {
-                if (patient.isEmergency()) {
-                    emergencyQueue.offer(patientIdToMove, patient);
-                } else {
-                    normalQueue.offer(patientIdToMove, patient);
-                }
-            }
-        }
-    }
-
-    /**
-     * Promote patient from waitlist to queue
-     */
-    public boolean promoteFromWaitlist(String patientId) {
-        if (!isPatientInWaitlist(patientId) || getTotalQueueSize() >= MAX_QUEUE_SIZE) {
-            return false;
-        }
-
-        Patient patient = waitlist.remove(patientId);
-        if (patient != null) {
-            if (patient.isEmergency()) {
-                emergencyQueue.offer(patientId, patient);
-            } else {
-                normalQueue.offer(patientId, patient);
-            }
-            return true;
-        }
-        return false;
     }
 
     /**
@@ -357,13 +262,6 @@ public class PatientMaintenance {
     }
 
     /**
-     * Get waitlist
-     */
-    public CustomADT<String, Patient> getWaitlist() {
-        return waitlist;
-    }
-
-    /**
      * Helper method to get all patients currently in any queue
      */
     private CustomADT<String, Patient> getAllQueuedPatients() {
@@ -383,24 +281,11 @@ public class PatientMaintenance {
     }
 
     /**
-     * Remove patient from waitlist
-     */
-    public boolean removeFromWaitlist(String patientId) {
-        return waitlist.remove(patientId) != null;
-    }
-
-    /**
-     * Clear all queues and waitlist
+     * Clear all queues
      */
     public void clearAllQueues() {
         normalQueue.clear();
         emergencyQueue.clear();
-        waitlist.clear();
-    }
-
-    // Queue Status Methods
-    public boolean isPatientInWaitlist(String patientId) {
-        return waitlist.containsKey(patientId);
     }
 
     public boolean isPatientInQueue(String patientId) {
@@ -417,14 +302,6 @@ public class PatientMaintenance {
 
     public int getTotalQueueSize() {
         return emergencyQueue.size() + normalQueue.size();
-    }
-
-    public int getWaitlistSize() {
-        return waitlist.size();
-    }
-
-    public boolean isQueueFull() {
-        return getTotalQueueSize() >= MAX_QUEUE_SIZE;
     }
 
     // ===============================
@@ -576,7 +453,6 @@ public class PatientMaintenance {
         reportData.put("patientsInQueue", getTotalQueueSize());
         reportData.put("emergencyQueueSize", getEmergencyQueueSize());
         reportData.put("normalQueueSize", getNormalQueueSize());
-        reportData.put("waitlistSize", getWaitlistSize());
 
         // Gender breakdown using filter
         CustomADT<String, Integer> genderStats = new CustomADT<>();
