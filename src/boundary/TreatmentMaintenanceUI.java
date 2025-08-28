@@ -1430,7 +1430,7 @@ public class TreatmentMaintenanceUI {
                 int quantity = InputHandler.getInt("Enter quantity", 1, 100);
                 String dosage = InputHandler.getString("Enter dosage (e.g., '2 tablets')", 1, 50);
                 String frequency = InputHandler.getString("Enter frequency (e.g., 'Twice daily')", 1, 50);
-                String description = InputHandler.getString("Enter description (optional)");
+                String description = InputHandler.getOptionalString("Enter description");
 
                 // Add medicine to prescription
                 try {
