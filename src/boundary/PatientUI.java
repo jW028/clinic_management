@@ -7,11 +7,6 @@ import utility.InputHandler;
 import adt.*;
 import utility.DateTimeFormatterUtil;
 
-/**
- * PatientUI class handles the user interface for patient management operations.
- * It provides methods to register, update, delete patients, manage queues and waitlists,
- * and view patient records and visit history.
- */
 public class PatientUI {
     private final PatientMaintenance patientMaintenance;
 
@@ -26,7 +21,7 @@ public class PatientUI {
         int choice;
         do {
             printMenu();
-            choice = InputHandler.getInt("Select an option", 0, 5);
+            choice = InputHandler.getInt("Select an option", 0, 4);
 
             switch(choice) {
                 case 1:
@@ -36,12 +31,9 @@ public class PatientUI {
                     queueManagementMenu();
                     break;
                 case 3:
-                    waitlistManagementMenu();
-                    break;
-                case 4:
                     recordManagementMenu();
                     break;
-                case 5:
+                case 4:
                     displaySystemStatistics();
                     break;
                 case 0:
@@ -67,9 +59,8 @@ public class PatientUI {
         System.out.println("=".repeat(40));
         System.out.println("1. Patient Registration");
         System.out.println("2. Queue Management");
-        System.out.println("3. Waitlist Management");
-        System.out.println("4. View Records");
-        System.out.println("5. Display System Statistics");
+        System.out.println("3. View Records");
+        System.out.println("4. Display System Statistics");
         System.out.println("0. Back to Main Menu");
         System.out.println("=".repeat(40));
     }
@@ -128,63 +119,10 @@ public class PatientUI {
             System.out.println("\n" + "=".repeat(40));
             System.out.println("     QUEUE MANAGEMENT MENU");
             System.out.println("=".repeat(40));
-            System.out.println("1. Add Patient to Queue");
-            System.out.println("2. Serve Next Patient");
-            System.out.println("3. View Next Patient");
-            System.out.println("4. View Queue Status");
-            System.out.println("5. Display Queue Patients");
-            System.out.println("6. Clear All Queues");
-            System.out.println("0. Back to Patient Menu");
-            System.out.println("=".repeat(40));
-
-            choice = InputHandler.getInt("Select an option", 0, 6);
-
-            switch(choice) {
-                case 1:
-                    addToQueue();
-                    break;
-                case 2:
-                    servePatient();
-                    break;
-                case 3:
-                    viewNextPatient();
-                    break;
-                case 4:
-                    viewQueueStatus();
-                    break;
-                case 5:
-                    viewQueue();
-                    break;
-                case 6:
-                    clearAllQueues();
-                    break;
-                case 0:
-                    System.out.println("Returning to patient menu...");
-                    break;
-                default:
-                    System.out.println("Invalid choice. Please try again.");
-            }
-
-            if (choice != 0) {
-                InputHandler.pauseForUser();
-            }
-
-        } while (choice != 0);
-    }
-
-    /**
-     * Waitlist Management submenu
-     */
-    public void waitlistManagementMenu() {
-        int choice;
-        do {
-            System.out.println("\n" + "=".repeat(40));
-            System.out.println("    WAITLIST MANAGEMENT MENU");
-            System.out.println("=".repeat(40));
-            System.out.println("1. View Waitlist");
-            System.out.println("2. Add Patient to Waitlist");
-            System.out.println("3. Remove from Waitlist");
-            System.out.println("4. Promote from Waitlist to Queue");
+            System.out.println("1. View Next Patient");
+            System.out.println("2. View Queue Status");
+            System.out.println("3. Display Queue Patients");
+            System.out.println("4. Clear All Queues");
             System.out.println("0. Back to Patient Menu");
             System.out.println("=".repeat(40));
 
@@ -192,16 +130,16 @@ public class PatientUI {
 
             switch(choice) {
                 case 1:
-                    viewWaitlist();
+                    viewNextPatient();
                     break;
                 case 2:
-                    addToWaitlist();
+                    viewQueueStatus();
                     break;
                 case 3:
-                    removeFromWaitlist();
+                    viewQueue();
                     break;
                 case 4:
-                    promoteFromWaitlist();
+                    clearAllQueues();
                     break;
                 case 0:
                     System.out.println("Returning to patient menu...");
@@ -369,69 +307,6 @@ public class PatientUI {
         }
     }
 
-    /**
-     * Add patient to queue workflow
-     */
-    public void addToQueue() {
-        System.out.println("\n=== ADD PATIENT TO QUEUE ===");
-
-        String id = InputHandler.getString("Enter Patient ID");
-        Patient patient = patientMaintenance.getPatientById(id.toUpperCase());
-
-        if (patient == null) {
-            System.out.println("❌ Patient not found!");
-            return;
-        }
-
-        if (patientMaintenance.isPatientInQueue(id)) {
-            System.out.println("❌ Patient is already in queue!");
-            return;
-        }
-
-        if (patientMaintenance.isPatientInWaitlist(id)) {
-            System.out.println("❌ Patient is currently in waitlist. Use 'Promote from Waitlist' option instead.");
-            return;
-        }
-
-        if (patientMaintenance.isQueueFull()) {
-            System.out.println("⚠️ Queue is full! Patient will be added to waitlist instead.");
-            if (patientMaintenance.addToWaitlist(id)) {
-                System.out.println("✅ Patient " + patient.getName() + " has been added to the waitlist.");
-                System.out.println("Waitlist position: " + patientMaintenance.getWaitlistSize());
-            } else {
-                System.out.println("❌ Cannot add to waitlist - it may be full or patient is already listed.");
-            }
-        } else {
-            patientMaintenance.enqueuePatient(id);
-            System.out.println("✅ Patient " + patient.getName() + " has been added to the " +
-                    (patient.isEmergency() ? "emergency" : "normal") + " queue.");
-        }
-
-        displayCurrentStatus();
-    }
-
-    /**
-     * Serve next patient workflow
-     */
-    public void servePatient() {
-        System.out.println("\n=== SERVE NEXT PATIENT ===");
-
-        Patient next = patientMaintenance.serveNextPatient();
-        if (next != null) {
-            System.out.println("🏥 Now serving:");
-            displayPatientDetails(next);
-
-            patientMaintenance.addVisitHistory(
-                    next.getPatientId(),
-                    "Served in queue",
-                    "COMPLETED"
-            );
-            System.out.println("✅ Visit history added for this patient.");
-        } else {
-            System.out.println("❌ No patients in queue");
-        }
-    }
-
     /*
     * View next patient using CustomADT's peek method
      */
@@ -470,101 +345,6 @@ public class PatientUI {
     }
 
     /**
-     * View waitlist
-     */
-    public void viewWaitlist() {
-        System.out.println("\n=== WAITLIST STATUS ===");
-        System.out.println("Waitlist size: " + patientMaintenance.getWaitlistSize() + "/30");
-
-        CustomADT<String, Patient> waitlist = patientMaintenance.getWaitlist();
-        if (waitlist.isEmpty()) {
-            System.out.println("No patients in waitlist");
-        } else {
-            displayWaitlistPatients(waitlist);
-        }
-    }
-
-    /**
-     * Add patient to waitlist
-     */
-    public void addToWaitlist() {
-        System.out.println("\n=== ADD PATIENT TO WAITLIST ===");
-
-        String id = InputHandler.getString("Enter Patient ID to add to waitlist");
-        Patient patient = patientMaintenance.getPatientById(id.toUpperCase());
-
-        if (patient == null) {
-            System.out.println("❌ Patient not found!");
-            return;
-        }
-
-        if (patientMaintenance.isPatientInQueue(id)) {
-            System.out.println("❌ Patient is already in queue!");
-            return;
-        }
-
-        if (patientMaintenance.addToWaitlist(id)) {
-            System.out.println("✅ Patient " + patient.getName() + " added to waitlist successfully!");
-            System.out.println("Waitlist position: " + patientMaintenance.getWaitlistSize());
-        } else {
-            System.out.println("❌ Cannot add to waitlist. It may be full or patient is already in waitlist.");
-        }
-    }
-
-    /**
-     * Remove patient from waitlist
-     */
-    public void removeFromWaitlist() {
-        System.out.println("\n=== REMOVE FROM WAITLIST ===");
-
-        if (patientMaintenance.getWaitlistSize() == 0) {
-            System.out.println("❌ Waitlist is empty!");
-            return;
-        }
-
-        String id = InputHandler.getString("Enter Patient ID to remove from waitlist");
-
-        if (patientMaintenance.removeFromWaitlist(id)) {
-            System.out.println("✅ Patient removed from waitlist successfully!");
-        } else {
-            System.out.println("❌ Patient not found in waitlist!");
-        }
-    }
-
-    /**
-     * Promote patient from waitlist to queue
-     */
-    public void promoteFromWaitlist() {
-        System.out.println("\n=== PROMOTE FROM WAITLIST ===");
-
-        if (patientMaintenance.getWaitlistSize() == 0) {
-            System.out.println("❌ Waitlist is empty!");
-            return;
-        }
-
-        if (patientMaintenance.isQueueFull()) {
-            System.out.println("❌ Queue is full! Cannot promote from waitlist.");
-            return;
-        }
-
-        String id = InputHandler.getString("Enter Patient ID to promote from waitlist to queue");
-        Patient patient = patientMaintenance.getPatientById(id.toUpperCase());
-
-        if (patient == null) {
-            System.out.println("❌ Patient not found!");
-            return;
-        }
-
-        if (patientMaintenance.promoteFromWaitlist(id)) {
-            System.out.println("✅ Patient " + patient.getName() + " promoted from waitlist to " +
-                    (patient.isEmergency() ? "emergency" : "normal") + " queue successfully!");
-            displayCurrentStatus();
-        } else {
-            System.out.println("❌ Cannot promote patient. They may not be in waitlist or queue may be full.");
-        }
-    }
-
-    /**
      * View patient records
      */
     public void viewPatientRecordsWithHistory() {
@@ -585,10 +365,8 @@ public class PatientUI {
         if (patientMaintenance.isPatientInQueue(id)) {
             System.out.println("Current Status: IN QUEUE (" +
                     (patient.isEmergency() ? "Emergency" : "Normal") + ")");
-        } else if (patientMaintenance.isPatientInWaitlist(id)) {
-            System.out.println("Current Status: IN WAITLIST");
-        } else {
-            System.out.println("Current Status: REGISTERED (Not in queue or waitlist)");
+        }  else {
+            System.out.println("Current Status: REGISTERED (Not in queue)");
         }
 
         CustomADT<String, VisitHistory> visitHistories = patientMaintenance.getPatientVisitHistory(id);
@@ -781,23 +559,6 @@ public class PatientUI {
     }
 
     /**
-     * Display waitlist patients
-     */
-    public void displayWaitlistPatients(CustomADT<String, Patient> waitlist) {
-        System.out.println("\nPatients in waitlist (in order):");
-        System.out.println("-".repeat(50));
-        for (int i = 0; i < waitlist.size(); i++) {
-            Patient patient = waitlist.get(i);
-            System.out.printf("%d. %s (%s) - %s\n",
-                    (i + 1),
-                    patient.getName(),
-                    patient.getPatientId(),
-                    patient.isEmergency() ? "EMERGENCY" : "NORMAL");
-        }
-        System.out.println("-".repeat(50));
-    }
-
-    /**
      * View Specific Queue Patients
      * Allows user to view patients in a specific queue (emergency or normal)
      * and perform actions like viewing next patient or displaying all patients in that queue.
@@ -869,7 +630,6 @@ public class PatientUI {
         System.out.println("Emergency queue: " + patientMaintenance.getEmergencyQueueSize() + " patients");
         System.out.println("Normal queue: " + patientMaintenance.getNormalQueueSize() + " patients");
         System.out.println("Total queue size: " + patientMaintenance.getTotalQueueSize() + "/20");
-        System.out.println("Waitlist size: " + patientMaintenance.getWaitlistSize() + "/30");
         System.out.println("=".repeat(40));
     }
 
@@ -892,8 +652,6 @@ public class PatientUI {
             String id = selectedPatient.getPatientId();
             if (patientMaintenance.isPatientInQueue(id)) {
                 System.out.println("Status: IN QUEUE");
-            } else if (patientMaintenance.isPatientInWaitlist(id)) {
-                System.out.println("Status: IN WAITLIST");
             } else {
                 System.out.println("Status: REGISTERED");
             }
@@ -1119,7 +877,6 @@ public class PatientUI {
         int qTot  = (Integer) data.get("patientsInQueue");
         int qEm   = (Integer) data.get("emergencyQueueSize");
         int qNm   = (Integer) data.get("normalQueueSize");
-        int wSize = (Integer) data.get("waitlistSize");
 
         CustomADT<String,Integer> gender = (CustomADT<String,Integer>) data.get("genderBreakdown");
         CustomADT<String,Integer> ages = (CustomADT<String,Integer>) data.get("ageGroupBreakdown");
@@ -1131,7 +888,6 @@ public class PatientUI {
                 String.format("In queues: %d / 20", qTot),
                 String.format("└ Emergency: %d", qEm),
                 String.format("└ Normal: %d", qNm),
-                String.format("Waitlist: %d / 30", wSize)
         };
         String[] genderRows = {
                 "Gender   Count   %",
