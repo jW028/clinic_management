@@ -399,9 +399,7 @@ public class PharmacyUI {
                     case 3:
                         boolean confirm = InputHandler.getYesNo("Are you sure the medicines are available to process this prescription?");
                         if (confirm) {
-                            presc.setStatus("PENDING");
-                            pharmacyMaintenance.enqueuePrescription(presc);
-                            pharmacyMaintenance.removePrescriptionFromProcessed(prescId);
+                            pharmacyMaintenance.reprocessRejectedPrescription(prescId);
                         } else {
                             System.out.println("Reprocess cancelled.");
                         }

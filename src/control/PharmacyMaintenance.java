@@ -353,11 +353,13 @@ public class PharmacyMaintenance {
                 (p1, p2) -> p1.getStatus().equals("REJECTED") ? 0 : 1);
     }
 
-    public void removePrescriptionFromProcessed(String prescID){
-        if (processedPrescriptionMap.containsKey(prescID)) {
-            processedPrescriptionMap.remove(prescID);
-            processedPrescriptionDAO.saveToFile(processedPrescriptionMap);
-            processedPrescriptionMap = processedPrescriptionDAO.retrieveFromFile();
-        }
+    public void reprocessRejectedPrescription(String prescID){
+        Prescription presc = processedPrescriptionMap.get(prescID);
+        processedPrescriptionMap.remove(prescID);
+        presc.setStatus(STATUS_PENDING);
+        pendingPrescriptionMap.put(prescID, presc);
+        processedPrescriptionDAO.saveToFile(processedPrescriptionMap);
+        pendingPrescriptionDAO.saveToFile(pendingPrescriptionMap);
+        processedPrescriptionMap = processedPrescriptionDAO.retrieveFromFile();
     }
 }
