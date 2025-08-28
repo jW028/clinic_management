@@ -18,6 +18,7 @@ public class StudentUI {
     private final TreatmentMaintenance treatmentMaintenance;
     private final PaymentMaintenance paymentMaintenance;
     private final ConsultationMaintenance consultationMaintenance;
+    private final ConsultationMaintenanceUI consultationMaintenanceUI;
     private Patient currentPatient;
     private boolean exit = false;
 
@@ -26,6 +27,7 @@ public class StudentUI {
         this.treatmentMaintenance = new TreatmentMaintenance();
         this.paymentMaintenance = PaymentMaintenance.getInstance();
         this.consultationMaintenance = new ConsultationMaintenance();
+        this.consultationMaintenanceUI = new ConsultationMaintenanceUI();
     }
 
     public void displayMenu() {
@@ -95,7 +97,7 @@ public class StudentUI {
             switch (choice) {
                 case 1 -> viewDetails();
                 case 2 -> updateDetails();
-                case 3 -> bookAppointment();
+                case 3 -> makeAppointment();
                 case 4 -> viewAppointmentStatus();
                 case 5 -> viewVisitHistory();
                 case 6 -> viewAndPayTreatmentBills();
@@ -160,19 +162,22 @@ public class StudentUI {
         }
     }
 
-    private void bookAppointment() {
-        System.out.println("\n--- Book Appointment (Queue Entry) ---");
-        if (patientMaintenance.isPatientInQueue(currentPatient.getPatientId())) {
-            System.out.println("Already in queue.");
-            return;
-        }
+    private void makeAppointment() {
+        System.out.println("\n--- Make Appointment ---");
+        consultationMaintenanceUI.customerMakeAppointment(currentPatient.getPatientId());
 
-        patientMaintenance.enqueuePatient(currentPatient.getPatientId());
-       if (patientMaintenance.isPatientInQueue(currentPatient.getPatientId())) {
-            System.out.println("Added to active queue.");
-        }  else {
-            System.out.println("Failed to enqueue.");
-        }
+//        System.out.println("\n--- Book Appointment (Queue Entry) ---");
+//        if (patientMaintenance.isPatientInQueue(currentPatient.getPatientId())) {
+//            System.out.println("Already in queue.");
+//            return;
+//        }
+//
+//        patientMaintenance.enqueuePatient(currentPatient.getPatientId());
+//       if (patientMaintenance.isPatientInQueue(currentPatient.getPatientId())) {
+//            System.out.println("Added to active queue.");
+//        }  else {
+//            System.out.println("Failed to enqueue.");
+//        }
     }
 
     private void viewAppointmentStatus() {

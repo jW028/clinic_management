@@ -11,13 +11,15 @@ public class Appointment implements Serializable {
     private String doctorId;
     private LocalDateTime appointmentTime;
     private String status;
+    private String appointmentType;     // "appointment" // "walk-in"
 
-    public Appointment(String appointmentId, String patientId, String doctorId, LocalDateTime appointmentTime, String status) {
+    public Appointment(String appointmentId, String patientId, String doctorId, LocalDateTime appointmentTime, String status, String appointmentType) {
         this.appointmentId = appointmentId;
         this.patientId = patientId;
         this.doctorId = doctorId;
         this.appointmentTime = appointmentTime;
         this.status = status;
+        this.appointmentType = appointmentType;
     }
 
     public String getAppointmentId() {
@@ -40,6 +42,10 @@ public class Appointment implements Serializable {
         return status;
     }
 
+    public String getAppointmentType() {
+        return appointmentType;
+    }
+
     public void setAppointmentId(String appointmentId) {
         this.appointmentId = appointmentId;
     }
@@ -60,12 +66,17 @@ public class Appointment implements Serializable {
         this.status = status;
     }
 
+    public void setAppointmentType(String appointmentType) {
+        this.appointmentType = appointmentType;
+    }
+
     @Override
     public String toString() {
         return "Appointment ID: " + appointmentId +
                 "\nPatient ID: " + patientId +
                 "\nDoctor ID: " + doctorId +
                 "\nAppointment Time: " + appointmentTime +
-                "\nStatus: " + status;
+                "\nStatus: " + status +
+                "\nAppointment Type: " + appointmentType;
     }
 }

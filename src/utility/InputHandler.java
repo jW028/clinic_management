@@ -444,6 +444,7 @@ public class InputHandler {
             case "doctor":         pattern = "^DC\\d{3}$"; break;
             case "patient":        pattern = "^P\\d{3}$"; break;
             case "diagnosis":      pattern = "^D\\d{3}$"; break;
+            case "service":        pattern = "^S\\d{3}$"; break;
             default: return false;
         }
         return id != null && id.matches(pattern);
