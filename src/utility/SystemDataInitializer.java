@@ -31,6 +31,7 @@ public class SystemDataInitializer {
         initializeWithErrorHandling("Patient", () -> PatientInitializer.main(null));
         initializeWithErrorHandling("Doctor", () -> DoctorInitializer.main(null));
         initializeWithErrorHandling("Medicine", () -> MedicineInitializer.main(null));
+        initializeWithErrorHandling("Diagnosis", () -> DiagnosisInitializer.main(null));
         initializeWithErrorHandling("Consultation Service", () -> ConsultationServiceInitializer.main(null));
         initializeWithErrorHandling("Procedure", () -> ProcedureInitializer.main(null));
         
@@ -120,7 +121,7 @@ public class SystemDataInitializer {
         
         String[] expectedFiles = {
             "appointment.dat",
-            "consultation.dat", 
+            "diagnosis.dat",
             "doctors.dat",
             "medicine.dat",
             "pending_prescriptions.dat",
@@ -182,8 +183,8 @@ public class SystemDataInitializer {
             case "appointment": return "appointment.dat";
             case "schedule": return "schedules.dat";
             case "medicine": return "medicine.dat";
+            case "diagnosis": return "diagnosis.dat";
             case "prescription": return "pending_prescriptions.dat";
-            case "consultation": return "consultation.dat";
             case "service": return "service.dat";
             case "procedure": return "procedures.dat";
             case "transaction": return "transactions.dat";
@@ -213,6 +214,9 @@ public class SystemDataInitializer {
                 break;
             case "medicine":
                 MedicineInitializer.main(null);
+                break;
+            case "diagnosis":
+                DiagnosisInitializer.main(null);
                 break;
             case "prescription":
                 PrescriptionInitializer.main(null);

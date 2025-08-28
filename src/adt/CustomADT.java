@@ -636,7 +636,6 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
 
     /**
      * Private method to copy elements from source array to destination array
-     * This replaces System.arraycopy for better encapsulation
      * @param src the source array
      * @param srcPos starting position in the source array
      * @param dest the destination array

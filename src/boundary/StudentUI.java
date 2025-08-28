@@ -28,23 +28,7 @@ public class StudentUI {
         this.consultationMaintenance = new ConsultationMaintenance();
     }
 
-    public void  displayMenu() {
-        while (!exit) {
-            System.out.println("\n========== MAIN MENU ==========");
-            System.out.println("1. Patient");
-            System.out.println("2. Admin");
-            System.out.println("0. Exit");
-            int choice = InputHandler.getInt(0, 2);
-            switch (choice) {
-                case 1 -> patientAccessMenu();
-                case 2 -> adminStub();
-                case 0 -> exit = true;
-            }
-        }
-        System.out.println("Goodbye.");
-    }
-
-    private void patientAccessMenu() {
+    public void displayMenu() {
         while (true) {
             System.out.println("\n------ Patient Access ------");
             System.out.println("1. Login");
@@ -182,23 +166,46 @@ public class StudentUI {
             System.out.println("Already in queue.");
             return;
         }
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
         patientMaintenance.enqueuePatient(currentPatient.getPatientId());
-        if (patientMaintenance.isPatientInQueue(currentPatient.getPatientId())) {
+//        if (patientMaintenance.isPatientInQueue(currentPatient.getPatientId())) {
             System.out.println("Added to active queue.");
+<<<<<<< Updated upstream
         }  else {
             System.out.println("Failed to enqueue.");
         }
+=======
+//        } else if (patientMaintenance.isPatientInWaitlist(currentPatient.getPatientId())) {
+//            System.out.println("Main queue full. Added to waitlist.");
+//        } else {
+//            System.out.println("Failed to enqueue.");
+//        }
+>>>>>>> Stashed changes
     }
 
     private void viewAppointmentStatus() {
         System.out.println("\n--- Appointment Status ---");
         String pid = currentPatient.getPatientId();
+<<<<<<< Updated upstream
         if (patientMaintenance.isPatientInQueue(pid)) {
             int position = computeQueuePosition(pid);
             System.out.println("Status: In Queue. Position: " + position);
         } else {
             System.out.println("No active appointment (not queued).");
         }
+=======
+//        if (patientMaintenance.isPatientInQueue(pid)) {
+//            int position = computeQueuePosition(pid);
+//            System.out.println("Status: In Queue. Position: " + position);
+//        } else if (patientMaintenance.isPatientInWaitlist(pid)) {
+//            System.out.println("Status: In Waitlist. Position (waitlist): " + computeWaitlistPosition(pid));
+//        } else {
+//            System.out.println("No active appointment (not queued).");
+//        }
+>>>>>>> Stashed changes
     }
 
     private int computeQueuePosition(String pid) {
@@ -217,6 +224,17 @@ public class StudentUI {
         return -1;
     }
 
+<<<<<<< Updated upstream
+=======
+    private int computeWaitlistPosition(String pid) {
+//        for (int i = 0; i < patientMaintenance.getWaitlistSize(); i++) {
+//            Patient p = patientMaintenance.getWaitlist().get(i);
+//            if (p.getPatientId().equals(pid)) return i + 1;
+//        }
+        return -1;
+    }
+
+>>>>>>> Stashed changes
     private void viewVisitHistory() {
         System.out.println("\n--- Visit History ---");
         CustomADT<String, VisitHistory> visits = patientMaintenance.getPatientVisitHistory(currentPatient.getPatientId());

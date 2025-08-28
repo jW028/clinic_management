@@ -1,3 +1,8 @@
+/**
+ *@author Tan Jin Wei
+ */
+
+
 package boundary;
 
 import adt.CustomADT;
@@ -49,15 +54,12 @@ public class TreatmentMaintenanceUI {
                     processTreatmentsMenu();
                     break;
                 case 6:
-                    procedureUI.displayMainMenu();
-                    break;
-                case 7:
                     searchTreatmentsMenu();
                     break;
-                case 8:
-                    sortTreatmentsMenu();
+                case 7:
+                    procedureUI.displayMainMenu();
                     break;
-                case 9:
+                case 8:
                     reportsMenu();
                     break;
                 case 0:
@@ -86,10 +88,9 @@ public class TreatmentMaintenanceUI {
         System.out.println("│ 3. Update Treatment                    │");
         System.out.println("│ 4. Remove Treatment                    │");
         System.out.println("│ 5. Process Treatments                  │");
-        System.out.println("│ 6. Manage Procedures                   │");
-        System.out.println("│ 7. Search Treatments                   │");
-        System.out.println("│ 8. Sort Treatments                     │");
-        System.out.println("│ 9. Reports and Statistics              │");
+        System.out.println("│ 6. Search Treatments                   │");
+        System.out.println("│ 7. Manage Procedures                   │");
+        System.out.println("│ 8. Reports and Statistics              │");
         System.out.println("│ 0. Back to Main Menu                   │");
         System.out.println("└" + "─".repeat(40) + "┘");
     }
@@ -106,10 +107,11 @@ public class TreatmentMaintenanceUI {
             System.out.println("│ 1. View All Treatments                 │");
             System.out.println("│ 2. View Treatments by Patient          │");
             System.out.println("│ 3. View Treatments by Status           │");
+            System.out.println("│ 4. Sort Treatments                     │");
             System.out.println("│ 0. Back to Treatment Menu              │");
             System.out.println("└" + "─".repeat(40) + "┘");
 
-            choice = InputHandler.getInt("Select an option", 0, 3);
+            choice = InputHandler.getInt("Select an option", 0, 4);
 
             switch(choice) {
                 case 1:
@@ -120,6 +122,9 @@ public class TreatmentMaintenanceUI {
                     break;
                 case 3:
                     viewTreatmentsByStatus();
+                    break;
+                case 4:
+                    sortTreatmentsMenu();
                     break;
                 case 0:
                     System.out.println("Returning to treatment menu...");

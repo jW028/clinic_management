@@ -1,3 +1,7 @@
+/**
+ * @author Tan Jin Wei
+ */
+
 package control;
 import adt.CustomADT;
 import entity.*;

@@ -1,3 +1,7 @@
+/**
+ * @author Tan Jin Wei
+ */
+
 package control;
 
 import adt.CustomADT;
@@ -95,13 +99,6 @@ public class TreatmentMaintenance {
         Patient patient = consultation.getPatient();
         Doctor doctor = consultation.getDoctor();
 
-        // Create diagnosis from consultation
-        Diagnosis diagnosis = new Diagnosis(
-                "DG" + System.currentTimeMillis(), // Simple ID generation
-                "Test Diagnosis",
-                "No Severity"
-        );
-
         // Create treatment
         Treatment treatment = new Treatment (
                 treatmentID,
@@ -121,9 +118,9 @@ public class TreatmentMaintenance {
         return treatment;
 
     }
-    
-    /** TODO: KIV
-     * Add a new treatment 
+
+    /**
+     * Add a new treatment
      * @param treatment Treatment object to add
      */
     public void addTreatment(Treatment treatment) {
@@ -153,17 +150,15 @@ public class TreatmentMaintenance {
      */
     public CustomADT<String, Consultation> getConsultationsWithoutTreatment() {
         Consultation[] availableArr = consultationController.getAllConsultations();
-        System.out.println("DEBUG: getConsultationsWithoutTreatment -> availableArr.length=" + availableArr.length);
 
         CustomADT<String, Consultation> available = new CustomADT<>();
 
         for (Consultation consultation : availableArr) {
             if (consultation == null) {
-                System.out.println("DEBUG: skipping null consultation element");
+                // Skip null consultations
                 continue;
             }
             String consultId = consultation.getConsultationId();
-            System.out.println("DEBUG: checking consultation id=" + consultId);
 
             boolean hasExistingTreatment = false;
             for (Treatment treatment : treatments) {
@@ -183,12 +178,10 @@ public class TreatmentMaintenance {
                     System.out.println("Cannot add consultation with null id, skipping");
                 } else {
                     available.put(consultId, consultation);
-                    System.out.println("Added consultation " + consultId + " to available");
                 }
             }
         }
 
-        System.out.println("getConsultationsWithoutTreatment -> available.size=" + available.size());
         return available;
     }
 
@@ -383,21 +376,6 @@ public class TreatmentMaintenance {
         System.out.println("Treatment " + treatmentID + " not found.");
         return false;
     }
-
-    /**
-     * Get statistics about the current state of treatments
-     * @return String containing statistics summary
-     */
-    public String getStatistics() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("=== Treatment Statistics ===\n")
-            .append("Total Treatments: ").append(treatments.size()).append("\n")
-            .append("Emergency Treatments: ").append(emergencyQueue.size()).append("\n")
-            .append("Regular Treatments: ").append(regularQueue.size()).append("\n")
-            .append("Recent Treatments: ").append(recentTreatments.size()).append("\n");
-
-        return sb.toString();
-    } 
 
     /**
      * Check if a treatment exists using Map functionality
@@ -703,17 +681,17 @@ public class TreatmentMaintenance {
                 writer.println("End of Report");
             }
             
-            System.out.println("✅ Report saved successfully!");
-            System.out.println("📁 File saved as: " + filename);
+            System.out.println("Report saved successfully!");
+            System.out.println("File saved as: " + filename);
             return true;
             
         } catch (java.io.IOException e) {
-            System.err.println("❌ Error saving report: " + e.getMessage());
+            System.err.println("Error saving report: " + e.getMessage());
             return false;
         }
     }
 
-    // Simple Payment Feature - Links consultation, treatment, and prescription costs
+    // Simple payment linking consultation, treatment, and prescription costs
     public Payment createSimplePayment(String consultationId, String treatmentId) {
         try {
             // Get consultation and calculate consultation costs
