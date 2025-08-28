@@ -1,10 +1,10 @@
 package boundary;
 
 import adt.CustomADT;
+import control.ConsultationMaintenance;
 import control.PatientMaintenance;
 import control.PaymentMaintenance;
 import control.TreatmentMaintenance;
-import control.ConsultationMaintenance;
 import entity.Consultation;
 import entity.Patient;
 import entity.Payment;
@@ -166,46 +166,24 @@ public class StudentUI {
             System.out.println("Already in queue.");
             return;
         }
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
         patientMaintenance.enqueuePatient(currentPatient.getPatientId());
-//        if (patientMaintenance.isPatientInQueue(currentPatient.getPatientId())) {
+       if (patientMaintenance.isPatientInQueue(currentPatient.getPatientId())) {
             System.out.println("Added to active queue.");
-<<<<<<< Updated upstream
         }  else {
             System.out.println("Failed to enqueue.");
         }
-=======
-//        } else if (patientMaintenance.isPatientInWaitlist(currentPatient.getPatientId())) {
-//            System.out.println("Main queue full. Added to waitlist.");
-//        } else {
-//            System.out.println("Failed to enqueue.");
-//        }
->>>>>>> Stashed changes
     }
 
     private void viewAppointmentStatus() {
         System.out.println("\n--- Appointment Status ---");
         String pid = currentPatient.getPatientId();
-<<<<<<< Updated upstream
         if (patientMaintenance.isPatientInQueue(pid)) {
             int position = computeQueuePosition(pid);
             System.out.println("Status: In Queue. Position: " + position);
         } else {
             System.out.println("No active appointment (not queued).");
         }
-=======
-//        if (patientMaintenance.isPatientInQueue(pid)) {
-//            int position = computeQueuePosition(pid);
-//            System.out.println("Status: In Queue. Position: " + position);
-//        } else if (patientMaintenance.isPatientInWaitlist(pid)) {
-//            System.out.println("Status: In Waitlist. Position (waitlist): " + computeWaitlistPosition(pid));
-//        } else {
-//            System.out.println("No active appointment (not queued).");
-//        }
->>>>>>> Stashed changes
     }
 
     private int computeQueuePosition(String pid) {
@@ -224,17 +202,6 @@ public class StudentUI {
         return -1;
     }
 
-<<<<<<< Updated upstream
-=======
-    private int computeWaitlistPosition(String pid) {
-//        for (int i = 0; i < patientMaintenance.getWaitlistSize(); i++) {
-//            Patient p = patientMaintenance.getWaitlist().get(i);
-//            if (p.getPatientId().equals(pid)) return i + 1;
-//        }
-        return -1;
-    }
-
->>>>>>> Stashed changes
     private void viewVisitHistory() {
         System.out.println("\n--- Visit History ---");
         CustomADT<String, VisitHistory> visits = patientMaintenance.getPatientVisitHistory(currentPatient.getPatientId());
@@ -426,10 +393,6 @@ public class StudentUI {
         } else {
             System.out.println("Payment cancelled.");
         }
-    }
-
-    private void adminStub() {
-        System.out.println("\n(Admin module placeholder)");
     }
 
     public static void main(String[] args) {
