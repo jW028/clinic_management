@@ -636,58 +636,81 @@ public class PatientMaintenance {
         return reportData;
     }
 
-    // Java
     public CustomADT<String, Object> generatePatientVisitSummaryReport() {
         CustomADT<String, Object> report = new CustomADT<>();
-        int totalVisits = visitHistoryMap.size();
+
+        // 1) aggregate
         CustomADT<String, Integer> statusCounts = new CustomADT<>();
-        CustomADT<String, Integer> visitsPerPatient = new CustomADT<>();
+        statusCounts.put("SCHEDULED", 0);
+        statusCounts.put("IN_PROGRESS", 0);
+        statusCounts.put("COMPLETED", 0);
+        statusCounts.put("CANCELLED", 0);
+
         CustomADT<String, Integer> visitsPerMonth = new CustomADT<>();
+        CustomADT<String, Integer> countByPatient = new CustomADT<>();
 
-        for (VisitHistory vh : visitHistoryMap) {
-            // Status breakdown
-            String status = vh.getStatus();
-            statusCounts.put(status, statusCounts.get(status) == null ? 1 : statusCounts.get(status) + 1);
+        CustomADT<String, VisitHistory> allV = getAllVisitHistories();
+        int total = allV.size();
 
-            // Visits per patient
+        for (int i = 0; i < allV.size(); i++) {
+            VisitHistory vh = allV.get(i);
+            // status
+            String st = vh.getStatus();
+            if (!statusCounts.containsKey(st)) statusCounts.put(st, 0);
+            statusCounts.put(st, statusCounts.get(st) + 1);
+
+            // month
+            String m = vh.getVisitDate().getYear() + "-" +
+                    String.format("%02d", vh.getVisitDate().getMonthValue());
+            if (!visitsPerMonth.containsKey(m)) visitsPerMonth.put(m, 0);
+            visitsPerMonth.put(m, visitsPerMonth.get(m) + 1);
+
+            // patient
             String pid = vh.getPatient().getPatientId();
-            visitsPerPatient.put(pid, visitsPerPatient.get(pid) == null ? 1 : visitsPerPatient.get(pid) + 1);
-
-            // Visits per month (format: yyyy-MM)
-            String month = vh.getVisitDate().getYear() + "-" + String.format("%02d", vh.getVisitDate().getMonthValue());
-            visitsPerMonth.put(month, visitsPerMonth.get(month) == null ? 1 : visitsPerMonth.get(month) + 1);
+            // normalize to uppercase so UI lookups match
+            if (pid != null) pid = pid.toUpperCase();
+            if (!countByPatient.containsKey(pid)) countByPatient.put(pid, 0);
+            countByPatient.put(pid, countByPatient.get(pid) + 1);
         }
 
-        // Average visits per patient
-        double avgVisits = visitsPerPatient.size() == 0 ? 0.0 : (double) totalVisits / visitsPerPatient.size();
+        // 2) compute average
+        int patientDenom = Math.max(1, getAllPatients().size());
+        double avgPerPatient = (double) total / patientDenom;
 
-        // Top 3 patients by visit count
+        // 3) top patients (pick top 3 without collections)
         CustomADT<String, Integer> topPatients = new CustomADT<>();
-        String[] patientIds = new String[visitsPerPatient.size()];
-        Integer[] visitCounts = new Integer[visitsPerPatient.size()];
-        for (int i = 0; i < visitsPerPatient.size(); i++) {
-            patientIds[i] = visitsPerPatient.get(i) != null ? visitsPerPatient.get(i).toString() : null;
-            visitCounts[i] = visitsPerPatient.get(visitsPerPatient.get(i).toString());
-        }
-        for (int i = 0; i < 3 && i < visitsPerPatient.size(); i++) {
-            int maxIdx = -1, maxVal = -1;
-            for (int j = 0; j < visitCounts.length; j++) {
-                if (visitCounts[j] != null && visitCounts[j] > maxVal) {
-                    maxVal = visitCounts[j];
-                    maxIdx = j;
+        int picks = Math.min(3, countByPatient.size());
+        for (int pick = 0; pick < picks; pick++) {
+            String bestId = null;
+            int bestCnt = -1;
+
+            // scan over all known patients to find the current max
+            Patient[] arr = getAllPatientsArray();
+            for (int i = 0; i < arr.length; i++) {
+                Patient p = arr[i];
+                if (p == null) continue;
+                String pid = p.getPatientId();
+                if (pid != null) pid = pid.toUpperCase();
+
+                if (countByPatient.containsKey(pid)) {
+                    int c = countByPatient.get(pid);
+                    if (c > bestCnt && !topPatients.containsKey(pid)) {
+                        bestCnt = c;
+                        bestId = pid;
+                    }
                 }
             }
-            if (maxIdx != -1 && patientIds[maxIdx] != null) {
-                topPatients.put(patientIds[maxIdx], visitCounts[maxIdx]);
-                visitCounts[maxIdx] = -1; // Mark as used
+            if (bestId != null) {
+                topPatients.put(bestId, bestCnt);
             }
         }
 
-        report.put("totalVisits", totalVisits);
+        // 4) pack report
+        report.put("totalVisits", total);
+        report.put("averageVisitsPerPatient", avgPerPatient);
         report.put("statusCounts", statusCounts);
-        report.put("averageVisitsPerPatient", avgVisits);
-        report.put("topPatients", topPatients);
         report.put("visitsPerMonth", visitsPerMonth);
+        report.put("topPatients", topPatients);
 
         return report;
     }

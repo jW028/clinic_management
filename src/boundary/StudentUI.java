@@ -4,6 +4,8 @@ import adt.CustomADT;
 import control.PatientMaintenance;
 import control.PaymentMaintenance;
 import control.TreatmentMaintenance;
+import control.ConsultationMaintenance;
+import entity.Consultation;
 import entity.Patient;
 import entity.Payment;
 import entity.Treatment;
@@ -15,6 +17,7 @@ public class StudentUI {
     private final PatientMaintenance patientMaintenance;
     private final TreatmentMaintenance treatmentMaintenance;
     private final PaymentMaintenance paymentMaintenance;
+    private final ConsultationMaintenance consultationMaintenance;
     private Patient currentPatient;
     private boolean exit = false;
 
@@ -22,6 +25,7 @@ public class StudentUI {
         this.patientMaintenance = patientMaintenance;
         this.treatmentMaintenance = new TreatmentMaintenance();
         this.paymentMaintenance = PaymentMaintenance.getInstance();
+        this.consultationMaintenance = new ConsultationMaintenance();
     }
 
     public void  displayMenu() {
@@ -244,6 +248,23 @@ public class StudentUI {
                     v.getVisitDate(),
                     v.getVisitReason(),
                     v.getStatus());
+        }
+
+        CustomADT<String, Consultation> consults = patientMaintenance.getConsultationsByPatient(currentPatient.getPatientId());
+        if (consults.size() == 0) {
+            System.out.println("No consultation history.");
+        } else {
+            System.out.println("\n--- Consultation History ---");
+            for (int i = 0; i < consults.size(); i++) {
+                Consultation c = consults.get(i);
+                System.out.printf("%d. %s | Doctor: %s | Time: %s | Diagnosis: %s\n",
+                        i + 1,
+                        c.getConsultationId(),
+                        c.getDoctor() != null ? c.getDoctor().getName() : "-",
+                        c.getConsultationTime(),
+                        c.getDiagnosis() != null ? c.getDiagnosis().getName() : "-"
+                );
+            }
         }
     }
 

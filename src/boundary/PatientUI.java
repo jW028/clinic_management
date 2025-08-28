@@ -87,11 +87,10 @@ public class PatientUI {
             System.out.println("2. Update Patient Details"); // Patient
             System.out.println("3. Delete Patient"); // Admin
             System.out.println("4. View Patient List"); // Admin
-            System.out.println("5. Sort Patients");
             System.out.println("0. Back to Patient Menu");
             System.out.println("=".repeat(40));
 
-            choice = InputHandler.getInt("Select an option", 0, 5);
+            choice = InputHandler.getInt("Select an option", 0, 4);
 
             switch(choice) {
                 case 1:
@@ -105,9 +104,6 @@ public class PatientUI {
                     break;
                 case 4:
                     viewPatientList();
-                    break;
-                case 5:
-                    sortPatients();
                     break;
                 case 0:
                     System.out.println("Returning to patient menu...");
@@ -424,6 +420,13 @@ public class PatientUI {
         if (next != null) {
             System.out.println("🏥 Now serving:");
             displayPatientDetails(next);
+
+            patientMaintenance.addVisitHistory(
+                    next.getPatientId(),
+                    "Served in queue",
+                    "COMPLETED"
+            );
+            System.out.println("✅ Visit history added for this patient.");
         } else {
             System.out.println("❌ No patients in queue");
         }
@@ -1040,43 +1043,6 @@ public class PatientUI {
         System.out.println("=".repeat(60));
     }
 
-    /*
-    * Patient Sorting and Verification
-     */
-    private void sortPatients() {
-        int choice;
-        do {
-            System.out.println("\n" + "=".repeat(40));
-            System.out.println("       PATIENT SORTING MENU");
-            System.out.println("=".repeat(40));
-            System.out.println("1. Sort Patients by ID");
-            System.out.println("2. Sort Patients by Registration Order");
-            System.out.println("0. Back to Patient Menu");
-            System.out.println("=".repeat(40));
-
-            choice = InputHandler.getInt("Select an option", 0, 2);
-
-            switch(choice) {
-                case 1:
-                    //sortPatientsById();
-                    break;
-                case 2:
-                    //sortPatientsByRegistration();
-                    break;
-                case 0:
-                    System.out.println("Returning to patient menu...");
-                    break;
-                default:
-                    System.out.println("Invalid choice. Please try again.");
-            }
-
-            if (choice != 0) {
-                InputHandler.pauseForUser();
-            }
-
-        } while (choice != 0);
-    }
-
     /**
      * Helper method to view details of selected visit
      */
@@ -1137,109 +1103,206 @@ public class PatientUI {
      * Display patient registration summary report
      */
     public void displayPatientRegistrationReport() {
-        CustomADT<String, Object> reportData = patientMaintenance.generatePatientRegistrationReport();
+        CustomADT<String, Object> data = patientMaintenance.generatePatientRegistrationReport();
+        String now = java.time.ZonedDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
 
-        System.out.println("\n" + "=".repeat(60));
-        System.out.println("            PATIENT REGISTRATION SUMMARY REPORT");
-        System.out.println("=".repeat(60));
+        line();
+        System.out.println(center("TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY"));
+        System.out.println(center("PATIENT MANAGEMENT SUBSYSTEM"));
+        System.out.println(center("PATIENT REGISTRATION ANALYSIS REPORT"));
+        line();
+        System.out.println(rightInDash("generated at: " + now));
+        dash(); blank();
 
-        // Overall statistics
-        System.out.println("📊 OVERALL PATIENT STATISTICS:");
-        System.out.println("   Total Registered Patients: " + reportData.get("totalPatients"));
+        int total = (Integer) data.get("totalPatients");
+        int qTot  = (Integer) data.get("patientsInQueue");
+        int qEm   = (Integer) data.get("emergencyQueueSize");
+        int qNm   = (Integer) data.get("normalQueueSize");
+        int wSize = (Integer) data.get("waitlistSize");
 
-        // Queue status
-        System.out.println("\n🏥 CURRENT QUEUE STATUS:");
-        System.out.println("   Patients in Queue: " + reportData.get("patientsInQueue") + "/20");
-        System.out.println("   Emergency Queue: " + reportData.get("emergencyQueueSize"));
-        System.out.println("   Normal Queue: " + reportData.get("normalQueueSize"));
-        System.out.println("   Waitlist: " + reportData.get("waitlistSize") + "/30");
+        CustomADT<String,Integer> gender = (CustomADT<String,Integer>) data.get("genderBreakdown");
+        CustomADT<String,Integer> ages = (CustomADT<String,Integer>) data.get("ageGroupBreakdown");
+        String[] ageOrder = {"0-18","19-35","36-50","51-65","65+"};
 
-        // Gender breakdown
-        System.out.println("\n👥 GENDER DISTRIBUTION:");
-        CustomADT<String, Integer> genderStats = (CustomADT<String, Integer>) reportData.get("genderBreakdown");
-        for (String gender : new String[]{"Male", "Female"}) {
-            if (genderStats.containsKey(gender)) {
-                Integer count = genderStats.get(gender);
-                double percentage = (count.doubleValue() / (Integer) reportData.get("totalPatients")) * 100;
-                System.out.printf("   %-10s: %d patients (%.1f%%)\n", gender, count, percentage);
-            }
+        // Prepare rows for each section
+        String[] overview = {
+                String.format("Total registered: %d", total),
+                String.format("In queues: %d / 20", qTot),
+                String.format("└ Emergency: %d", qEm),
+                String.format("└ Normal: %d", qNm),
+                String.format("Waitlist: %d / 30", wSize)
+        };
+        String[] genderRows = {
+                "Gender   Count   %",
+                String.format("Male     %3d   %5s", n(gender.get("Male")), pct(n(gender.get("Male")), total)),
+                String.format("Female   %3d   %5s", n(gender.get("Female")), pct(n(gender.get("Female")), total))
+        };
+        String[] ageRows = new String[ageOrder.length + 1];
+        ageRows[0] = "Age Group  Count   %";
+        for (int i = 0; i < ageOrder.length; i++) {
+            int c = n(ages.get(ageOrder[i]));
+            ageRows[i+1] = String.format("%-9s %3d   %5s", ageOrder[i], c, pct(c, total));
         }
+        System.out.println(center("PATIENT SUMMARY", W));
+        dash();
 
-        // Age group breakdown
-        System.out.println("\n📈 AGE GROUP DISTRIBUTION:");
-        CustomADT<String, Integer> ageStats = (CustomADT<String, Integer>) reportData.get("ageGroupBreakdown");
-        String[] ageOrder = {"0-18", "19-35", "36-50", "51-65", "65+"};
-        for (String ageGroup : ageOrder) {
-            Integer count = ageStats.get(ageGroup);
-            double percentage = (count.doubleValue() / (Integer) reportData.get("totalPatients")) * 100;
-            System.out.printf("   %-8s: %d patients (%.1f%%)\n", ageGroup, count, percentage);
+        int col1 = 26, col2 = 20, col3 = 20;
+
+        // header row
+        System.out.printf("  %-"+col1+"s │ %-"+col2+"s │ %-"+col3+"s%n",
+                "Overview", "Gender", "Age Group");
+        System.out.printf("  %-"+col1+"s │ %-"+col2+"s │ %-"+col3+"s%n",
+                "", "Count  %", "Count  %");
+        dash();
+
+        int maxRows = Math.max(overview.length, Math.max(genderRows.length-1, ageRows.length-1));
+        for (int i = 0; i < maxRows; i++) {
+            String o = i < overview.length ? overview[i] : "";
+            String g = (i+1 < genderRows.length) ? genderRows[i+1] : ""; // skip header
+            String a = (i+1 < ageRows.length)   ? ageRows[i+1]   : "";   // skip header
+            System.out.printf("  %-"+col1+"s │ %-"+col2+"s │ %-"+col3+"s%n", o, g, a);
         }
+        dash(); blank();
 
-        System.out.println("=".repeat(60));
+        System.out.println(center("AGE GROUP DISTRIBUTION HISTOGRAM", W));
+        dash();
+        int maxCount = 0;
+        for (String age : ageOrder) maxCount = Math.max(maxCount, n(ages.get(age)));
+        for (String age : ageOrder) {
+            int count = n(ages.get(age));
+            int barLen = maxCount == 0 ? 0 : (int) Math.round((count * 40.0) / maxCount);
+            String bar = "█".repeat(barLen);
+            System.out.printf("  %-9s | %-3d | %s%n", age, count, bar);
+        }
+        dash();
+        System.out.println(center("END OF THE REPORT", W));
+        line();
     }
 
     public void displayPatientVisitSummaryReport() {
-        CustomADT<String, Object> report = patientMaintenance.generatePatientVisitSummaryReport();
+        CustomADT<String,Object> rpt = patientMaintenance.generatePatientVisitSummaryReport();
+        String now = java.time.ZonedDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
 
-        System.out.println("\n" + "=".repeat(60));
-        System.out.println("         PATIENT VISIT SUMMARY REPORT");
-        System.out.println("=".repeat(60));
-        System.out.println("Total Visits: " + report.get("totalVisits"));
-        System.out.println("Average Visits per Patient: " + String.format("%.2f", report.get("averageVisitsPerPatient")));
+        line();
+        System.out.println(center("TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY"));
+        System.out.println(center("PATIENT MANAGEMENT SUBSYSTEM"));
+        System.out.println(center("PATIENT VISIT SUMMARY REPORT"));
+        line();
+        System.out.println(rightInDash("generated at: " + now));
+        dash(); blank();
 
-        System.out.println("\nVisits by Status:");
-        CustomADT<String, Integer> statusCounts = (CustomADT<String, Integer>) report.get("statusCounts");
-        for (String status : new String[]{"SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"}) {
-            System.out.printf("  %-12s: %d\n", status, statusCounts.get(status) != null ? statusCounts.get(status) : 0);
-        }
+        int totalVisits = (Integer) rpt.get("totalVisits");
+        double avg = ((Double) rpt.get("averageVisitsPerPatient")).doubleValue();
 
-        System.out.println("\nTop 3 Patients by Visit Count:");
-        CustomADT<String, Integer> topPatients = (CustomADT<String, Integer>) report.get("topPatients");
-        // Iterate over all possible patient IDs in topPatients
-        for (int i = 0, printed = 0; i < topPatients.size() && printed < topPatients.size(); i++) {
-            // Find the key at index i
-            for (Patient p : patientMaintenance.getAllPatientsArray()) {
-                if (topPatients.containsKey(p.getPatientId())) {
-                    Integer count = topPatients.get(p.getPatientId());
-                    System.out.printf("  %s: %d visits\n", p.getPatientId(), count);
-                    printed++;
-                    if (printed >= topPatients.size()) break;
-                }
+        CustomADT<String,Integer> status = (CustomADT<String,Integer>) rpt.get("statusCounts");
+        String[] sts = {"SCHEDULED","IN_PROGRESS","COMPLETED","CANCELLED"};
+
+        CustomADT<String,Integer> vpm = (CustomADT<String,Integer>) rpt.get("visitsPerMonth");
+        CustomADT<String,Integer> top = (CustomADT<String,Integer>) rpt.get("topPatients");
+
+        String[] months = new String[vpm.size()];
+        int mCount = 0;
+        for (VisitHistory vh : patientMaintenance.getAllVisitHistories()){
+            String m = vh.getVisitDate().getYear() + "-" + String.format("%02d", vh.getVisitDate().getMonthValue());
+            if (vpm.containsKey(m)) {
+                boolean seen = false; for (int j=0;j<mCount;j++) if (months[j].equals(m)) { seen = true; break; }
+                if (!seen) months[mCount++] = m;
             }
         }
 
-        System.out.println("\nVisits per Month:");
-        CustomADT<String, Integer> visitsPerMonth = (CustomADT<String, Integer>) report.get("visitsPerMonth");
-        // Collect all possible month keys
-        for (int i = 0, printed = 0; i < visitsPerMonth.size() && printed < visitsPerMonth.size(); i++) {
-            // Find the key at index i
-            for (int j = 0; j < visitsPerMonth.size(); j++) {
-                String[] months = new String[visitsPerMonth.size()];
-                int idx = 0;
-                // Collect keys by iterating over all VisitHistory entries
-                for (VisitHistory vh : patientMaintenance.getAllVisitHistories()) {
-                    String month = vh.getVisitDate().getYear() + "-" + String.format("%02d", vh.getVisitDate().getMonthValue());
-                    if (visitsPerMonth.containsKey(month)) {
-                        boolean alreadyPrinted = false;
-                        for (int k = 0; k < idx; k++) {
-                            if (months[k].equals(month)) {
-                                alreadyPrinted = true;
-                                break;
-                            }
-                        }
-                        if (!alreadyPrinted) {
-                            months[idx++] = month;
-                            Integer count = visitsPerMonth.get(month);
-                            System.out.printf("  %s: %d visits\n", month, count);
-                            printed++;
-                            if (printed >= visitsPerMonth.size()) break;
-                        }
-                    }
-                }
-                break;
+        String[] topRows = new String[Math.max(1, top.size())];
+        int tCount = 0;
+        Patient[] all = patientMaintenance.getAllPatientsArray();
+        for (int i=0;i<all.length && tCount<top.size();i++){
+            Patient p = all[i];
+            if (p!=null && top.containsKey(p.getPatientId())){
+                topRows[tCount++] = String.format("%-8s %3d", p.getPatientId(), n(top.get(p.getPatientId())));
             }
         }
-        System.out.println("=".repeat(60));
+        if (tCount == 0) topRows[0] = String.format("%-8s %3d", "-", 0);
+
+        String[] overview = {
+                String.format("Total visits: %d", totalVisits),
+                String.format("Avg/Patient: %.2f", avg)
+        };
+
+        String[] statusRows = new String[sts.length];
+        for (int i=0;i<sts.length;i++) {
+            int c = n(status.get(sts[i]));
+            statusRows[i] = String.format("%-11s %3d %5s", sts[i], c, pct(c, totalVisits));
+        }
+
+        String[] monthRows = new String[Math.max(1,mCount)];
+        if (mCount > 0) {
+            for (int i=0;i<mCount;i++) {
+                monthRows[i] = String.format("%-7s %3d", months[i], n(vpm.get(months[i])));
+            }
+        } else {
+            monthRows[0] = String.format("%-7s %3d", "-", 0);
+        }
+
+        int col1 = 26, col2 = 22, col3 = 18, col4 = 20;
+
+        System.out.println(center("VISIT SUMMARY", W));
+        dash();
+        System.out.printf("  %-"+col1+"s │ %-"+col2+"s │ %-"+col3+"s │ %-"+col4+"s%n",
+                "Overview", "Status", "Visits per Month", "Top Patients");
+        dash();
+
+        int maxRows = Math.max(overview.length,
+                Math.max(statusRows.length,
+                        Math.max(monthRows.length, topRows.length)));
+
+        for (int i=0;i<maxRows;i++) {
+            String o = (i < overview.length)   ? overview[i]   : "";
+            String s = (i < statusRows.length)? statusRows[i] : "";
+            String m = (i < monthRows.length) ? monthRows[i]  : "";
+            String t = (i < topRows.length)   ? topRows[i]    : "";
+            System.out.printf("  %-"+col1+"s │ %-"+col2+"s │ %-"+col3+"s │ %-"+col4+"s%n", o, s, m, t);
+        }
+
+        System.out.println(center("VISITS PER MONTH HISTOGRAM", W));
+        dash();
+        int maxMonthCount = 0;
+        for (String month : months) maxMonthCount = Math.max(maxMonthCount, n(vpm.get(month)));
+        for (String month : months) {
+            int count = n(vpm.get(month));
+            int barLen = maxMonthCount == 0 ? 0 : (int) Math.round((count * 40.0) / maxMonthCount);
+            String bar = "█".repeat(barLen);
+            System.out.printf("  %-7s | %-3d | %s%n", month, count, bar);
+        }
+        dash();
+        System.out.println(center("END OF THE REPORT", W));
+        line();
+    }
+
+
+    private static String center(String s, int w) {
+        int pad = Math.max(0, (w - s.length()) / 2);
+        return " ".repeat(pad) + s;
+    }
+
+    private static final int W = 108;
+
+    private static void line() { System.out.println("=".repeat(W)); }
+    private static void dash() { System.out.println("-".repeat(W)); }
+    private static void blank() { System.out.println(); }
+
+    private static String center(String s) {
+        if (s.length() >= W) return s;
+        int pad = (W - s.length()) / 2;
+        return " ".repeat(pad) + s;
+    }
+    private static String rightInDash(String s) {
+        String left = "-".repeat(Math.max(0, W - s.length()));
+        return left.substring(0, Math.max(0, left.length() - 1)) + " " + s;
+    }
+    private static int n(Integer v){ return v==null?0:v; }
+    private static String pct(int part, int total){
+        double p = (total==0?0.0: (part*100.0/total));
+        return String.format("%.1f%%", p);
     }
 
     public static void main(String[] args) {
