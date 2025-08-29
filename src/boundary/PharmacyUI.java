@@ -83,7 +83,7 @@ public class PharmacyUI {
             System.out.println("└─────┴──────────┴────────────────┴──────────┴───────────┴────────────────────────────────┘");
             System.out.println("\nMedicine Management Menu:");
             System.out.println("1. Add Medicine");
-            System.out.println("2. View Medicine");
+            System.out.println("2. View Medicine Details");
             System.out.println("3. View Low Stock Medicine");
             System.out.println("4. Search Medicine");
             System.out.println("5. Back to Main Menu");
@@ -125,7 +125,7 @@ public class PharmacyUI {
 
     public void viewMedicineDetails(){
         String medId = InputHandler.getString("Enter Medication ID to view details");
-        Medicine med = pharmacyMaintenance.getMedicineById(medId);
+        Medicine med = pharmacyMaintenance.getMedicineById(medId.toUpperCase());
         if (med == null) {
             System.out.println("Medication not found.");
             return;
@@ -381,7 +381,7 @@ public class PharmacyUI {
                         break;
                 }
             } else {
-                System.out.println("-- This prescription has been rejected. --");
+                System.out.println("-- This prescription has been rejected due to unavailable stock for medicines --");
                 System.out.println("-- Try edit and process again or delete the prescription. --");
                 System.out.println("\nPrescription options:");
                 System.out.println("1. Delete prescription");
@@ -399,7 +399,8 @@ public class PharmacyUI {
                     case 3:
                         boolean confirm = InputHandler.getYesNo("Are you sure the medicines are available to process this prescription?");
                         if (confirm) {
-                            pharmacyMaintenance.reprocessRejectedPrescription(prescId);
+                            pharmacyMaintenance.reprocessRejectedPrescription(presc.getPrescriptionID());
+                            System.out.println("~> Prescription successfully reprocessed and moved to pending queue...\n");
                         } else {
                             System.out.println("Reprocess cancelled.");
                         }
@@ -650,7 +651,7 @@ public class PharmacyUI {
         report.append(String.format("│ Total number of medicines: %-60d │\n", medicineMap.size()));
         report.append(String.format("│ Total stock quantity: %-65d │\n", totalStock));
         report.append(String.format("│ Total low stock medicines: %-60d │\n", lowStockCount));
-        report.append(String.format("│ Total stock value (RM): %-62.2f │\n", totalStockValue));
+        report.append(String.format("│ Total stock value (RM): %-63.2f │\n", totalStockValue));
         report.append("└─────────────────────────────────────────────────────────────────────────────────────────┘\n");
 
         System.out.print(report.toString());

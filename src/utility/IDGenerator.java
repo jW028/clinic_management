@@ -15,6 +15,8 @@ public class IDGenerator {
     private static int transactionCounter = 1;
     private static int treatmentCounter = 1;
     private static int visitCounter = 1;
+    private static int medicineCounter = 6;
+    private static int prescriptionCounter = 1;
 
     public static String generateAppointmentID() {
         return "A" + String.format("%03d", appointmentCounter++);
