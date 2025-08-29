@@ -418,15 +418,23 @@ public class PatientUI {
             System.out.println("No consultations found.");
             return;
         }
+        System.out.println("┌────┬───────────────┬───────────────┬─────────────────────┬───────────────┐");
+        System.out.println("│ No │ Consultation  │ Doctor        │ Time                │ Diagnosis     │");
+        System.out.println("├────┼───────────────┼───────────────┼─────────────────────┼───────────────┤");
         for (int i = 0; i < consults.size(); i++) {
             Consultation c = consults.get(i);
-            System.out.printf("%d. %s | Doctor: %s | Time: %s | Diagnosis: %s%n",
+            String doctor = c.getDoctor() != null ? c.getDoctor().getName() : "-";
+            String diagnosis = c.getDiagnosis() != null ? c.getDiagnosis().getName() : "-";
+            String time = c.getConsultationTime() != null ? c.getConsultationTime().toString() : "-";
+            System.out.printf("│ %-2d │ %-13s │ %-13s │ %-19s │ %-13s │%n",
                     i + 1,
                     c.getConsultationId(),
-                    c.getDoctor() != null ? c.getDoctor().getName() : "-",
-                    c.getConsultationTime(),
-                    c.getDiagnosis() != null ? c.getDiagnosis().getName() : "-");
+                    doctor.length() > 13 ? doctor.substring(0, 10) + "..." : doctor,
+                    time.length() > 19 ? time.substring(0, 16) + "..." : time,
+                    diagnosis.length() > 13 ? diagnosis.substring(0, 10) + "..." : diagnosis
+            );
         }
+        System.out.println("└────┴───────────────┴───────────────┴─────────────────────┴───────────────┘");
     }
 
     private void displayTreatmentsForPatient(String patientId) {
@@ -436,16 +444,21 @@ public class PatientUI {
             System.out.println("No treatments found.");
             return;
         }
+        System.out.println("┌────┬───────────────┬─────────┬─────────────┬───────────┬───────────────┐");
+        System.out.println("│ No │ Treatment ID  │ Status  │ Type        │ Critical  │ Total Cost    │");
+        System.out.println("├────┼───────────────┼─────────┼─────────────┼───────────┼───────────────┤");
         for (int i = 0; i < treatments.size(); i++) {
             Treatment t = treatments.get(i);
-            System.out.printf("%d. %s | Status: %s | Type: %s | Critical: %s | Total Procedure Cost: RM%.2f%n",
+            System.out.printf("│ %-2d │ %-13s │ %-7s │ %-11s │ %-9s │ RM%10.2f │%n",
                     i + 1,
                     t.getTreatmentID(),
                     t.getStatus(),
-                    t.getType(),
+                    t.getType().length() > 11 ? t.getType().substring(0, 8) + "..." : t.getType(),
                     t.isCritical() ? "Yes" : "No",
-                    t.getTotalProcedureCost());
+                    t.getTotalProcedureCost()
+            );
         }
+        System.out.println("└────┴───────────────┴─────────┴─────────────┴───────────┴───────────────┘");
     }
 
     /**
@@ -508,40 +521,24 @@ public class PatientUI {
             System.out.println("No patients found.");
             return;
         }
-
-        System.out.println("\n" + "=".repeat(80));
-        System.out.println("  " + title.toUpperCase());
-        System.out.println("=".repeat(80));
-        System.out.printf("%-4s %-12s %-20s %-4s %-8s %-15s %-10s\n",
-                "#", "ID", "Name", "Age", "Gender", "Contact", "Emergency");
-        System.out.println("-".repeat(80));
-
-        Patient[] patientsOrder = patientMaintenance.getAllPatientsArray();
-
+        System.out.println("\n┌────┬───────────────┬────────────────────┬─────┬─────────┬───────────────┬────────────┐");
+        System.out.printf("│ #  │ Patient ID    │ Name               │ Age │ Gender  │ Contact       │ Emergency  │%n");
+        System.out.println("├────┼───────────────┼────────────────────┼─────┼─────────┼───────────────┼────────────┤");
         for (int i = 0; i < patients.size(); i++) {
-            Patient patient = patients.get(i);
-            if (patient != null) {
-                String name = patient.getName();
-                String contact = patient.getContactNumber();
-
-                // Truncate long names for table formatting
-                if (name.length() > 19) name = name.substring(0, 16) + "...";
-                if (contact.length() > 14) contact = contact.substring(0, 11) + "...";
-
-                int patOrder = findRegistrationOrder(patientsOrder, patient.getPatientId());
-
-                System.out.printf("%-4d %-12s %-20s %-4d %-8s %-15s %-10s\n",
-                        i + 1,
-                        patient.getPatientId(),
-                        name,
-                        patient.getAge(),
-                        patient.getGender(),
-                        contact,
-                        patient.isEmergency() ? "YES" : "No"
-                );
-            }
+            Patient p = patients.get(i);
+            String name = p.getName().length() > 18 ? p.getName().substring(0, 15) + "..." : p.getName();
+            String contact = p.getContactNumber().length() > 13 ? p.getContactNumber().substring(0, 10) + "..." : p.getContactNumber();
+            System.out.printf("│ %-2d │ %-13s │ %-18s │ %-3d │ %-7s │ %-13s │ %-10s │%n",
+                    i + 1,
+                    p.getPatientId(),
+                    name,
+                    p.getAge(),
+                    p.getGender(),
+                    contact,
+                    p.isEmergency() ? "YES" : "No"
+            );
         }
-        System.out.println("=".repeat(80));
+        System.out.println("└────┴───────────────┴────────────────────┴─────┴─────────┴───────────────┴────────────┘");
     }
 
     private int findRegistrationOrder(Patient[] patientsOrder, String patientId) {
@@ -591,28 +588,27 @@ public class PatientUI {
        * Display Queue contents
      */
     public void displayQueuePatients(String queueType) {
-        System.out.println("\nPatients in " + queueType + " queue (in order):");
-        System.out.println("-".repeat(50));
+        System.out.println("\n┌────┬───────────────┬────────────────────┬─────┬─────────┬───────────────┬────────────┐");
+        System.out.printf("│ #  │ Patient ID    │ Name               │ Age │ Gender  │ Contact       │ Emergency  │%n");
+        System.out.println("├────┼───────────────┼────────────────────┼─────┼─────────┼───────────────┼────────────┤");
         CustomADT<String, Patient> queue = queueType.equals("emergency")
                 ? patientMaintenance.getEmergencyQueue()
                 : patientMaintenance.getNormalQueue();
-
-        if (queue.isEmpty()) {
-            System.out.println("Queue is empty.");
-            return;
-        }
-
-        System.out.println("Queue size: " + queue.size());
-        System.out.println("-".repeat(80));
-
         int position = 1;
-        // Use CustomADT's iterator for efficient queue traversal
-        for (Patient patient : queue) {
-            if (patient != null) {
-                System.out.printf("%d. %s\n", position++, patient.toString());
-            }
+        for (Patient p : queue) {
+            String name = p.getName().length() > 18 ? p.getName().substring(0, 15) + "..." : p.getName();
+            String contact = p.getContactNumber().length() > 13 ? p.getContactNumber().substring(0, 10) + "..." : p.getContactNumber();
+            System.out.printf("│ %-2d │ %-13s │ %-18s │ %-3d │ %-7s │ %-13s │ %-10s │%n",
+                    position++,
+                    p.getPatientId(),
+                    name,
+                    p.getAge(),
+                    p.getGender(),
+                    contact,
+                    p.isEmergency() ? "YES" : "No"
+            );
         }
-        System.out.println("-".repeat(80));
+        System.out.println("└────┴───────────────┴────────────────────┴─────┴─────────┴───────────────┴────────────┘");
     }
 
     /**
@@ -660,36 +656,22 @@ public class PatientUI {
      */
     public void displayPatientVisitHistory(String patientId) {
         CustomADT<String, VisitHistory> visitHistories = patientMaintenance.getPatientVisitHistory(patientId);
-
-        System.out.println("\n" + "=".repeat(80));
-        System.out.println("                    VISIT HISTORY");
-        System.out.println("=".repeat(80));
-
-        if (visitHistories.isEmpty()) {
-            System.out.println("No visit history found for this patient.");
-            System.out.println("=".repeat(80));
-            return;
-        }
-
-        System.out.printf("%-4s %-12s %-20s %-15s %-8s\n",
-                "#", "Visit ID", "Visit Date", "Reason", "Status");
-        System.out.println("-".repeat(80));
-
+        System.out.println("\n┌────┬───────────────┬────────────────────┬────────────────────┬────────────┐");
+        System.out.printf("│ #  │ Visit ID      │ Visit Date         │ Reason             │ Status     │%n");
+        System.out.println("├────┼───────────────┼────────────────────┼────────────────────┼────────────┤");
         for (int i = 0; i < visitHistories.size(); i++) {
-            VisitHistory visit = visitHistories.get(i);
-            String reason = visit.getVisitReason();
-            if (reason.length() > 19) reason = reason.substring(0, 16) + "...";
-
-            System.out.printf("%-4d %-12s %-20s %-15s %-8s\n",
+            VisitHistory v = visitHistories.get(i);
+            String reason = v.getVisitReason().length() > 18 ? v.getVisitReason().substring(0, 15) + "..." : v.getVisitReason();
+            String date = DateTimeFormatterUtil.formatForDisplay(v.getVisitDate());
+            System.out.printf("│ %-2d │ %-13s │ %-18s │ %-18s │ %-10s │%n",
                     i + 1,
-                    visit.getVisitId(),
-                    DateTimeFormatterUtil.formatForDisplay(visit.getVisitDate()),
+                    v.getVisitId(),
+                    date,
                     reason,
-                    visit.getStatus()
+                    v.getStatus()
             );
         }
-        System.out.println("=".repeat(80));
-        System.out.println("Total visits: " + visitHistories.size());
+        System.out.println("└────┴───────────────┴────────────────────┴────────────────────┴────────────┘");
     }
 
     /**

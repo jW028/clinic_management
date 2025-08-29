@@ -214,31 +214,43 @@ public class StudentUI {
             System.out.println("No visit history.");
             return;
         }
+        System.out.println("┌────┬───────────────┬───────────────┬────────────────────┬────────────┐");
+        System.out.println("│ No │ Visit ID      │ Date          │ Reason             │ Status     │");
+        System.out.println("├────┼───────────────┼───────────────┼────────────────────┼────────────┤");
         for (int i = 0; i < visits.size(); i++) {
             VisitHistory v = visits.get(i);
-            System.out.printf("%d. %s | %s | %s | %s\n",
+            String reason = v.getVisitReason().length() > 18 ? v.getVisitReason().substring(0, 15) + "..." : v.getVisitReason();
+            String date = v.getVisitDate().toString();
+            System.out.printf("│ %-2d │ %-13s │ %-13s │ %-18s │ %-10s │%n",
                     i + 1,
                     v.getVisitId(),
-                    v.getVisitDate(),
-                    v.getVisitReason(),
+                    date.length() > 13 ? date.substring(0, 10) + "..." : date,
+                    reason,
                     v.getStatus());
         }
+        System.out.println("└────┴───────────────┴───────────────┴────────────────────┴────────────┘");
 
         CustomADT<String, Consultation> consults = patientMaintenance.getConsultationsByPatient(currentPatient.getPatientId());
         if (consults.size() == 0) {
             System.out.println("No consultation history.");
         } else {
-            System.out.println("\n--- Consultation History ---");
+            System.out.println("\n┌────┬───────────────┬───────────────┬─────────────────────┬───────────────┐");
+            System.out.println("│ No │ Consultation  │ Doctor        │ Time                │ Diagnosis     │");
+            System.out.println("├────┼───────────────┼───────────────┼─────────────────────┼───────────────┤");
             for (int i = 0; i < consults.size(); i++) {
                 Consultation c = consults.get(i);
-                System.out.printf("%d. %s | Doctor: %s | Time: %s | Diagnosis: %s\n",
+                String doctor = c.getDoctor() != null ? c.getDoctor().getName() : "-";
+                String diagnosis = c.getDiagnosis() != null ? c.getDiagnosis().getName() : "-";
+                String time = c.getConsultationTime() != null ? c.getConsultationTime().toString() : "-";
+                System.out.printf("│ %-2d │ %-13s │ %-13s │ %-19s │ %-13s │%n",
                         i + 1,
                         c.getConsultationId(),
-                        c.getDoctor() != null ? c.getDoctor().getName() : "-",
-                        c.getConsultationTime(),
-                        c.getDiagnosis() != null ? c.getDiagnosis().getName() : "-"
+                        doctor.length() > 13 ? doctor.substring(0, 10) + "..." : doctor,
+                        time.length() > 19 ? time.substring(0, 16) + "..." : time,
+                        diagnosis.length() > 13 ? diagnosis.substring(0, 10) + "..." : diagnosis
                 );
             }
+            System.out.println("└────┴───────────────┴───────────────┴─────────────────────┴───────────────┘");
         }
     }
 

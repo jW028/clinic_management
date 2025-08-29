@@ -9,9 +9,9 @@ public class Doctor implements Serializable{
     private String email;
     private String address;
     private String gender;
-    private String dateOfBirth;
+    private int yearsOfExperience;
 
-    public Doctor(String doctorID, String name, String specialty, String phone, String email, String address, String gender, String dateOfBirth) {
+    public Doctor(String doctorID, String name, String specialty, String phone, String email, String address, String gender, int yearsOfExperience) {
         this.doctorID = doctorID;
         this.name = name;
         this.specialty = specialty;
@@ -19,7 +19,7 @@ public class Doctor implements Serializable{
         this.email = email;
         this.address = address;
         this.gender = gender;
-        this.dateOfBirth = dateOfBirth;
+        this.yearsOfExperience = yearsOfExperience;
     }
 
     public String getDoctorID() {
@@ -43,9 +43,7 @@ public class Doctor implements Serializable{
     public String getGender() {
         return gender;
     }
-    public String getDateOfBirth() {
-        return dateOfBirth;
-    }
+    public int getYearsOfExperience() {return yearsOfExperience;}
 
     public void setDoctorID(String doctorID) {
         this.doctorID = doctorID;
@@ -68,20 +66,11 @@ public class Doctor implements Serializable{
     public void setGender(String gender) {
         this.gender = gender;
     }
-    public void setDateOfBirth(String dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
+    public void setYearsOfExperience(int yearsOfExperience) {
+        this.yearsOfExperience = yearsOfExperience;
     }
     @Override
     public String toString(){
-//        StringBuilder sb = new StringBuilder();
-//        sb.append("Doctor ID: ").append(doctorID).append("\n")
-//          .append("Name: ").append(name).append("\n")
-//          .append("Specialty: ").append(specialty).append("\n")
-//          .append("Phone: ").append(phone).append("\n")
-//          .append("Email: ").append(email).append("\n")
-//          .append("Address: ").append(address).append("\n")
-//          .append("Gender: ").append(gender).append("\n")
-//          .append("Date of Birth: ").append(dateOfBirth).append("\n");
         return "Doctor ID: " + doctorID +
                 ", Name: " + name +
                 ", Specialty: " + specialty +
@@ -89,6 +78,6 @@ public class Doctor implements Serializable{
                 ", Email: " + email +
                 ", Address: " + address +
                 ", Gender: " + gender +
-                ", Date of Birth: " + dateOfBirth;
+                ", Years of Experience: " + yearsOfExperience;
     }
 }
