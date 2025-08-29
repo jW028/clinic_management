@@ -318,9 +318,21 @@ public class DoctorUI {
         System.out.println("1. Number of Doctors per Specialty");
         System.out.println("2. Gender Distribution of Doctors");
         System.out.println("0. Back");
+        System.out.println("=".repeat(44));
         int choice = InputHandler.getInt("Choose report", 0, 2);
 
         if (choice == 1) {
+            String now = java.time.ZonedDateTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
+
+            line();
+            System.out.println(center("TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY", 80));
+            System.out.println(center("DOCTOR MANAGEMENT SUBSYSTEM", 80));
+            System.out.println(center("DOCTOR REPORTS & STATISTICS", 80));
+            line();
+            System.out.println(rightInDash("generated at: " + now, 80));
+            dash(80); blank();
+
             CustomADT<String, Integer> specialtyCount = doctorMaintenance.getDoctorCountPerSpecialty();
             Doctor[] doctors = doctorMaintenance.getAllDoctorsArray();
             java.util.HashSet<String> printed = new java.util.HashSet<>();
@@ -337,23 +349,41 @@ public class DoctorUI {
                 }
             }
             printed.clear();
-            System.out.println("\n" + "-".repeat(54));
-            System.out.printf("| %-25s | %-8s | %-15s |\n", "Specialty", "Count", "Graph");
-            System.out.println("-".repeat(54));
+
+            System.out.println(center("DOCTORS PER SPECIALTY", 80));
+            dash(80);
+            System.out.printf("  %-25s │ %-8s │ %-15s%n", "Specialty", "Count", "Graph");
+            dash(80);
+
             for (int i = 0; i < doctors.length; i++) {
                 String spec = doctors[i].getSpecialty();
                 if (!printed.contains(spec)) {
                     int count = specialtyCount.get(spec) == null ? 0 : specialtyCount.get(spec);
                     int barLen = maxCount == 0 ? 0 : (int)Math.round(((double)count / maxCount) * 30);
-                    String bar = "#".repeat(barLen);
-                    System.out.printf("| %-25s | %-8d | %-15s |\n", spec, count, bar);
+                    String bar = "█".repeat(barLen);
+                    System.out.printf("  %-25s │ %-8d │ %-15s%n", spec, count, bar);
                     printed.add(spec);
                 }
             }
-            System.out.println("-".repeat(54));
-            System.out.printf("| %-25s | %-8d |\n", "TOTAL", totalDoctors);
-            System.out.println("-".repeat(54));
+            dash(80);
+            System.out.printf("  %-25s │ %-8d%n", "TOTAL", totalDoctors);
+            dash(80);
+            blank();
+            System.out.println(center("END OF THE REPORT", 80));
+            line();
+
         } else if (choice == 2) {
+            String now = java.time.ZonedDateTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
+
+            line();
+            System.out.println(center("TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY", 80));
+            System.out.println(center("DOCTOR MANAGEMENT SUBSYSTEM", 80));
+            System.out.println(center("DOCTOR REPORTS & STATISTICS", 80));
+            line();
+            System.out.println(rightInDash("generated at: " + now, 80));
+            dash(80); blank();
+
             CustomADT<String, Integer> genderMap = doctorMaintenance.getDoctorCountByGender();
             String[] keys = {"Male", "Female", "Other"};
             int total = 0;
@@ -363,18 +393,40 @@ public class DoctorUI {
                 if (count > maxCount) maxCount = count;
                 total += count;
             }
-            System.out.println("\n" + "-".repeat(40));
-            System.out.printf("| %-10s | %-8s | %-15s |\n", "Gender", "Count", "Graph");
-            System.out.println("-".repeat(40));
+            System.out.println(center("DOCTOR GENDER DISTRIBUTION", 80));
+            dash(80);
+            System.out.printf("  %-10s │ %-8s │ %-15s%n", "Gender", "Count", "Graph");
+            dash(80);
+
             for (String key : keys) {
                 int count = genderMap.get(key) == null ? 0 : genderMap.get(key);
                 int barLen = maxCount == 0 ? 0 : (int)Math.round(((double)count / maxCount) * 30);
-                String bar = "#".repeat(barLen);
-                System.out.printf("| %-10s | %-8d | %-15s |\n", key, count, bar);
+                String bar = "█".repeat(barLen);
+                System.out.printf("  %-10s │ %-8d │ %-15s%n", key, count, bar);
             }
-            System.out.println("-".repeat(40));
-            System.out.printf("| %-10s | %-8d |\n", "TOTAL", total);
-            System.out.println("-".repeat(40));
+            dash(80);
+            System.out.printf("  %-10s │ %-8d%n", "TOTAL", total);
+            dash(80); blank();
+            System.out.println(center("END OF THE REPORT", 80));
+            line();
         }
+    }
+
+    private void line() {
+        System.out.println("=".repeat(80));
+    }
+    private void dash(int w) {
+        System.out.println("-".repeat(w));
+    }
+    private void blank() {
+        System.out.println();
+    }
+    private String center(String s, int width) {
+        int pad = (width - s.length()) / 2;
+        return " ".repeat(Math.max(0, pad)) + s;
+    }
+    private String rightInDash(String s, int width) {
+        int pad = Math.max(0, width - s.length());
+        return " ".repeat(pad) + s;
     }
 }

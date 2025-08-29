@@ -323,16 +323,33 @@ public class ScheduleUI {
             System.out.println("Some slots may already exist. Please check.");
         }
     }
+
     private void showScheduleReports() {
-        System.out.println("\n" + "-".repeat(55));
-        System.out.printf("| %-10s | %-15s | %-25s |\n", "Doctor ID", "Total Schedules", "Graph");
-        System.out.println("-".repeat(55));
+        System.out.println("\n" + "=".repeat(44));
+        System.out.printf("%-44s\n", "REPORT MENU");
+        System.out.println("=".repeat(44));
+        System.out.println("1. Number of Schedules per Doctor");
+        System.out.println("2. Schedule Status Distribution");
+        System.out.println("0. Back");
+        System.out.println("=".repeat(44));
         int choice = InputHandler.getInt("Choose report", 0, 2);
 
         if (choice == 1) {
+            String now = java.time.ZonedDateTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
+
+            line(70);
+            System.out.println(center("TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY", 70));
+            System.out.println(center("DOCTOR MANAGEMENT SUBSYSTEM", 70));
+            System.out.println(center("SCHEDULE REPORTS & STATISTICS", 70));
+            line(70);
+            System.out.println(rightInDash("generated at: " + now, 70));
+            dash(70); blank();
+
             CustomADT<String, Integer> countPerDoctor = scheduleMaintenance.getScheduleCountPerDoctor();
             if (countPerDoctor.size() == 0) {
                 System.out.println("\nNo schedules found for any doctor.");
+                line(70);
                 return;
             }
             CustomADT<Integer, Schedule> allSchedules = scheduleMaintenance.getAllSchedules();
@@ -350,20 +367,41 @@ public class ScheduleUI {
                 }
             }
             printed.clear();
+
+            System.out.println(center("SCHEDULES PER DOCTOR", 70));
+            dash(70);
+            System.out.printf("  %-12s │ %-18s │ %-28s%n", "Doctor ID", "Total Schedules", "Graph");
+            dash(70);
+
             for (int i = 0; i < allSchedules.size(); i++) {
                 String docId = allSchedules.get(i).getDoctorID();
                 if (!printed.contains(docId)) {
                     int count = countPerDoctor.get(docId) == null ? 0 : countPerDoctor.get(docId);
-                    int barLen = maxCount == 0 ? 0 : (int)Math.round(((double)count / maxCount) * 25);
-                    String bar = "=".repeat(barLen);
-                    System.out.printf("| %-10s | %15d | %-25s |\n", docId, count, bar);
+                    int barLen = maxCount == 0 ? 0 : (int)Math.round(((double)count / maxCount) * 28);
+                    String bar = "█".repeat(barLen);
+                    System.out.printf("  %-12s │ %-18d │ %-28s%n", docId, count, bar);
                     printed.add(docId);
                 }
             }
-            System.out.println("-".repeat(55));
-            System.out.printf("| %-10s | %15d | %-25s |\n", "TOTAL", totalSchedules, "");
-            System.out.println("-".repeat(55));
+            dash(70);
+            System.out.printf("  %-12s │ %-18d │ %-28s%n", "TOTAL", totalSchedules, "");
+            dash(70); blank();
+            System.out.println(center("END OF THE REPORT", 70));
+            line(70);
+
         } else if (choice == 2) {
+            String now = java.time.ZonedDateTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
+
+            line(70);
+            System.out.println(center("TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY", 70));
+            System.out.println(center("DOCTOR MANAGEMENT SUBSYSTEM", 70));
+            System.out.println(center("SCHEDULE REPORTS & STATISTICS", 70));
+            line(70);
+            System.out.println(rightInDash("generated at: " + now, 70));
+            dash(70); blank();
+
+
             CustomADT<String, Integer> statusMap = scheduleMaintenance.getScheduleCountByStatus();
             String[] statusKeys = {"Available", "Leave"};
             int total = 0;
@@ -373,18 +411,40 @@ public class ScheduleUI {
                 if (count > maxCount) maxCount = count;
                 total += count;
             }
-            System.out.println("\n" + "-".repeat(55));
-            System.out.printf("| %-13s | %-15s | %-25s |\n", "Status", "Count", "Graph");
-            System.out.println("-".repeat(55));
+            System.out.println(center("SCHEDULE STATUS DISTRIBUTION", 70));
+            dash(70);
+            System.out.printf("  %-13s │ %-18s │ %-28s%n", "Status", "Count", "Graph");
+            dash(70);
+
             for (String key : statusKeys) {
                 int count = statusMap.get(key) == null ? 0 : statusMap.get(key);
-                int barLen = maxCount == 0 ? 0 : (int)Math.round(((double)count / maxCount) * 25);
-                String bar = "#".repeat(barLen);
-                System.out.printf("| %-13s | %15d | %-25s |\n", key, count, bar);
+                int barLen = maxCount == 0 ? 0 : (int)Math.round(((double)count / maxCount) * 28);
+                String bar = "█".repeat(barLen);
+                System.out.printf("  %-13s │ %-18d │ %-28s%n", key, count, bar);
             }
-            System.out.println("-".repeat(55));
-            System.out.printf("| %-13s | %15d | %-25s |\n", "TOTAL", total, "");
-            System.out.println("-".repeat(55));
+            dash(70);
+            System.out.printf("  %-13s │ %-18d │ %-28s%n", "TOTAL", total, "");
+            dash(70); blank();
+            System.out.println(center("END OF THE REPORT", 70));
+            line(70);
         }
+    }
+
+    private void line(int w) {
+        System.out.println("=".repeat(w));
+    }
+    private void dash(int w) {
+        System.out.println("-".repeat(w));
+    }
+    private void blank() {
+        System.out.println();
+    }
+    private String center(String s, int width) {
+        int pad = (width - s.length()) / 2;
+        return " ".repeat(Math.max(0, pad)) + s;
+    }
+    private String rightInDash(String s, int width) {
+        int pad = Math.max(0, width - s.length());
+        return " ".repeat(pad) + s;
     }
 }

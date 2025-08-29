@@ -210,38 +210,6 @@ public class ConsultationMaintenanceUI {
             return;
         }
 
-        /*
-        Earliest 'Scheduled' Appointment for Consultation
-         */
-//        CustomADT<String, Appointment> allAppointmentsADT = new CustomADT<>();
-//        Appointment[] allAppointments = maintenance.getAllAppointments();
-//        for (Appointment a : allAppointments) {
-//            allAppointmentsADT.put(a.getAppointmentId(), a);
-//        }
-//
-//        // Find the earliest 'Scheduled' appointment
-//        Appointment earliest = null;
-//        for (int i = 0; i < allAppointmentsADT.size(); i++) {
-//            Appointment a = allAppointmentsADT.get(i);
-//            if ("Scheduled".equalsIgnoreCase(a.getStatus())) {
-//                if (earliest == null || a.getAppointmentTime().isBefore(earliest.getAppointmentTime())) {
-//                    earliest = a;
-//                }
-//            }
-//        }
-//        if (earliest == null) {
-//            System.out.println("No scheduled appointments available. ");
-//            return;
-//        }
-//        System.out.println("-- Earliest Scheduled Appointments --");
-//        printAllAppointments(new Appointment[] { earliest });
-//        boolean proceed = InputHandler.getYesNo("Proceed with consultation for this appointment? ");
-//        if (!proceed) {
-//            System.out.println("Consultation creation cancelled. ");
-//            return;
-//        }
-//        Appointment appointment = earliest;
-
         // Select Appointment
         System.out.println("\n-- Available Appointments --");
         maintenance.sortAppointmentsByDate();
