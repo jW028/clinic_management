@@ -239,17 +239,30 @@ public class ConsultationMaintenance {
 
     // Schedule
     public String[] getAvailableSlotsForDoctor(String doctorId) {
-        // if (doctorId == null) return new LocalDateTime[0];
         if (doctorId == null) return new String[0];
 
         // Collect available slots for doctor
         OrderedMap<String, String> slotMap = new OrderedMap<>();
         int slotCounter = 1;
+        LocalDateTime now = LocalDateTime.now();
+
         for (int i = 0; i < scheduleMap.size(); i++) {
             Schedule sched = scheduleMap.get(i);
             if (sched.getDoctorID().equals(doctorId) && sched.getStatus()) {
                 String displaySlot = sched.getDate() + " " + sched.getTimeslot();
-                slotMap.put("slot" + slotCounter++, displaySlot);
+                try {
+                    String[] slotParts = sched.getTimeslot().split("[-–—]");
+                    String startTime = slotParts[0].trim();
+                    String[] dateParts = sched.getDate().split("-");
+                    String formattedDate = dateParts.length == 3
+                            ? dateParts[2] + "/" + dateParts[1] + "/" + dateParts[0]
+                            : sched.getDate();
+                    String dateTimeStr = formattedDate + " " + startTime;
+                    LocalDateTime slotDateTime = utility.DateTimeFormatterUtil.parseDisplayFormat(dateTimeStr);
+                    if (slotDateTime.isAfter(now)) {
+                        slotMap.put("slot" + slotCounter++, displaySlot);
+                    }
+                } catch (Exception ex) {}
             }
         }
         return slotMap.toArray(new String[0]);
