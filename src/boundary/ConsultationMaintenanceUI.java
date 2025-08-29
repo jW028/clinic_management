@@ -1264,6 +1264,10 @@ public class ConsultationMaintenanceUI {
                 System.out.println("Appointment is already cancelled. ");
                 continue;
             }
+            if ("Completed".equalsIgnoreCase(appointment.getStatus())) {
+                System.out.println("Appointment is already completed. ");
+                continue;
+            }
             break;
         }
 
