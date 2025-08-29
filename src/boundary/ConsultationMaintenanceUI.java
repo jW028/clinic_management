@@ -893,7 +893,7 @@ public class ConsultationMaintenanceUI {
             System.out.println("│ 0. Exit without sorting           │");
             System.out.println("└" + "─".repeat(35) + "┘");
 
-            choice = InputHandler.getInt("Choose option", 0, 5);
+            choice = InputHandler.getInt("Choose option", 0, 4);
 
             switch (choice) {
                 case 1 -> maintenance.sortAppointmentsByID();
