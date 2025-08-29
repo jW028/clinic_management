@@ -9,7 +9,8 @@ public class DoctorMaintenance {
     private CustomADT<String, Doctor> doctorRegistry;
 
     public DoctorMaintenance() {
-        doctorRegistry = DoctorDAO.loadDoctors();
+        IDGenerator.loadCounter("counter.dat");
+        this.doctorRegistry = DoctorDAO.loadDoctors();
 
         String highestID = "DC000";
         for (Doctor doctor : doctorRegistry) { // Use values() to iterate over all doctors
@@ -19,12 +20,14 @@ public class DoctorMaintenance {
             }
         }
         IDGenerator.updateDoctorCounterFromHighestID(highestID);
+        IDGenerator.saveCounters("counter.dat");
     }
 
     public boolean registerDoctor(Doctor doctor) {
         if (doctorRegistry.containsKey(doctor.getDoctorID())) return false;
         doctorRegistry.put(doctor.getDoctorID(), doctor);
         DoctorDAO.saveDoctors(doctorRegistry);
+        IDGenerator.saveCounters("counter.dat");
         return true;
     }
 
@@ -47,28 +50,17 @@ public class DoctorMaintenance {
         }
 
         DoctorDAO.saveDoctors(doctorRegistry); // persist immediately
+        IDGenerator.saveCounters("counter.dat");
     }
 
     public boolean removeDoctor(String doctorID) {
         boolean removed = doctorRegistry.remove(doctorID) != null;
         if (removed) {
             DoctorDAO.saveDoctors(doctorRegistry); // Save after removal
+            IDGenerator.saveCounters("counter.dat");
         }
         return removed;
     }
-
-//    public void listAllDoctors() {
-//        System.out.printf("%-8s | %-20s | %-15s | %-13s | %-25s | %-25s | %-6s | %-12s\n",
-//                "ID", "Name", "Specialty", "Phone", "Email", "Address", "Gender", "DOB");
-//        System.out.println("-----------------------------------------------------------------------------------------------"
-//                + "------------------------------------------------------");
-//
-//        for (Doctor doctor : doctorRegistry) {
-//            System.out.printf("%-8s | %-20s | %-15s | %-13s | %-25s | %-25s | %-6s | %-12s\n",
-//                    doctor.getDoctorID(), doctor.getName(), doctor.getSpecialty(), doctor.getPhone(),
-//                    doctor.getEmail(), doctor.getAddress(), doctor.getGender(), doctor.getDateOfBirth());
-//        }
-//    }
 
     public Doctor[] getAllDoctorsArray() {
         return doctorRegistry.toArray(new Doctor[doctorRegistry.size()]);
@@ -128,10 +120,5 @@ public class DoctorMaintenance {
             return ascending ? cmp : -cmp;
         });
         return doctorRegistry.toArray(new Doctor[doctorRegistry.size()]);
-    }
-
-
-    public int getRegisteredDoctorCount() {
-        return doctorRegistry.size();
     }
 }

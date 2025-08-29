@@ -9,6 +9,7 @@ import entity.Diagnosis;
 import entity.Payment;
 import entity.Patient;
 import entity.Doctor;
+import entity.VisitHistory;
 import adt.CustomADT;
 import utility.IDGenerator;
 import utility.InputHandler;
@@ -661,6 +662,21 @@ public class ConsultationMaintenanceUI {
         );
 
         maintenance.addConsultation(consultation);
+        CustomADT<String, VisitHistory> visits = patientMaintenance.getPatientVisitHistory(consultation.getPatient().getPatientId());
+        for (int i = 0; i < visits.size(); i++) {
+            VisitHistory vh = visits.get(i);
+            if (vh.getPatient().getPatientId().equals(consultation.getPatient().getPatientId())
+                    && vh.getVisitDate().toLocalDate().equals(consultation.getAppointment().getAppointmentTime().toLocalDate())
+                    && "SCHEDULED".equalsIgnoreCase(vh.getStatus())) {
+                patientMaintenance.updateVisitHistory(
+                        consultation.getPatient().getPatientId(),
+                        vh.getVisitId(),
+                        vh.getVisitReason(),
+                        "COMPLETED"
+                );
+                break;
+            }
+        }
         appointment.setStatus("In Progress");
         maintenance.updateAppointmentStatus(appointment.getAppointmentId(), "In Progress");
 
@@ -1262,6 +1278,11 @@ public class ConsultationMaintenanceUI {
         Appointment appointment = new Appointment(appointmentId, patientId, selectedDoctor.getDoctorID(), appointmentTime, status, appointmentType);
         maintenance.addAppointment(appointment);
 
+        patientMaintenance.addVisitHistory(
+                appointment.getPatientId(),
+                "Appointment Scheduled",
+                "SCHEDULED"
+        );
         // If walk-in, enqueue patient:
 //        if ("walk-in".equalsIgnoreCase(appointment.getAppointmentType())) {
 //            walkInQueue.offer(walkInQueue.size(), patientId);

@@ -7,14 +7,14 @@ public class IDGenerator {
     private static int consultationCounter = 1;
     private static int diagnosisCounter = 1;
     private static int doctorCounter = 1;
-    private static int medicineCounter = 6;
     private static int patientCounter = 1;
-    private static int prescriptionCounter = 4;
     private static int procedureCounter = 1;
     private static int scheduleCounter = 1;
     private static int transactionCounter = 1;
     private static int treatmentCounter = 1;
     private static int visitCounter = 1;
+    private static int medicineCounter = 6;
+    private static int prescriptionCounter = 1;
 
     public static String generateAppointmentID() {
         return "A" + String.format("%03d", appointmentCounter++);
@@ -98,9 +98,14 @@ public class IDGenerator {
         }
     }
 
+    public static void updatePatientCounterFromHighestID(String highestID) {
+        int num = Integer.parseInt(highestID.substring(1)); // "P005" => 5
+        patientCounter = num + 1;
+    }
+
     // for initializer that the counter didnt recorded in file
     public static void updateDoctorCounterFromHighestID(String highestID) {
-        int num = Integer.parseInt(highestID.substring(1)); // "D005" => 5
+        int num = Integer.parseInt(highestID.substring(2)); // "DC005" => 5
         doctorCounter = num + 1;
     }
 

@@ -455,16 +455,7 @@ public class PatientUI {
         System.out.println("\n=== SEARCH PATIENT RECORDS ===");
 
         String searchTerm = InputHandler.getString("Enter patient name or ID to search");
-        CustomADT<String, Patient> searchResults = new CustomADT<>();
-
-        CustomADT<String, Patient> patients = patientMaintenance.getAllPatients();
-        for (int i = 0; i < patients.size(); i++) {
-            Patient patient = patients.get(i);
-            if (patient.getPatientId().contains(searchTerm) ||
-                    patient.getName().toLowerCase().contains(searchTerm.toLowerCase())) {
-                searchResults.put(patient.getPatientId(), patient);
-            }
-        }
+        CustomADT<String, Patient> searchResults = patientMaintenance.searchPatients(searchTerm);
 
         if (searchResults.isEmpty()) {
             System.out.println("❌ No patients found matching the search term.");
