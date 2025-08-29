@@ -7,9 +7,7 @@ public class IDGenerator {
     private static int consultationCounter = 1;
     private static int diagnosisCounter = 1;
     private static int doctorCounter = 1;
-    private static int medicineCounter = 6;
     private static int patientCounter = 1;
-    private static int prescriptionCounter = 4;
     private static int procedureCounter = 1;
     private static int scheduleCounter = 1;
     private static int transactionCounter = 1;
