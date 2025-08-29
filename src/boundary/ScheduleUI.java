@@ -90,7 +90,7 @@ public class ScheduleUI {
         String date = String.format("%04d-%02d-%02d", year, month, day);
 
         System.out.println(" 1. Show all schedules for this date");
-        System.out.println("2. Show schedules for this date by doctor");
+        System.out.println(" 2. Show schedules for this date by doctor");
         int choice = InputHandler.getInt("Choose option", 1, 2);
         if (choice == 1) {
             CustomADT<Integer, Schedule> schedules = scheduleMaintenance.getSchedulesByDate(date);

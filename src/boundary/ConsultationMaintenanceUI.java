@@ -6,7 +6,6 @@ import entity.Appointment;
 import entity.Consultation;
 import entity.ConsultationService;
 import entity.Diagnosis;
-import entity.Payment;
 import entity.Patient;
 import entity.Doctor;
 import entity.VisitHistory;
@@ -16,13 +15,13 @@ import utility.InputHandler;
 import utility.DateTimeFormatterUtil;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 public class ConsultationMaintenanceUI {
     private final ConsultationMaintenance maintenance;
     private final PatientMaintenance patientMaintenance;
     private final Scanner scanner;
+    private String nearestDoctorSlotStr = null;
 
     public ConsultationMaintenanceUI(PatientMaintenance patientMaintenance) {
         maintenance = new ConsultationMaintenance();
@@ -33,19 +32,8 @@ public class ConsultationMaintenanceUI {
     public void run() {
         int choice;
         do {
-            System.out.println("\n=== Consultation Maintenance Menu ===");
-            System.out.println("1. Manage Appointments");
-            System.out.println("2. Manage Consultations");
-            System.out.println("3. View Reports");
-            System.out.println("0. Return to Main Menu");
-            System.out.print("Enter choice: ");
-            String input = scanner.nextLine().trim();
-            try {
-                choice = Integer.parseInt(input);
-            } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid number. ");
-                continue;
-            }
+            printMenu();
+            choice = InputHandler.getInt("Select an option", 0, 3);
 
             switch (choice) {
                 case 1 -> appointmentMenu();
@@ -60,26 +48,34 @@ public class ConsultationMaintenanceUI {
         } while (true);
     }
 
+    public void printMenu() {
+        System.out.println("\n┌" + "─".repeat(42) + "┐");
+        System.out.println("│       CONSULTATION MAINTENANCE MENU      |");
+        System.out.println("├" + "─".repeat(42) + "┤");
+        System.out.println("│ 1. Manage Appointments                   │");
+        System.out.println("│ 2. Manage Consultations                  │");
+        System.out.println("│ 3. View Reports                          │");
+        System.out.println("│ 0. Return to Main Menu                   │");
+        System.out.println("└" + "─".repeat(42) + "┘");
+    }
+
     private void appointmentMenu() {
         int choice;
         do {
-            System.out.println("\n=== Appointment Management Menu ===");
-            System.out.println("1. View All Appointments");
-            System.out.println("2. Add Future Appointment");
-            System.out.println("3. Add Walk-In Appointment");
-            System.out.println("4. Cancel Appointment");
-            System.out.println("5. Remove Appointment");
-            System.out.println("6. Search Appointments by Patient Name");
-            System.out.println("7. Search Appointments by Doctor Name");
-            System.out.println("0. Return to Consultation Maintenance Menu");
-            System.out.print("Enter choice: ");
-            String input = scanner.nextLine().trim();
-            try {
-                choice = Integer.parseInt(input);
-            } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid number. ");
-                continue;
-            }
+            System.out.println("\n┌" + "─".repeat(42) + "┐");
+            System.out.println("│       APPOINTMENT MANAGEMENT MENU        |");
+            System.out.println("├" + "─".repeat(42) + "┤");
+            System.out.println("│ 1. View All Appointments                 │");
+            System.out.println("│ 2. Add Future Appointment                │");
+            System.out.println("│ 3. Add Walk-In Appointment               │");
+            System.out.println("│ 4. Cancel Appointment                    │");
+            System.out.println("│ 5. Remove Appointment                    │");
+            System.out.println("│ 6. Search Appointments by Patient Name   │");
+            System.out.println("│ 7. Search Appointments by Doctor Name    │");
+            System.out.println("│ 0. Return                                │");
+            System.out.println("└" + "─".repeat(42) + "┘");
+
+            choice = InputHandler.getInt("Select an option", 0, 7);
 
             switch (choice) {
                 case 1 -> viewAllAppointments();
@@ -98,22 +94,19 @@ public class ConsultationMaintenanceUI {
     private void consultationMenu() {
         int choice;
         do {
-            System.out.println("\n=== Consultation Management Menu ===");
-            System.out.println("1. View All Consultations");
-            System.out.println("2. Add Consultation");
-            System.out.println("3. Update Consultation");
-            System.out.println("4. Delete Consultation");
-            System.out.println("5. Search Consultations by Patient Name");
-            System.out.println("6. Search Consultations by Doctor Name");
-            System.out.println("0. Return to Consultation Maintenance Menu");
-            System.out.print("Enter choice: ");
-            String input = scanner.nextLine().trim();
-            try {
-                choice = Integer.parseInt(input);
-            } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid number. ");
-                continue;
-            }
+            System.out.println("\n┌" + "─".repeat(42) + "┐");
+            System.out.println("│       CONSULTATION MANAGEMENT MENU       |");
+            System.out.println("├" + "─".repeat(42) + "┤");
+            System.out.println("│ 1. View All Consultations                │");
+            System.out.println("│ 2. Add Consultation                      │");
+            System.out.println("│ 3. Update Consultation                   │");
+            System.out.println("│ 4. Delete Consultation                   │");
+            System.out.println("│ 5. Search Consultations by Patient Name  │");
+            System.out.println("│ 6. Search Consultations by Doctor Name   │");
+            System.out.println("│ 0. Return                                │");
+            System.out.println("└" + "─".repeat(42) + "┘");
+
+            choice = InputHandler.getInt("Select an option", 0, 6);
 
             switch (choice) {
                 case 1 -> viewAllConsultations();
@@ -133,19 +126,16 @@ public class ConsultationMaintenanceUI {
     private void reportMenu() {
         int choice;
         do {
-            System.out.println("\n=== Report Menu ===");
-            System.out.println("1. Print Consultation Summary Report");
-            System.out.println("2. Print Service Usage Report");
-            System.out.println("3. Print Appointments per Doctor Report");
-            System.out.println("0. Return to Consultation Maintenance Menu");
-            System.out.print("Enter choice: ");
-            String input = scanner.nextLine().trim();
-            try {
-                choice = Integer.parseInt(input);
-            } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid number. ");
-                continue;
-            }
+            System.out.println("\n┌" + "─".repeat(42) + "┐");
+            System.out.println("│               REPORT MENU                |");
+            System.out.println("├" + "─".repeat(42) + "┤");
+            System.out.println("│ 1. Print Consultation Summary Report     │");
+            System.out.println("│ 2. Print Service Usage Report            │");
+            System.out.println("│ 3. Print Appointments per Doctor Report  │");
+            System.out.println("│ 0. Return                                │");
+            System.out.println("└" + "─".repeat(42) + "┘");
+
+            choice = InputHandler.getInt("Select an option", 0, 3);
 
             switch (choice) {
                 case 1 -> maintenance.printConsultationSummaryReport();
@@ -158,7 +148,6 @@ public class ConsultationMaintenanceUI {
     }
 
     private void viewAllConsultations() {
-        System.out.println("\n-- All Consultations --");
         Consultation[] consultations = maintenance.getAllConsultations();
         if (consultations == null || consultations.length == 0) {
             System.out.println("No consultations found.");
@@ -166,28 +155,25 @@ public class ConsultationMaintenanceUI {
         }
         printAllConsultations(consultations);
 
-        // Show sorting options
         int choice;
         do {
-            System.out.println("Sort consultations by: ");
-            System.out.println("1. Patient Name");
-            System.out.println("2. Doctor Name");
-            System.out.println("3. Date");
-            System.out.println("0. Return to Consultation Management Menu");
+            System.out.println("\n┌" + "─".repeat(35) + "┐");
+            System.out.println("│ Sort Consultations By;            │");
+            System.out.println("├" + "─".repeat(35) + "┤");
+            System.out.println("│ 1. By ID                          │");
+            System.out.println("│ 2. By Patient Name                │");
+            System.out.println("│ 3. By Doctor Name                 │");
+            System.out.println("│ 4. By Date                        │");
+            System.out.println("│ 0. Exit without sorting           │");
+            System.out.println("└" + "─".repeat(35) + "┘");
 
-            System.out.print("Choose sorting option: ");
-            String input = scanner.nextLine().trim();
-            try {
-                choice = Integer.parseInt(input);
-            } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid number. ");
-                continue;
-            }
+            choice = InputHandler.getInt("Choose option", 0, 4);
 
             switch (choice) {
-                case 1 -> maintenance.sortConsultationsByPatientName();
-                case 2 -> maintenance.sortConsultationsByDoctorName();
-                case 3 -> maintenance.sortConsultationsByDate();
+                case 1 -> maintenance.sortConsultationsByID();
+                case 2 -> maintenance.sortConsultationsByPatientName();
+                case 3 -> maintenance.sortConsultationsByDoctorName();
+                case 4 -> maintenance.sortConsultationsByDate();
                 case 0 -> {
                     return;
                 }
@@ -383,35 +369,6 @@ public class ConsultationMaintenanceUI {
         System.out.print("\nEnter notes (or leave empty to skip): ");
         String notes = scanner.nextLine();
 
-        // TODO loop prompt Link Payment if needed
-        // Payment link with validation
-        boolean linkPayment = InputHandler.getYesNo("Link a Payment?");
-        Payment payment = null;
-        Payment[] payments = maintenance.getAllPayments();
-        CustomADT<String, Payment> paymentsADT = new CustomADT<>();
-        for (Payment p : payments) {
-            paymentsADT.put(p.getPaymentId(), p);
-        }
-        if (linkPayment) {
-            if (paymentsADT.size() == 0) {
-                System.out.println("No payment records available. Cannot link payment.");
-            } else {
-                System.out.println("Available Payments:");
-                for (int i = 0; i < paymentsADT.size(); i++) {
-                    Payment p = paymentsADT.get(i);
-                    System.out.println(p.getPaymentId() + ": " + p);
-                }
-                while (payment == null) {
-                    String paymentId = InputHandler.getString("Enter Payment ID (or 0 to return)");
-                    if (paymentId.equals("0")) break;
-                    payment = paymentsADT.get(paymentId);
-                    if (payment == null) {
-                        System.out.println("Payment not found. Please enter a valid Payment ID.");
-                    }
-                }
-            }
-        }
-
         boolean followUpNeeded = false;
         LocalDateTime followUpDate = null;
         while (true) {
@@ -548,7 +505,7 @@ public class ConsultationMaintenanceUI {
                 servicesUsed,
                 diagnosis,
                 notes,
-                payment,
+                null,
                 followUpNeeded,
                 followUpDate
         );
@@ -631,9 +588,6 @@ public class ConsultationMaintenanceUI {
                 System.out.println("(none)");
             }
 
-            // Payment
-            System.out.println("Payment: " + (consultation.getPayment() != null ? consultation.getPayment().getPaymentId() : "(none)"));
-
             // Follow-up
             System.out.println("Follow-Up Needed: " + (consultation.isFollowUpNeeded() ? "Yes" : "No"));
             System.out.println("Follow-Up Date: " + (consultation.getFollowUpDate() != null ? DateTimeFormatterUtil.formatForDisplay(consultation.getFollowUpDate()) : "(none)"));
@@ -643,10 +597,9 @@ public class ConsultationMaintenanceUI {
             System.out.println("2. Notes");
             System.out.println("3. Add Service");
             System.out.println("4. Remove Service");
-            System.out.println("5. Link/Change Payment");
-            System.out.println("6. Change Follow-Up");
+            System.out.println("5. Change Follow-Up");
             System.out.println("0. Finish Update");
-            int choice = InputHandler.getInt(0, 6);
+            int choice = InputHandler.getInt(0, 5);
 
             switch (choice) {
                 case 1: {
@@ -752,35 +705,7 @@ public class ConsultationMaintenanceUI {
                     }
                     break;
                 }
-                case 5: { // Link/change payment
-                    Payment[] payments = maintenance.getAllPayments();
-                    CustomADT<String, Payment> paymentsADT = new CustomADT<>();
-                    for (Payment p : payments) paymentsADT.put(p.getPaymentId(), p);
-                    if (paymentsADT.size() == 0) {
-                        System.out.println("No payment records available. Cannot link payment.");
-                        break;
-                    }
-                    System.out.println("Available Payments:");
-                    for (int i = 0; i < paymentsADT.size(); i++) {
-                        Payment p = paymentsADT.get(i);
-                        System.out.println(p.getPaymentId() + ": " + p);
-                    }
-                    Payment newPayment = null;
-                    while (newPayment == null) {
-                        String paymentId = InputHandler.getString("Enter Payment ID to link (or 0 to cancel)");
-                        if (paymentId.equals("0")) break;
-                        newPayment = paymentsADT.get(paymentId);
-                        if (newPayment == null) {
-                            System.out.println("Payment not found. Please enter a valid Payment ID.");
-                        }
-                    }
-                    if (newPayment != null) {
-                        consultation.setPayment(newPayment);
-                        System.out.println("Payment linked/changed.");
-                    }
-                    break;
-                }
-                case 6: { // Change follow-up
+                case 5: { // Change follow-up
                     boolean followUpNeeded = InputHandler.getYesNo("Is follow-up needed?");
                     consultation.setFollowUpNeeded(followUpNeeded);
                     LocalDateTime followUpDate = null;
@@ -896,43 +821,6 @@ public class ConsultationMaintenanceUI {
         }
     }
 
-    private void countConsultations() {
-        System.out.println("Total consultations stored: " + maintenance.countConsultations());
-    }
-
-    public LocalDateTime selectDoctorSlot(ConsultationMaintenance maintenance, Doctor doctor, Scanner scanner) {
-        String[] availableSlots = maintenance.getAvailableSlotsForDoctor(doctor.getDoctorID());
-        if (availableSlots == null || availableSlots.length == 0) {
-            System.out.println("No available slots for this doctor.");
-            return null;
-        }
-        System.out.println("Available Time Slots:");
-        for (int i = 0; i < availableSlots.length; i++) {
-            System.out.println("  " + (i + 1) + ". " + availableSlots[i]);
-        }
-        int selectedSlot = -1;
-        while (selectedSlot < 1 || selectedSlot > availableSlots.length) {
-            System.out.print("Select slot (1-" + availableSlots.length + ", or 0 to return): ");
-            try {
-                selectedSlot = Integer.parseInt(scanner.nextLine().trim());
-                if (selectedSlot == 0) return null;
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Try again.");
-            }
-        }
-        // Parse slot string to LocalDateTime
-        String selectedSlotStr = availableSlots[selectedSlot - 1];
-        String[] parts = selectedSlotStr.split(" ");
-        String datePart = parts[0];
-        String timeslot = parts[1];
-        String[] timeParts = timeslot.split("[–-]");
-        String startTime = timeParts[0].trim();
-        String[] dateElems = datePart.split("-");
-        String formattedDatePart = dateElems[2] + "/" + dateElems[1] + "/" + dateElems[0];
-        String appointmentDateTimeStr = formattedDatePart + " " + startTime;
-        return DateTimeFormatterUtil.parseDisplayFormat(appointmentDateTimeStr);
-    }
-
     private void searchConsultationsByPatientName() {
         while (true) {
             System.out.print("\nEnter patient name (Eg. Alice, or 0 to return): ");
@@ -989,7 +877,7 @@ public class ConsultationMaintenanceUI {
             return;
         }
 
-        System.out.println("Consultation List");
+        System.out.println("\n-- Consultation List --");
         System.out.println("=".repeat(105));
         System.out.printf("%-15s %-15s %-20s %-20s %-20s %-10s%n",
                 "ConsultationID", "AppointmentID", "Patient Name", "Doctor Name", "Date", "Fee");
@@ -1027,25 +915,23 @@ public class ConsultationMaintenanceUI {
         // Show sorting options
         int choice;
         do {
-            System.out.println("\nSort appointments by: ");
-            System.out.println("1. Patient Name");
-            System.out.println("2. Doctor Name");
-            System.out.println("3. Date");
-            System.out.println("0. Return to Appointment Management Menu");
+            System.out.println("\n┌" + "─".repeat(35) + "┐");
+            System.out.println("│ Sort Appointments By:             │");
+            System.out.println("├" + "─".repeat(35) + "┤");
+            System.out.println("│ 1. By ID                          │");
+            System.out.println("│ 2. By Patient Name                │");
+            System.out.println("│ 3. By Doctor Name                 │");
+            System.out.println("│ 4. By Date                        │");
+            System.out.println("│ 0. Exit without sorting           │");
+            System.out.println("└" + "─".repeat(35) + "┘");
 
-            System.out.print("Choose sorting option: ");
-            String input = scanner.nextLine().trim();
-            try {
-                choice = Integer.parseInt(input);
-            } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid number. ");
-                continue;
-            }
+            choice = InputHandler.getInt("Choose option", 0, 5);
 
             switch (choice) {
-                case 1 -> maintenance.sortAppointmentsByPatientName();
-                case 2 -> maintenance.sortAppointmentsByDoctorName();
-                case 3 -> maintenance.sortAppointmentsByDate();
+                case 1 -> maintenance.sortAppointmentsByID();
+                case 2 -> maintenance.sortAppointmentsByPatientName();
+                case 3 -> maintenance.sortAppointmentsByDoctorName();
+                case 4 -> maintenance.sortAppointmentsByDate();
                 case 0 -> {
                     return;
                 }
@@ -1060,17 +946,6 @@ public class ConsultationMaintenanceUI {
      * Used by customer, admin, admin walk-in
      */
     public void createAppointmentFlow(String patientId, String appointmentType, Doctor[] doctorsToShow) {
-//        if (patientId == null || patientId.isEmpty()) {
-//            System.out.println("Error: No patient specified!");
-//            return;
-//        }
-//        if (patient == null) {
-//            System.out.println("Error: Patient not found!");
-//            return;
-//        }
-//        String appointmentId = IDGenerator.generateAppointmentID();
-//        System.out.println("Generated Appointment ID: " + appointmentId);
-
         Patient patient = maintenance.getPatient(patientId);
         if (doctorsToShow == null || doctorsToShow.length == 0) {
             System.out.println("No doctors available for appointment.");
@@ -1174,10 +1049,6 @@ public class ConsultationMaintenanceUI {
                 "Appointment Scheduled",
                 "SCHEDULED"
         );
-        // If walk-in, enqueue patient:
-//        if ("walk-in".equalsIgnoreCase(appointment.getAppointmentType())) {
-//            walkInQueue.offer(walkInQueue.size(), patientId);
-//        }
 
         System.out.println("\nAppointment (" + appointmentId + ") booked successfully!");
         System.out.println("+-----------------+----------------------+----------------------+---------------------------+-----------------+");
@@ -1188,66 +1059,13 @@ public class ConsultationMaintenanceUI {
         System.out.println("+-----------------+----------------------+----------------------+---------------------------+-----------------+");
     }
 
-    /*
-    Customer Appointment Creation Wrapper
-     */
     public void customerMakeAppointment(String currentLoginPatientId) {
         System.out.println("\n-- Add Appointment --");
         Doctor[] allDoctors = maintenance.getAllDoctors();
         createAppointmentFlow(currentLoginPatientId, "appointment", allDoctors);
     }
 
-    /*
-    public String getCurrentLoginPatientId() {
-        // If you have login/session, return patient id for current user
-        // For now, you can prompt or hardcode for testing:
-        return "P001"; // Or prompt for patient id if customer flow
-    }
-     */
-
     public Doctor getCurrentWalkInDoctor() {
-//        Doctor[] doctors = maintenance.getAllDoctors();
-//        Doctor bestDoctor = null;
-//        LocalDateTime earliestSlot = null;
-//        LocalDateTime now = LocalDateTime.now();
-//
-//        for (Doctor doctor : doctors) {
-//            String[] slots = maintenance.getAvailableSlotsForDoctor(doctor.getDoctorID());
-//            for (String slotStr : slots) {
-//                // Parse slot string: "dd/MM/yyyy HH:mm-HH:mm"
-//                String[] parts = slotStr.split(" ");
-//                if (parts.length < 2) continue;
-//                String datePart = parts[0];
-//                String timeslot = parts[1];
-//                String[] timeParts = timeslot.split("[–-]");
-//                if (timeParts.length < 2) continue;
-//                String startTime = timeParts[0].trim();
-//
-//                // If your datePart is already "dd/MM/yyyy", skip the reformatting
-//                // If it's "yyyy-MM-dd", then do the conversion below
-//                String formattedDatePart = datePart;
-//                if (datePart.contains("-")) { // If format is "yyyy-MM-dd"
-//                    String[] dateElems = datePart.split("-");
-//                    formattedDatePart = dateElems[2] + "/" + dateElems[1] + "/" + dateElems[0];
-//                }
-//
-//                String appointmentDateTimeStr = formattedDatePart + " " + startTime;
-//                LocalDateTime slotTime;
-//                try {
-//                    slotTime = DateTimeFormatterUtil.parseDisplayFormat(appointmentDateTimeStr);
-//                } catch (Exception ex) {
-//                    continue;
-//                }
-//
-//                if (slotTime.isBefore(now)) continue; // Skip past slots
-//
-//                if (earliestSlot == null || slotTime.isBefore(earliestSlot)) {
-//                    earliestSlot = slotTime;
-//                    bestDoctor = doctor;
-//                }
-//            }
-//        }
-//        return bestDoctor;
         Doctor[] doctors = maintenance.getAllDoctors();
         Doctor bestDoctor = null;
         LocalDateTime earliestSlot = null;
@@ -1290,17 +1108,10 @@ public class ConsultationMaintenanceUI {
                 }
             }
         }
-
-        // Store the best slot string for later use
-        nearestDoctorSlotStr = bestSlotStr; // Make nearestDoctorSlotStr a field if needed
+        nearestDoctorSlotStr = bestSlotStr;
         return bestDoctor;
     }
 
-    private String nearestDoctorSlotStr = null;
-
-    /*
-    Admin Normal Appointment Wrapper1
-     */
     public void adminMakeAppointment() {
         System.out.println("\n-- Add Appointment --");
         // printAllAppointments(maintenance.getAllAppointments());
@@ -1349,9 +1160,6 @@ public class ConsultationMaintenanceUI {
      */
     public void adminWalkInAppointment() {
         System.out.println("\n-- Add Walk-In Appointment --");
-//        String appointmentId = IDGenerator.generateAppointmentID();
-//        System.out.println("Generated Appointment ID: " + appointmentId);
-
         // Select patient
         Patient[] patients = maintenance.getAllPatients();
         if (patients == null || patients.length == 0) {

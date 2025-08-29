@@ -22,7 +22,7 @@ public class DoctorUI {
         int choice;
         do {
             printMenu();
-            choice = InputHandler.getInt("Enter your choice", 0, 9);
+            choice = InputHandler.getInt("Enter your choice", 0, 8);
 
             switch (choice) {
                 case 1 -> registerDoctor();
@@ -273,7 +273,7 @@ public class DoctorUI {
 
     private void showSpecializationAnalytics() {
         System.out.println("\n┌" + "─".repeat(38) + "┐");
-        System.out.println("│   Doctor Specialization Analytics   │");
+        System.out.println("│   Doctor Specialization Analytics    │");
         System.out.println("└" + "─".repeat(38) + "┘");
         var specialtyCounts = doctorMaintenance.getSpecialtyCounts();
         if (specialtyCounts.size() == 0) {
