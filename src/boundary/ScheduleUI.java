@@ -23,7 +23,7 @@ public class ScheduleUI {
         int choice;
         do {
             printMenu();
-            choice = InputHandler.getInt("Enter your choice", 0, 5);
+            choice = InputHandler.getInt("Enter your choice", 0, 6);
 
             switch (choice) {
                 case 1 -> listAllSchedulesFlow();
@@ -31,6 +31,7 @@ public class ScheduleUI {
                 case 3 -> assignFlow();
                 case 4 -> removeFlow();
                 case 5 -> markLeaveFlow();
+                case 6 -> showScheduleReports();
                 case 0 -> System.out.println("Returning to main menu...");
                 default -> System.out.println("Invalid choice, try again.");
             }
@@ -47,6 +48,7 @@ public class ScheduleUI {
         System.out.println("│ 3. Assign New Schedule(s)                                │");
         System.out.println("│ 4. Remove Schedule(s)                                    │");
         System.out.println("│ 5. Mark Leave (Update Schedule Status)                   │");
+        System.out.println("│ 6. Reports and Statistics                                │");
         System.out.println("│ 0. Back to Main Menu                                     │");
         System.out.println("└" + "─".repeat(58) + "┘");
     }
@@ -321,5 +323,68 @@ public class ScheduleUI {
             System.out.println("Some slots may already exist. Please check.");
         }
     }
+    private void showScheduleReports() {
+        System.out.println("\n" + "-".repeat(55));
+        System.out.printf("| %-10s | %-15s | %-25s |\n", "Doctor ID", "Total Schedules", "Graph");
+        System.out.println("-".repeat(55));
+        int choice = InputHandler.getInt("Choose report", 0, 2);
 
+        if (choice == 1) {
+            CustomADT<String, Integer> countPerDoctor = scheduleMaintenance.getScheduleCountPerDoctor();
+            if (countPerDoctor.size() == 0) {
+                System.out.println("\nNo schedules found for any doctor.");
+                return;
+            }
+            CustomADT<Integer, Schedule> allSchedules = scheduleMaintenance.getAllSchedules();
+            java.util.HashSet<String> printed = new java.util.HashSet<>();
+            int totalSchedules = 0;
+            int maxCount = 0;
+            // Find max count for scaling
+            for (int i = 0; i < allSchedules.size(); i++) {
+                String docId = allSchedules.get(i).getDoctorID();
+                if (!printed.contains(docId)) {
+                    int count = countPerDoctor.get(docId) == null ? 0 : countPerDoctor.get(docId);
+                    if (count > maxCount) maxCount = count;
+                    totalSchedules += count;
+                    printed.add(docId);
+                }
+            }
+            printed.clear();
+            for (int i = 0; i < allSchedules.size(); i++) {
+                String docId = allSchedules.get(i).getDoctorID();
+                if (!printed.contains(docId)) {
+                    int count = countPerDoctor.get(docId) == null ? 0 : countPerDoctor.get(docId);
+                    int barLen = maxCount == 0 ? 0 : (int)Math.round(((double)count / maxCount) * 25);
+                    String bar = "=".repeat(barLen);
+                    System.out.printf("| %-10s | %15d | %-25s |\n", docId, count, bar);
+                    printed.add(docId);
+                }
+            }
+            System.out.println("-".repeat(55));
+            System.out.printf("| %-10s | %15d | %-25s |\n", "TOTAL", totalSchedules, "");
+            System.out.println("-".repeat(55));
+        } else if (choice == 2) {
+            CustomADT<String, Integer> statusMap = scheduleMaintenance.getScheduleCountByStatus();
+            String[] statusKeys = {"Available", "Leave"};
+            int total = 0;
+            int maxCount = 0;
+            for (String key : statusKeys) {
+                int count = statusMap.get(key) == null ? 0 : statusMap.get(key);
+                if (count > maxCount) maxCount = count;
+                total += count;
+            }
+            System.out.println("\n" + "-".repeat(55));
+            System.out.printf("| %-13s | %-15s | %-25s |\n", "Status", "Count", "Graph");
+            System.out.println("-".repeat(55));
+            for (String key : statusKeys) {
+                int count = statusMap.get(key) == null ? 0 : statusMap.get(key);
+                int barLen = maxCount == 0 ? 0 : (int)Math.round(((double)count / maxCount) * 25);
+                String bar = "#".repeat(barLen);
+                System.out.printf("| %-13s | %15d | %-25s |\n", key, count, bar);
+            }
+            System.out.println("-".repeat(55));
+            System.out.printf("| %-13s | %15d | %-25s |\n", "TOTAL", total, "");
+            System.out.println("-".repeat(55));
+        }
+    }
 }

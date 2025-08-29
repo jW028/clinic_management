@@ -437,4 +437,29 @@ public class ScheduleMaintenance {
     private String generateKey(String doctorID, String date, String timeSlot) {
         return doctorID + "_" + date + "_" + timeSlot;
     }
+    public CustomADT<String, Integer> getScheduleCountPerDoctor() {
+        CustomADT<Integer, Schedule> allSchedules = getAllSchedules();
+        CustomADT<String, Integer> countPerDoctor = new CustomADT<>();
+        for (int i = 0; i < allSchedules.size(); i++) {
+            Schedule s = allSchedules.get(i);
+            String docId = s.getDoctorID();
+            Integer count = countPerDoctor.get(docId);
+            countPerDoctor.put(docId, count == null ? 1 : count + 1);
+        }
+        return countPerDoctor;
+    }
+
+    public CustomADT<String, Integer> getScheduleCountByStatus() {
+        CustomADT<Integer, Schedule> allSchedules = getAllSchedules();
+        int available = 0, leave = 0;
+        for (int i = 0; i < allSchedules.size(); i++) {
+            Schedule s = allSchedules.get(i);
+            if (s.getStatus()) available++;
+            else leave++;
+        }
+        CustomADT<String, Integer> statusMap = new CustomADT<>();
+        statusMap.put("Available", available);
+        statusMap.put("Leave", leave);
+        return statusMap;
+    }
 }
