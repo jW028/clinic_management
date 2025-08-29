@@ -169,8 +169,8 @@ public class ConsultationMaintenance {
             return false;
         }
 
-        if (!"Cancelled".equalsIgnoreCase(appt.getStatus())) {
-            System.out.println("Only appointments with status \"Cancelled\" can be removed. ");
+        if (!"Cancelled".equalsIgnoreCase(appt.getStatus()) || !"Completed".equalsIgnoreCase(appt.getStatus())) {
+            System.out.println("Only appointments with status \"Completed\" and \"Cancelled\" can be removed. ");
             return false;
         }
 

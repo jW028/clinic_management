@@ -24,12 +24,6 @@ public class ConsultationMaintenanceUI {
     private final PatientMaintenance patientMaintenance;
     private final Scanner scanner;
 
-//    public ConsultationMaintenanceUI() {
-//        maintenance = new ConsultationMaintenance();
-//        patientMaintenance = new PatientMaintenance();
-//        scanner = new Scanner(System.in);
-//    }
-
     public ConsultationMaintenanceUI(PatientMaintenance patientMaintenance) {
         maintenance = new ConsultationMaintenance();
         this.patientMaintenance = patientMaintenance;
@@ -285,6 +279,19 @@ public class ConsultationMaintenanceUI {
             if (!appointment.getStatus().equalsIgnoreCase("Scheduled")) {
                 System.out.println("Consultation can only be added for Scheduled appointments. ");
                 appointment = null;
+                continue;
+            }
+
+            if ("walk-in".equalsIgnoreCase(appointment.getAppointmentType())) {
+                String currentPatientId = appointment.getPatientId();
+                if (patientMaintenance.isPatientInQueue(currentPatientId)) {
+                    Patient firstPatient = patientMaintenance.peekNextPatient();
+                    if (firstPatient != null && !firstPatient.getPatientId().equals(currentPatientId)) {
+                        // Patient is in queue but not first, block and prompt
+                        System.out.println("Patient is in the queue, but not first. Please select the first walk-in patient for consultation.");
+                        appointment = null;
+                    }
+                }
             }
         }
 
@@ -423,115 +430,6 @@ public class ConsultationMaintenanceUI {
             }
             break;
         }
-//        if (followUpNeeded) {
-//            // Show available slots for follow-up doctor
-//            String[] slots = maintenance.getAvailableSlotsForDoctor(doctor.getDoctorID());
-//            if (slots != null && slots.length > 0) {
-//                System.out.println("\nFollow-Up Available Slots for Doctor:");
-//                System.out.println("+------------+----------------------+----------------------+--------------------------------+");
-//                System.out.printf("| %-10s | %-20s | %-20s | %-30s |\n", "Doctor ID", "Name", "Specialization", "Available Slot(s)");
-//                System.out.println("+------------+----------------------+----------------------+--------------------------------+");
-//
-//                int slotIndex = 1;
-//                CustomADT<Integer, Object[]> slotSelectionMap = new CustomADT<>();
-//                for (int i = 0; i < slots.length; i++) {
-//                    if (i == 0) {
-//                        System.out.printf("| %-10s | %-20s | %-20s | %3d. %-25s |\n",
-//                                doctor.getDoctorID(),
-//                                doctor.getName(),
-//                                doctor.getSpecialty(),
-//                                slotIndex, slots[i]
-//                        );
-//                    } else {
-//                        System.out.printf("| %-10s | %-20s | %-20s | %3d. %-25s |\n",
-//                                "", "", "", slotIndex, slots[i]
-//                        );
-//                    }
-//                    slotSelectionMap.put(slotIndex, new Object[]{doctor, slots[i]});
-//                    slotIndex++;
-//                }
-//                System.out.println("+------------+----------------------+----------------------+--------------------------------+");
-//
-//                // Input loop for follow-up slot selection
-//                do {
-//                    System.out.print("\nEnter follow-up slot number (or 0 to return): ");
-//                    String input = scanner.nextLine().trim();
-//                    if (input.equals("0")) return;
-//
-//                    if (input.isEmpty()) {
-//                        System.out.println("Input cannot be empty.");
-//                        continue;
-//                    }
-//
-//                    int chosenIndex;
-//                    try {
-//                        chosenIndex = Integer.parseInt(input);
-//                    } catch (NumberFormatException e) {
-//                        System.out.println("Please enter a valid number.");
-//                        continue;
-//                    }
-//                    if (!slotSelectionMap.containsKey(chosenIndex)) {
-//                        System.out.println("Invalid slot number. Please enter a valid index shown above.");
-//                        continue;
-//                    }
-//
-//                    Object[] selection = slotSelectionMap.get(chosenIndex);
-//                    String slotStr = (String) selection[1];
-//
-//                    String[] parts = slotStr.split(" ");
-//                    if (parts.length < 2) {
-//                        System.out.println("Slot format error.");
-//                        followUpDate = null;
-//                        continue;
-//                    }
-//                    String datePart = parts[0]; // dd/MM/yyyy
-//                    String timeslot = parts[1]; // HH:mm-HH:mm
-//                    String[] timeParts = timeslot.split("[-–—]"); // hyphen, en-dash, em-dash
-//                    if (timeParts.length < 2) {
-//                        System.out.println("Timeslot format error.");
-//                        followUpDate = null;
-//                        continue;
-//                    }
-//                    String startTime = timeParts[0].trim(); // HH:mm
-//                    String[] dateElems = datePart.split("-");
-//                    String formattedDatePart = dateElems[2] + "/" + dateElems[1] + "/" + dateElems[0];
-//                    String appointmentDateTimeStr = formattedDatePart + " " + startTime;
-//                    try {
-//                        followUpDate = DateTimeFormatterUtil.parseDisplayFormat(appointmentDateTimeStr);
-//                    } catch (Exception ex) {
-//                        System.out.println("Failed to parse follow-up time from slot.");
-//                        followUpDate = null;
-//                        continue;
-//                    }
-//
-//                    if (followUpDate.isBefore(consultationTime)) {
-//                        System.out.println("Selected follow-up date must be after the consultation date. ");
-//                        followUpDate = null;
-//                    }
-//                } while (followUpDate == null);
-//
-//                // Prompt to create follow-up appointment immediately
-//                System.out.print("Create follow-up appointment now? (y/n): ");
-//                String createFollowUp = scanner.nextLine().trim();
-//                if (createFollowUp.equalsIgnoreCase("y")) {
-//                    String newApptId = IDGenerator.generateAppointmentID();
-//                    System.out.println("Generated Appointment ID: " + newApptId);
-//
-//                    Appointment followUp = new Appointment(newApptId, patient.getPatientId(), doctor.getDoctorID(), followUpDate, "Scheduled", "appointment");
-//                    maintenance.addAppointment(followUp);
-//                    System.out.println("Follow-up appointment created.");
-//                }
-//            } else {
-//                System.out.printf("| %-10s | %-20s | %-20s | %-30s |\n",
-//                        doctor.getDoctorID(),
-//                        doctor.getName(),
-//                        doctor.getSpecialty(),
-//                        "      No slots"
-//                );
-//                System.out.println("+------------+----------------------+----------------------+--------------------------------+");
-//            }
-//
-//        }
         if (followUpNeeded) {
             // Get available slots for the assigned doctor
             String[] slots = maintenance.getAvailableSlotsForDoctor(doctor.getDoctorID());
@@ -563,18 +461,15 @@ public class ConsultationMaintenanceUI {
 
                 // Input loop for follow-up slot selection
                 do {
-                    System.out.print("\nEnter follow-up slot number (or 0 to return): ");
-                    String input = scanner.nextLine().trim();
-                    if (input.equals("0")) return;
-
-                    if (input.isEmpty()) {
-                        System.out.println("Input cannot be empty.");
-                        continue;
+                    String chosenStr = InputHandler.getString("Enter follow-up slot number (or 0 to skip)");
+                    if (chosenStr.equals("0")) {
+                        followUpDate = null;
+                        break;
                     }
 
                     int chosenIndex;
                     try {
-                        chosenIndex = Integer.parseInt(input);
+                        chosenIndex = Integer.parseInt(chosenStr);
                     } catch (NumberFormatException e) {
                         System.out.println("Please enter a valid number.");
                         continue;
@@ -583,16 +478,15 @@ public class ConsultationMaintenanceUI {
                         System.out.println("Invalid slot number. Please enter a valid index shown above.");
                         continue;
                     }
-
-                    Object[] selection = slotSelectionMap.get(chosenIndex);
+                    Object[] selection = slotSelectionMap.get(chosenIndex - 1);
                     String slotStr = (String) selection[1];
 
                     String[] parts = slotStr.split(" ");
                     if (parts.length < 2) {
                         System.out.println("Slot format error.");
-                        followUpDate = null;
                         continue;
                     }
+
                     String datePart = parts[0];
                     String timeslot = parts[1];
                     String[] timeParts = timeslot.split("[-–—]");
@@ -620,9 +514,8 @@ public class ConsultationMaintenanceUI {
                 } while (followUpDate == null);
 
                 // Only prompt to create follow-up if a valid slot was picked
-                System.out.print("Create follow-up appointment now? (y/n): ");
-                String createFollowUp = scanner.nextLine().trim();
-                if (createFollowUp.equalsIgnoreCase("y")) {
+                boolean createFollowUp = InputHandler.getYesNo("Create follow-up appointment now?");
+                if (createFollowUp) {
                     String newApptId = IDGenerator.generateAppointmentID();
                     System.out.println("Generated Appointment ID: " + newApptId);
 
@@ -631,7 +524,6 @@ public class ConsultationMaintenanceUI {
                     System.out.println("Follow-up appointment created.");
                 }
             } else {
-                // Doctor has no slots; show "No slots" row only, do NOT prompt for slot selection or appointment creation
                 System.out.printf("| %-10s | %-20s | %-20s | %-30s |\n",
                         doctor.getDoctorID(),
                         doctor.getName(),
@@ -662,6 +554,10 @@ public class ConsultationMaintenanceUI {
         );
 
         maintenance.addConsultation(consultation);
+        appointment.setStatus("In Progress");
+        maintenance.updateAppointmentStatus(appointment.getAppointmentId(), "In Progress");
+        System.out.println("Consultation added.");
+
         CustomADT<String, VisitHistory> visits = patientMaintenance.getPatientVisitHistory(consultation.getPatient().getPatientId());
         for (int i = 0; i < visits.size(); i++) {
             VisitHistory vh = visits.get(i);
@@ -677,24 +573,19 @@ public class ConsultationMaintenanceUI {
                 break;
             }
         }
-        appointment.setStatus("In Progress");
-        maintenance.updateAppointmentStatus(appointment.getAppointmentId(), "In Progress");
-
-        System.out.println("Consultation added.");
 
         // Dequeue patient from walk-in queue
-        String currentPatient = appointment.getPatientId();
+        String currentPatientId = appointment.getPatientId();
         if ("walk-in".equalsIgnoreCase(appointment.getAppointmentType())
                 && "In Progress".equalsIgnoreCase(appointment.getStatus())) {
-            if (!patientMaintenance.isPatientInQueue(currentPatient)) {
-                System.out.println("Patient not in queue.");
-                return;
-            }
-            patientMaintenance.serveNextPatient();
-            if (!patientMaintenance.isPatientInQueue(currentPatient)) {
-                System.out.println("Removed from queue.");
-            }  else {
-                System.out.println("Failed to dequeue.");
+            if (patientMaintenance.isPatientInQueue(currentPatientId)) {
+                Patient firstPatient = patientMaintenance.peekNextPatient();
+                if (firstPatient != null && firstPatient.getPatientId().equals(currentPatientId)) {
+                    patientMaintenance.serveNextPatient();
+                    System.out.println("Patient dequeued. Proceeding with consultation.");
+                }
+            } else {
+                System.out.println("Patient is not in the queue. Proceeding without dequeue.");
             }
         }
     }
