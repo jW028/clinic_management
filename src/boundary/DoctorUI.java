@@ -2,6 +2,7 @@ package boundary;
 
 import control.DoctorMaintenance;
 import control.ScheduleMaintenance;
+import boundary.ScheduleUI;
 import entity.Doctor;
 import utility.IDGenerator;
 import utility.InputHandler;
@@ -9,10 +10,12 @@ import utility.InputHandler;
 public class DoctorUI {
     private final DoctorMaintenance doctorMaintenance;
     private final ScheduleMaintenance scheduleMaintenance;
+    private final ScheduleUI scheduleUI;
 
     public DoctorUI() {
-        doctorMaintenance = new DoctorMaintenance();
-        scheduleMaintenance = new ScheduleMaintenance();
+        this.doctorMaintenance = new DoctorMaintenance();
+        this.scheduleMaintenance = new ScheduleMaintenance();
+        this.scheduleUI = new ScheduleUI();
     }
 
     public void runDoctorMenu() {
@@ -25,7 +28,7 @@ public class DoctorUI {
             System.out.println("3. Update Doctor Details");
             System.out.println("4. Remove Doctor");
             System.out.println("5. List All Doctors");
-//            System.out.println("6. View Schedule for Doctor");
+            System.out.println("6. View Doctors Schedule");
             System.out.println("0. Back to Main Menu");
             choice = InputHandler.getInt("Enter your choice", 0, 6);
 
@@ -35,7 +38,7 @@ public class DoctorUI {
                 case 3 -> updateDoctor();
                 case 4 -> removeDoctor();
                 case 5 -> listDoctors();
-//                case 6 -> viewDoctorSchedule();
+                case 6 -> scheduleUI.runScheduleMenu();
                 case 0 -> System.out.println("Returning to main menu...");
                 default -> System.out.println("Invalid choice. Please try again.");
             }

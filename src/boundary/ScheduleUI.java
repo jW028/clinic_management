@@ -15,7 +15,7 @@ public class ScheduleUI {
     private final Scanner scanner;
 
     public ScheduleUI() {
-        scheduleMaintenance = new ScheduleMaintenance();
+        this.scheduleMaintenance = new ScheduleMaintenance();
         scanner = new Scanner(System.in);
     }
 
@@ -41,28 +41,6 @@ public class ScheduleUI {
         } while (choice != 0);
     }
 
-    // 1. List schedule calendar with month/year selection and * for scheduled days
-//    private void listCalendarFlow() {
-//        int year = InputHandler.getInt("Enter year (e.g. 2025)", 2000, 2100);
-//        int month = InputHandler.getInt("Enter month ", 1, 12);
-//
-//        scheduleMaintenance.displayUnifiedCalendar(year, month);
-//
-//        int monthLength = YearMonth.of(year, month).lengthOfMonth();
-//        int day = InputHandler.getInt("Pick a day (1-" + monthLength + ", 0 to return) ", 0, monthLength);
-//
-//        if (day == 0) return;
-//
-//        String selectedDate = String.format("%04d-%02d-%02d", year, month, day);
-//        if (!scheduleMaintenance.isScheduledDate(selectedDate)) {
-//            System.out.println("No schedules for this date.");
-//            return;
-//        }
-//
-//        CustomADT<Integer, Schedule> schedules = scheduleMaintenance.getSchedulesByDate(selectedDate);
-//        showScheduleTable(schedules);
-//        sortScheduleTableFlow(schedules);
-//    }
     private void listAllSchedulesFlow() {
         CustomADT<Integer, Schedule> schedules = scheduleMaintenance.getAllSchedules();
         showScheduleTable(schedules);

@@ -15,8 +15,11 @@ public class ScheduleMaintenance {
     private final ScheduleDAO scheduleDAO;
 
     public ScheduleMaintenance() {
-        scheduleDAO = new ScheduleDAO();
-        scheduleList = scheduleDAO.retrieveFromFile();
+        IDGenerator.loadCounter("counter.dat");
+
+        this.scheduleDAO = new ScheduleDAO();
+        this.scheduleList = scheduleDAO.retrieveFromFile();
+
         String highestID = "S000";
         for (int i = 0; i < scheduleList.size(); i++) {
             Schedule schedule = scheduleList.get(i);
@@ -26,6 +29,7 @@ public class ScheduleMaintenance {
             }
         }
         IDGenerator.updateScheduleCounterFromHighestID(highestID);
+        IDGenerator.saveCounters("counter.dat");
     }
 
     // Show calendar for selected year and month, marking * for scheduled days
@@ -280,6 +284,7 @@ public class ScheduleMaintenance {
         }
         scheduleList.put(key, schedule);
         scheduleDAO.saveToFile(scheduleList);
+        IDGenerator.saveCounters("counter.dat");
         return true;
     }
 
@@ -305,6 +310,7 @@ public class ScheduleMaintenance {
         if (schedule != null) {
             schedule.setStatus(available);
             scheduleDAO.saveToFile(scheduleList);
+            IDGenerator.saveCounters("counter.dat");
             return true;
         }
         return false;
@@ -315,6 +321,7 @@ public class ScheduleMaintenance {
         boolean removed = scheduleList.remove(key) != null;
         if (removed) {
             scheduleDAO.saveToFile(scheduleList);
+            IDGenerator.saveCounters("counter.dat");
         }
         return removed;
     }

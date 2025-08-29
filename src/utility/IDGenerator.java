@@ -100,7 +100,7 @@ public class IDGenerator {
 
     // for initializer that the counter didnt recorded in file
     public static void updateDoctorCounterFromHighestID(String highestID) {
-        int num = Integer.parseInt(highestID.substring(1)); // "D005" => 5
+        int num = Integer.parseInt(highestID.substring(2)); // "DC005" => 5
         doctorCounter = num + 1;
     }
 
