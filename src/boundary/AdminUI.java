@@ -1,14 +1,16 @@
 package boundary;
 
 import control.PatientMaintenance;
+import entity.Patient;
+
 import java.util.Scanner;
 
 public class AdminUI {
 
     final private PatientMaintenance patientMaintenace;
 
-    public AdminUI () {
-        this.patientMaintenace = new PatientMaintenance();
+    public AdminUI (PatientMaintenance patientMaintenance) {
+        this.patientMaintenace = patientMaintenance;
     }
 
     
@@ -34,7 +36,7 @@ public class AdminUI {
                     doctorUI.runDoctorMenu();
                     break;
                 case 3:
-                    ConsultationMaintenanceUI consultationUI = new ConsultationMaintenanceUI();
+                    ConsultationMaintenanceUI consultationUI = new ConsultationMaintenanceUI(patientMaintenace);
                     consultationUI.run();
                     break;
                 case 4:
@@ -56,7 +58,11 @@ public class AdminUI {
 
 
     public static void main(String[] args) {
-        AdminUI adminUI = new AdminUI();
+        PatientMaintenance patientController = new PatientMaintenance();
+        AdminUI adminUI = new AdminUI(patientController);
         adminUI.displayMenu();
+
+//        AdminUI adminUI = new AdminUI();
+//        adminUI.displayMenu();
     }
 }

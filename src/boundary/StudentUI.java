@@ -27,7 +27,7 @@ public class StudentUI {
         this.treatmentMaintenance = new TreatmentMaintenance();
         this.paymentMaintenance = PaymentMaintenance.getInstance();
         this.consultationMaintenance = new ConsultationMaintenance();
-        this.consultationMaintenanceUI = new ConsultationMaintenanceUI();
+        this.consultationMaintenanceUI = new ConsultationMaintenanceUI(patientMaintenance.getInstance());
     }
 
     public void displayMenu() {

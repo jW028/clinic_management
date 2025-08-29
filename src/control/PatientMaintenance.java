@@ -20,6 +20,9 @@ public class PatientMaintenance {
     private final TreatmentDAO treatmentDAO;
     private ConsultationMaintenance consultationMaintenance;
     private TreatmentMaintenance treatmentMaintenance;
+
+    private static PatientMaintenance instance;
+
     public PatientMaintenance() {
         this.normalQueue = new CustomADT<>();
         this.emergencyQueue = new CustomADT<>();
@@ -59,6 +62,13 @@ public class PatientMaintenance {
         }
 
         IDGenerator.loadCounter("counter.dat");
+    }
+
+    public static PatientMaintenance getInstance() {
+        if (instance == null) {
+            instance = new PatientMaintenance();
+        }
+        return instance;
     }
 
     public CustomADT<String, Consultation> getConsultationsByPatient(String patientId) {

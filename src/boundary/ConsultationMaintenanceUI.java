@@ -23,9 +23,15 @@ public class ConsultationMaintenanceUI {
     private final PatientMaintenance patientMaintenance;
     private final Scanner scanner;
 
-    public ConsultationMaintenanceUI() {
+//    public ConsultationMaintenanceUI() {
+//        maintenance = new ConsultationMaintenance();
+//        patientMaintenance = new PatientMaintenance();
+//        scanner = new Scanner(System.in);
+//    }
+
+    public ConsultationMaintenanceUI(PatientMaintenance patientMaintenance) {
         maintenance = new ConsultationMaintenance();
-        patientMaintenance = new PatientMaintenance();
+        this.patientMaintenance = patientMaintenance;
         scanner = new Scanner(System.in);
     }
 
@@ -1697,6 +1703,7 @@ public class ConsultationMaintenanceUI {
     }
 
     public static void main(String[] args) {
-        new ConsultationMaintenanceUI().run();
+        PatientMaintenance pm = new PatientMaintenance();
+        new ConsultationMaintenanceUI(pm).run();
     }
 }
