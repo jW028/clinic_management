@@ -152,6 +152,22 @@ public class PatientMaintenance {
         return true;
     }
 
+    public CustomADT<String, Patient> searchPatients(String searchTerm) {
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return new CustomADT<>();
+        }
+        String term = searchTerm.trim().toLowerCase();
+        return patientRegistry.filter(
+                null,
+                (p, ref) -> {
+                    if (p == null) return -1;
+                    return (p.getPatientId().toLowerCase().contains(term) ||
+                            p.getName().toLowerCase().contains(term)) ? 0 : -1;
+                }
+        );
+    }
+
+
     /**
      * Get all patients as array
      */

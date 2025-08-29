@@ -98,6 +98,11 @@ public class IDGenerator {
         }
     }
 
+    public static void updatePatientCounterFromHighestID(String highestID) {
+        int num = Integer.parseInt(highestID.substring(1)); // "P005" => 5
+        patientCounter = num + 1;
+    }
+
     // for initializer that the counter didnt recorded in file
     public static void updateDoctorCounterFromHighestID(String highestID) {
         int num = Integer.parseInt(highestID.substring(2)); // "DC005" => 5
