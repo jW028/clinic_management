@@ -3,18 +3,14 @@ package boundary;
 import adt.OrderedMap;
 import control.ConsultationMaintenance;
 import control.PatientMaintenance;
-import entity.Appointment;
-import entity.Consultation;
-import entity.ConsultationService;
-import entity.Diagnosis;
-import entity.Patient;
-import entity.Doctor;
-import entity.VisitHistory;
+import dao.ScheduleDAO;
+import entity.*;
 import utility.IDGenerator;
 import utility.InputHandler;
 import utility.DateTimeFormatterUtil;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 public class ConsultationMaintenanceUI {
@@ -158,7 +154,7 @@ public class ConsultationMaintenanceUI {
         int choice;
         do {
             System.out.println("\n┌" + "─".repeat(35) + "┐");
-            System.out.println("│ Sort Consultations By;            │");
+            System.out.println("│ Sort Consultations By:            │");
             System.out.println("├" + "─".repeat(35) + "┤");
             System.out.println("│ 1. By ID                          │");
             System.out.println("│ 2. By Patient Name                │");
@@ -517,6 +513,7 @@ public class ConsultationMaintenanceUI {
 
     private void updateConsultation () {
         System.out.println("\n-- Update Consultation --");
+        maintenance.sortConsultationsByID();
         printAllConsultations(maintenance.getAllConsultations());
 
         String consultationId;
@@ -743,7 +740,23 @@ public class ConsultationMaintenanceUI {
                             }
                         }
                     }
+                    maintenance.updateFollowUpScheduleSlot(consultation, followUpDate);
+                    if (followUpDate != null) {
+                        String followUpApptId = IDGenerator.generateAppointmentID();
+                        Appointment followUpAppointment = new Appointment(
+                                followUpApptId,
+                                consultation.getPatient().getPatientId(),
+                                consultation.getDoctor().getDoctorID(),
+                                followUpDate,
+                                "Scheduled",
+                                "appointment"
+                        );
+                        maintenance.addAppointment(followUpAppointment);
+                        System.out.println("Follow-up appointment (" + followUpApptId + ") created for " +
+                                DateTimeFormatterUtil.formatForDisplay(followUpDate));
+                    }
                     consultation.setFollowUpDate(followUpDate);
+
                     System.out.println("Follow-up updated.");
                     break;
                 }

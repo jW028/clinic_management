@@ -115,6 +115,45 @@ public class ConsultationMaintenance {
         return consultationMap.get(id);
     }
 
+    public void updateFollowUpScheduleSlot(Consultation consultation, LocalDateTime newFollowUpDate) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime oldFollowUpDate = consultation.getFollowUpDate();
+
+        // Free the old slot if valid
+        if (oldFollowUpDate != null && oldFollowUpDate.isAfter(now)) {
+            String doctorId = consultation.getDoctor().getDoctorID();
+            String date = oldFollowUpDate.toLocalDate().toString();
+            String startTimeStr = oldFollowUpDate.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"));
+            String endTimeStr = oldFollowUpDate.plusHours(1).toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"));
+            String timeSlot = startTimeStr + "–" + endTimeStr;
+            String key = doctorId + "_" + date + "_" + timeSlot;
+
+            Schedule oldSched = scheduleMap.get(key);
+            if (oldSched != null && !oldSched.getStatus()) {
+                oldSched.setStatus(true);
+                scheduleMap.put(key, oldSched);
+                scheduleDAO.saveToFile(scheduleMap);
+            }
+        }
+
+        // Book the new slot
+        if (newFollowUpDate != null) {
+            String doctorId = consultation.getDoctor().getDoctorID();
+            String date = newFollowUpDate.toLocalDate().toString();
+            String startTimeStr = newFollowUpDate.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"));
+            String endTimeStr = newFollowUpDate.plusHours(1).toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"));
+            String timeSlot = startTimeStr + "–" + endTimeStr;
+            String key = doctorId + "_" + date + "_" + timeSlot;
+
+            Schedule newSched = scheduleMap.get(key);
+            if (newSched != null && newSched.getStatus()) {
+                newSched.setStatus(false);
+                scheduleMap.put(key, newSched);
+                scheduleDAO.saveToFile(scheduleMap);
+            }
+        }
+    }
+
     public boolean removeConsultation(String id) {
         Consultation removed = consultationMap.remove(id);
         consultationDAO.saveToFile(consultationMap);
