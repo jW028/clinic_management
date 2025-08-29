@@ -154,11 +154,6 @@ public class ConsultationMaintenance {
             return false;
         }
 
-        if (!"Cancelled".equalsIgnoreCase(appt.getStatus()) || !"Completed".equalsIgnoreCase(appt.getStatus())) {
-            System.out.println("Only appointments with status \"Completed\" and \"Cancelled\" can be removed. ");
-            return false;
-        }
-
         Appointment removed = appointmentMap.remove(appointmentId);
         appointmentDAO.saveToFile(appointmentMap);
 
@@ -355,13 +350,235 @@ public class ConsultationMaintenance {
         appointmentMap.sort(Comparator.comparing(Appointment::getAppointmentTime));
     }
 
+//    public void printConsultationSummaryReport() {
+//        Consultation[] consultations = consultationMap.toArray(new Consultation[0]);
+//        System.out.println("\n=== Consultation Summary Report ===");
+//        System.out.println("Total consultations: " + consultations.length);
+//
+//        if (consultations.length == 0) {
+//            System.out.println("No consultation records to show. Please add consultation data first.");
+//            return;
+//        }
+//
+//        // By patient
+//        CustomADT<String, Integer> byPatient = new CustomADT<>();
+//        CustomADT<String, String> patientIds = new CustomADT<>();
+//
+//        for (Consultation c : consultations) {
+//            String pid = c.getPatient().getPatientId();
+//            Integer count = byPatient.get(pid);
+//            byPatient.put(pid, count == null ? 1 : count + 1);
+//            if (!patientIds.containsKey(pid)) {
+//                patientIds.put(pid, pid);
+//            }
+//        }
+//
+//        // Sortable patient rows
+//        class PatientRow {
+//            String id, name;
+//            int count;
+//            PatientRow(String id, String name, int count) {
+//                this.id = id; this.name = name; this.count = count;
+//            }
+//        }
+//        CustomADT<Integer, PatientRow> rows = new CustomADT<>();
+//        String[] pidArray = patientIds.toArray(new String[0]);
+//        for (String pid : pidArray) {
+//            Patient patient = patientMap.get(pid);
+//            String pname = patient != null ? patient.getName() : "Unknown";
+//            int count = byPatient.get(pid) != null ? byPatient.get(pid) : 0;
+//            rows.put(rows.size(), new PatientRow(pid, pname, count));
+//        }
+//        rows.sort((a, b) -> b.count - a.count);
+//
+//        if (rows.size() == 0) {
+//            System.out.println("No patient records found in consultations.");
+//        } else {
+//            System.out.println("\nConsultations by Patient:");
+//            System.out.println("+------------+----------------------+---------------------------+");
+//            System.out.printf("| %-10s | %-20s | %-25s |\n", "Patient ID", "Patient Name", "Consultation Count");
+//            System.out.println("+------------+----------------------+---------------------------+");
+//            for (int i = 0; i < rows.size(); i++) {
+//                PatientRow r = rows.get(i);
+//                System.out.printf("| %-10s | %-20s | %-25d |\n", r.id, r.name, r.count);
+//            }
+//            System.out.println("+------------+----------------------+---------------------------+");
+//        }
+//
+//        // By doctor
+//        CustomADT<String, Integer> byDoctor = new CustomADT<>();
+//        CustomADT<String, String> doctorIds = new CustomADT<>();
+//
+//        for (Consultation c : consultations) {
+//            String did = c.getDoctor().getDoctorID();
+//            Integer count = byDoctor.get(did);
+//            byDoctor.put(did, count == null ? 1 : count + 1);
+//            if (!doctorIds.containsKey(did)) {
+//                doctorIds.put(did, did);
+//            }
+//        }
+//
+//        // Sortable doctor rows
+//        class DoctorRow {
+//            String id, name;
+//            int count;
+//            DoctorRow(String id, String name, int count) {
+//                this.id = id; this.name = name; this.count = count;
+//            }
+//        }
+//        CustomADT<Integer, DoctorRow> doctorRows = new CustomADT<>();
+//        String[] didArray = doctorIds.toArray(new String[0]);
+//        for (String did : didArray) {
+//            Doctor doctor = doctorMap.get(did);
+//            String dname = doctor != null ? doctor.getName() : "Unknown";
+//            int count = byDoctor.get(did) != null ? byDoctor.get(did) : 0;
+//            doctorRows.put(doctorRows.size(), new DoctorRow(did, dname, count));
+//        }
+//        doctorRows.sort((a, b) -> b.count - a.count);
+//
+//        if (doctorRows.size() == 0) {
+//            System.out.println("No doctor records found in consultations.");
+//        } else {
+//            System.out.println("\nConsultations by Doctor:");
+//            System.out.println("+------------+----------------------+---------------------------+");
+//            System.out.printf("| %-10s | %-20s | %-25s |\n", "Doctor ID", "Doctor Name", "Consultation Count");
+//            System.out.println("+------------+----------------------+---------------------------+");
+//            for (int i = 0; i < doctorRows.size(); i++) {
+//                DoctorRow r = doctorRows.get(i);
+//                System.out.printf("| %-10s | %-20s | %-25d |\n", r.id, r.name, r.count);
+//            }
+//            System.out.println("+------------+----------------------+---------------------------+");
+//        }
+//    }
+//
+//    public void printServiceUsageReport() {
+//        Consultation[] consultations = consultationMap.toArray(new Consultation[0]);
+//        if (consultations.length == 0) {
+//            System.out.println("\n=== Service Usage Report ===");
+//            System.out.println("No consultation records to show. Please add consultation data first.");
+//            return;
+//        }
+//
+//        CustomADT<String, Integer> serviceUsage = new CustomADT<>();
+//        CustomADT<String, String> serviceIdsADT = new CustomADT<>();
+//        for (Consultation c : consultations) {
+//            for (ConsultationService s : c.getServicesUsed().toArray(new ConsultationService[0])) {
+//                String sid = s.getServiceId();
+//                Integer count = serviceUsage.get(sid);
+//                serviceUsage.put(sid, count == null ? 1 : count + 1);
+//                if (!serviceIdsADT.containsKey(sid)) {
+//                    serviceIdsADT.put(sid, sid);
+//                }
+//            }
+//        }
+//
+//        // Sortable service rows
+//        class ServiceRow {
+//            String id, name;
+//            int count;
+//            ServiceRow(String id, String name, int count) { this.id = id; this.name = name; this.count = count; }
+//        }
+//        CustomADT<Integer, ServiceRow> rows = new CustomADT<>();
+//        String[] sidArray = serviceIdsADT.toArray(new String[0]);
+//        for (String sid : sidArray) {
+//            ConsultationService service = serviceMap.get(sid);
+//            String serviceName = service != null ? service.getServiceName() : "Unknown";
+//            int count = serviceUsage.get(sid) != null ? serviceUsage.get(sid) : 0;
+//            rows.put(rows.size(), new ServiceRow(sid, serviceName, count));
+//        }
+//        rows.sort((a, b) -> b.count - a.count);
+//
+//        System.out.println("\n=== Service Usage Report ===");
+//        if (rows.size() == 0) {
+//            System.out.println("No service records found in consultations.");
+//            return;
+//        }
+//        System.out.println("+------------+---------------------------+------------+");
+//        System.out.printf("| %-10s | %-25s | %-10s |\n", "Service ID", "Service Name", "Used Times");
+//        System.out.println("+------------+---------------------------+------------+");
+//        for (int i = 0; i < rows.size(); i++) {
+//            ServiceRow r = rows.get(i);
+//            System.out.printf("| %-10s | %-25s | %-10d |\n", r.id, r.name, r.count);
+//        }
+//        System.out.println("+------------+---------------------------+------------+");
+//    }
+//
+//    public void printAppointmentsPerDoctorReport() {
+//        Appointment[] appointments = appointmentMap.toArray(new Appointment[0]);
+//        System.out.println("\n=== Appointments Per Doctor Report ===");
+//        System.out.println("Total appointments: " + appointments.length);
+//
+//        if (appointments.length == 0) {
+//            System.out.println("No appointment records to show. Please add appointment data first.");
+//            return;
+//        }
+//
+//        // Count appointments per doctor
+//        CustomADT<String, Integer> byDoctor = new CustomADT<>();
+//        CustomADT<String, String> doctorIds = new CustomADT<>();
+//        for (Appointment a : appointments) {
+//            String did = a.getDoctorId();
+//            Integer count = byDoctor.get(did);
+//            byDoctor.put(did, count == null ? 1 : count + 1);
+//            if (!doctorIds.containsKey(did)) {
+//                doctorIds.put(did, did);
+//            }
+//        }
+//
+//        // Sortable doctor rows
+//        class DoctorRow {
+//            String id, name;
+//            int count;
+//            DoctorRow(String id, String name, int count) { this.id = id; this.name = name; this.count = count; }
+//        }
+//        CustomADT<Integer, DoctorRow> doctorRows = new CustomADT<>();
+//        String[] didArray = doctorIds.toArray(new String[0]);
+//        for (String did : didArray) {
+//            Doctor doctor = doctorMap.get(did);
+//            String dname = doctor != null ? doctor.getName() : "Unknown";
+//            int count = byDoctor.get(did) != null ? byDoctor.get(did) : 0;
+//            doctorRows.put(doctorRows.size(), new DoctorRow(did, dname, count));
+//        }
+//        doctorRows.sort((a, b) -> b.count - a.count);
+//
+//        if (doctorRows.size() == 0) {
+//            System.out.println("No doctor records found in appointments.");
+//            return;
+//        }
+//
+//        System.out.println("\nAppointments by Doctor:");
+//        System.out.println("+------------+----------------------+----------------------+");
+//        System.out.printf("| %-10s | %-20s | %-20s |\n", "Doctor ID", "Doctor Name", "Appointment Count");
+//        System.out.println("+------------+----------------------+----------------------+");
+//        for (int i = 0; i < doctorRows.size(); i++) {
+//            DoctorRow r = doctorRows.get(i);
+//            System.out.printf("| %-10s | %-20s | %-20d |\n", r.id, r.name, r.count);
+//        }
+//        System.out.println("+------------+----------------------+----------------------+");
+//    }
+
     public void printConsultationSummaryReport() {
         Consultation[] consultations = consultationMap.toArray(new Consultation[0]);
-        System.out.println("\n=== Consultation Summary Report ===");
-        System.out.println("Total consultations: " + consultations.length);
+        String now = java.time.ZonedDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
+
+        System.out.println();
+        line();
+        System.out.println(center("TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY", 70));
+        System.out.println(center("CONSULTATION MANAGEMENT SUBSYSTEM", 70));
+        System.out.println(center("CONSULTATION SUMMARY REPORT", 70));
+        line();
+        System.out.println(rightInDash("generated at: " + now));
+        dash(); blank();
+
+        System.out.println(center("CONSULTATION OVERVIEW", 70));
+        dash();
+        System.out.printf("  %-30s │ %-30s%n", "Total consultations", consultations.length);
+        dash();
 
         if (consultations.length == 0) {
             System.out.println("No consultation records to show. Please add consultation data first.");
+            line();
             return;
         }
 
@@ -396,19 +613,19 @@ public class ConsultationMaintenance {
         }
         rows.sort((a, b) -> b.count - a.count);
 
+        System.out.println(center("CONSULTATIONS BY PATIENT", 70));
+        dash();
+        System.out.printf("  %-12s │ %-20s │ %-20s%n", "Patient ID", "Patient Name", "Consultation Count");
+        dash();
         if (rows.size() == 0) {
-            System.out.println("No patient records found in consultations.");
+            System.out.printf("  %-12s │ %-20s │ %-20s%n", "-", "-", "0");
         } else {
-            System.out.println("\nConsultations by Patient:");
-            System.out.println("+------------+----------------------+---------------------------+");
-            System.out.printf("| %-10s | %-20s | %-25s |\n", "Patient ID", "Patient Name", "Consultation Count");
-            System.out.println("+------------+----------------------+---------------------------+");
             for (int i = 0; i < rows.size(); i++) {
                 PatientRow r = rows.get(i);
-                System.out.printf("| %-10s | %-20s | %-25d |\n", r.id, r.name, r.count);
+                System.out.printf("  %-12s │ %-20s │ %-20d%n", r.id, r.name, r.count);
             }
-            System.out.println("+------------+----------------------+---------------------------+");
         }
+        dash(); blank();
 
         // By doctor
         CustomADT<String, Integer> byDoctor = new CustomADT<>();
@@ -441,26 +658,40 @@ public class ConsultationMaintenance {
         }
         doctorRows.sort((a, b) -> b.count - a.count);
 
+        System.out.println(center("CONSULTATIONS BY DOCTOR", 70));
+        dash();
+        System.out.printf("  %-12s │ %-20s │ %-20s%n", "Doctor ID", "Doctor Name", "Consultation Count");
+        dash();
         if (doctorRows.size() == 0) {
-            System.out.println("No doctor records found in consultations.");
+            System.out.printf("  %-12s │ %-20s │ %-20s%n", "-", "-", "0");
         } else {
-            System.out.println("\nConsultations by Doctor:");
-            System.out.println("+------------+----------------------+---------------------------+");
-            System.out.printf("| %-10s | %-20s | %-25s |\n", "Doctor ID", "Doctor Name", "Consultation Count");
-            System.out.println("+------------+----------------------+---------------------------+");
             for (int i = 0; i < doctorRows.size(); i++) {
                 DoctorRow r = doctorRows.get(i);
-                System.out.printf("| %-10s | %-20s | %-25d |\n", r.id, r.name, r.count);
+                System.out.printf("  %-12s │ %-20s │ %-20d%n", r.id, r.name, r.count);
             }
-            System.out.println("+------------+----------------------+---------------------------+");
         }
+        dash();
+        System.out.println(center("END OF THE REPORT", 70));
+        line();
     }
 
     public void printServiceUsageReport() {
         Consultation[] consultations = consultationMap.toArray(new Consultation[0]);
+        String now = java.time.ZonedDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
+
+        System.out.println();
+        line();
+        System.out.println(center("TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY", 70));
+        System.out.println(center("CONSULTATION MANAGEMENT SUBSYSTEM", 70));
+        System.out.println(center("SERVICE USAGE REPORT", 70));
+        line();
+        System.out.println(rightInDash("generated at: " + now));
+        dash(); blank();
+
         if (consultations.length == 0) {
-            System.out.println("\n=== Service Usage Report ===");
             System.out.println("No consultation records to show. Please add consultation data first.");
+            line();
             return;
         }
 
@@ -493,28 +724,45 @@ public class ConsultationMaintenance {
         }
         rows.sort((a, b) -> b.count - a.count);
 
-        System.out.println("\n=== Service Usage Report ===");
+        System.out.println(center("SERVICE USAGE", 70));
+        dash();
+        System.out.printf("  %-12s │ %-25s │ %-10s%n", "Service ID", "Service Name", "Used Times");
+        dash();
         if (rows.size() == 0) {
-            System.out.println("No service records found in consultations.");
-            return;
+            System.out.printf("  %-12s │ %-25s │ %-10s%n", "-", "-", "0");
+        } else {
+            for (int i = 0; i < rows.size(); i++) {
+                ServiceRow r = rows.get(i);
+                System.out.printf("  %-12s │ %-25s │ %-10d%n", r.id, r.name, r.count);
+            }
         }
-        System.out.println("+------------+---------------------------+------------+");
-        System.out.printf("| %-10s | %-25s | %-10s |\n", "Service ID", "Service Name", "Used Times");
-        System.out.println("+------------+---------------------------+------------+");
-        for (int i = 0; i < rows.size(); i++) {
-            ServiceRow r = rows.get(i);
-            System.out.printf("| %-10s | %-25s | %-10d |\n", r.id, r.name, r.count);
-        }
-        System.out.println("+------------+---------------------------+------------+");
+        dash();
+        System.out.println(center("END OF THE REPORT", 70));
+        line();
     }
 
     public void printAppointmentsPerDoctorReport() {
         Appointment[] appointments = appointmentMap.toArray(new Appointment[0]);
-        System.out.println("\n=== Appointments Per Doctor Report ===");
-        System.out.println("Total appointments: " + appointments.length);
+        String now = java.time.ZonedDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
+
+        System.out.println();
+        line();
+        System.out.println(center("TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY", 70));
+        System.out.println(center("APPOINTMENT MANAGEMENT SUBSYSTEM", 70));
+        System.out.println(center("APPOINTMENTS PER DOCTOR REPORT", 70));
+        line();
+        System.out.println(rightInDash("generated at: " + now));
+        dash(); blank();
+
+        System.out.println(center("APPOINTMENTS OVERVIEW", 70));
+        dash();
+        System.out.printf("  %-30s │ %-30s%n", "Total appointments", appointments.length);
+        dash();
 
         if (appointments.length == 0) {
             System.out.println("No appointment records to show. Please add appointment data first.");
+            line();
             return;
         }
 
@@ -546,19 +794,39 @@ public class ConsultationMaintenance {
         }
         doctorRows.sort((a, b) -> b.count - a.count);
 
+        System.out.println(center("APPOINTMENTS BY DOCTOR", 70));
+        dash();
+        System.out.printf("  %-12s │ %-20s │ %-20s%n", "Doctor ID", "Doctor Name", "Appointment Count");
+        dash();
         if (doctorRows.size() == 0) {
-            System.out.println("No doctor records found in appointments.");
-            return;
+            System.out.printf("  %-12s │ %-20s │ %-20s%n", "-", "-", "0");
+        } else {
+            for (int i = 0; i < doctorRows.size(); i++) {
+                DoctorRow r = doctorRows.get(i);
+                System.out.printf("  %-12s │ %-20s │ %-20d%n", r.id, r.name, r.count);
+            }
         }
+        dash();
+        System.out.println(center("END OF THE REPORT", 70));
+        line();
+    }
 
-        System.out.println("\nAppointments by Doctor:");
-        System.out.println("+------------+----------------------+----------------------+");
-        System.out.printf("| %-10s | %-20s | %-20s |\n", "Doctor ID", "Doctor Name", "Appointment Count");
-        System.out.println("+------------+----------------------+----------------------+");
-        for (int i = 0; i < doctorRows.size(); i++) {
-            DoctorRow r = doctorRows.get(i);
-            System.out.printf("| %-10s | %-20s | %-20d |\n", r.id, r.name, r.count);
-        }
-        System.out.println("+------------+----------------------+----------------------+");
+    private void line() {
+        System.out.println("=".repeat(70));
+    }
+    private void dash() {
+        System.out.println("-".repeat(70));
+    }
+    private void blank() {
+        System.out.println();
+    }
+    private String center(String s, int width) {
+        int pad = (width - s.length()) / 2;
+        return " ".repeat(Math.max(0, pad)) + s;
+    }
+    private String rightInDash(String s) {
+        int width = 70;
+        int pad = Math.max(0, width - s.length());
+        return " ".repeat(pad) + s;
     }
 }

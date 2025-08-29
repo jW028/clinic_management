@@ -1334,6 +1334,11 @@ public class ConsultationMaintenanceUI {
                 System.out.println("Appointment not found. Please enter a valid Appointment ID. ");
                 continue;
             }
+            String status = maintenance.getAppointment(appointmentId).getStatus();
+            if (!"Completed".equalsIgnoreCase(status) && !"Cancelled".equalsIgnoreCase(status)) {
+                System.out.println("Only appointments with status \"Completed\" and \"Cancelled\" can be removed.");
+                continue;
+            }
             break;
         }
         boolean success = maintenance.removeAppointment(appointmentId);

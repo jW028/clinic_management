@@ -10,7 +10,7 @@ public class ClinicManagement {
 
             int choice;
             do {
-                System.out.println("=======Menu=======");
+                System.out.println("\n=======Menu=======");
                 System.out.println("1. Student");
                 System.out.println("2. Admin");
                 System.out.println("0. Exit");
