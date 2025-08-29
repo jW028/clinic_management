@@ -20,17 +20,9 @@ public class DoctorUI {
 
     public void runDoctorMenu() {
         int choice;
-
         do {
-            System.out.println("\n=== Doctor Management Menu ===");
-            System.out.println("1. Register Doctor");
-            System.out.println("2. Search Doctor");
-            System.out.println("3. Update Doctor Details");
-            System.out.println("4. Remove Doctor");
-            System.out.println("5. List All Doctors");
-            System.out.println("6. View Doctors Schedule");
-            System.out.println("0. Back to Main Menu");
-            choice = InputHandler.getInt("Enter your choice", 0, 6);
+            printMenu();
+            choice = InputHandler.getInt("Enter your choice", 0, 9);
 
             switch (choice) {
                 case 1 -> registerDoctor();
@@ -39,10 +31,29 @@ public class DoctorUI {
                 case 4 -> removeDoctor();
                 case 5 -> listDoctors();
                 case 6 -> scheduleUI.runScheduleMenu();
+                case 7 -> showRecentActionsWithUndo();
+                case 8 -> showSpecializationAnalytics();
                 case 0 -> System.out.println("Returning to main menu...");
                 default -> System.out.println("Invalid choice. Please try again.");
             }
         } while (choice != 0);
+    }
+
+    // Updated menu UI
+    public void printMenu() {
+        System.out.println("\n┌" + "─".repeat(42) + "┐");
+        System.out.println("│          DOCTOR MANAGEMENT MENU          │");
+        System.out.println("├" + "─".repeat(42) + "┤");
+        System.out.println("│ 1. Register Doctor                       │");
+        System.out.println("│ 2. Search Doctor                         │");
+        System.out.println("│ 3. Update Doctor                         │");
+        System.out.println("│ 4. Remove Doctor                         │");
+        System.out.println("│ 5. List All Doctors                      │");
+        System.out.println("│ 6. View Doctors Schedule                 │");
+        System.out.println("│ 7. Recent History                        │");
+        System.out.println("│ 8. Doctor Specialization Analytics       │");
+        System.out.println("│ 0. Back to Main Menu                     │");
+        System.out.println("└" + "─".repeat(42) + "┘");
     }
 
     private void registerDoctor() {
@@ -54,9 +65,9 @@ public class DoctorUI {
         String email = InputHandler.getEmail("Enter Email");
         String address = InputHandler.getString("Enter Address");
         String gender = InputHandler.getGender("Select Gender");
-        String dob = InputHandler.getString("Enter Date of Birth (YYYY-MM-DD)");
+        int experience = InputHandler.getInt("Enter Years of Experience", 0, 100);
 
-        Doctor doctor = new Doctor(id, name, specialty, phone, email, address, gender, dob);
+        Doctor doctor = new Doctor(id, name, specialty, phone, email, address, gender, experience);
         if (doctorMaintenance.registerDoctor(doctor)) {
             System.out.println("Doctor registered successfully.");
         } else {
@@ -65,12 +76,16 @@ public class DoctorUI {
     }
 
     private void searchDoctor() {
-        System.out.println("\n=== Search Doctor ===");
-        System.out.println("1. By ID");
-        System.out.println("2. By Name");
-        System.out.println("3. By Gender");
-        System.out.println("4. By Specialty");
-        int choice = InputHandler.getInt("Choose search option", 1, 4);
+        System.out.println("\n┌" + "─".repeat(35) + "┐");
+        System.out.println("│            Search Doctor          │");
+        System.out.println("├" + "─".repeat(35) + "┤");
+        System.out.println("│ 1. By ID                          │");
+        System.out.println("│ 2. By Name                        │");
+        System.out.println("│ 3. By Gender                      │");
+        System.out.println("│ 4. By Specialty                   │");
+        System.out.println("│ 5. By Years of Experience         │");
+        System.out.println("└" + "─".repeat(35) + "┘");
+        int choice = InputHandler.getInt("Choose search option", 1, 5);
 
         Doctor[] results = new Doctor[0];
 
@@ -94,6 +109,10 @@ public class DoctorUI {
                 String specialty = InputHandler.getString("Enter Specialty");
                 results = doctorMaintenance.searchBySpecialty(specialty);
             }
+            case 5 -> {
+                int exp = InputHandler.getInt("Enter Years of Experience", 0, 100);
+                results = doctorMaintenance.searchByExperience(exp);
+            }
         }
 
         if (results.length == 0) {
@@ -102,28 +121,8 @@ public class DoctorUI {
         }
 
         displayDoctorTable(results);
-
-//        System.out.println("\nDo you want to sort the results?");
-//        System.out.println("1. By ID");
-//        System.out.println("2. By Name");
-//        System.out.println("3. By Specialty");
-//        System.out.println("4. By Gender");
-//        System.out.println("0. No Sorting");
-//        int sortChoice = InputHandler.getInt("Choose option", 0, 4);
-//
-//        Doctor[] sorted = results;
-//        switch (sortChoice) {
-//            case 1 -> sorted = doctorMaintenance.sortByID(true);
-//            case 2 -> sorted = doctorMaintenance.sortByName(true);
-//            case 3 -> sorted = doctorMaintenance.sortBySpecialty(true);
-//            case 4 -> sorted = doctorMaintenance.sortByGender(true);
-//        }
-//
-//        if (sortChoice != 0) {
-//            System.out.println("\n=== Sorted Results ===");
-//            displayDoctorTable(sorted);
-//        }
     }
+
     private void listDoctors() {
         Doctor[] doctors = doctorMaintenance.getAllDoctorsArray();
 
@@ -135,13 +134,17 @@ public class DoctorUI {
         System.out.println("\n=== All Doctors ===");
         displayDoctorTable(doctors);
 
-        System.out.println("\nDo you want to sort the list?");
-        System.out.println("1. By ID");
-        System.out.println("2. By Name");
-        System.out.println("3. By Specialty");
-        System.out.println("4. By Gender");
-        System.out.println("0. Exit without sorting");
-        int sortChoice = InputHandler.getInt("Choose option", 0, 4);
+        System.out.println("\n┌" + "─".repeat(35) + "┐");
+        System.out.println("│      Sort Doctor List             │");
+        System.out.println("├" + "─".repeat(35) + "┤");
+        System.out.println("│ 1. By ID                          │");
+        System.out.println("│ 2. By Name                        │");
+        System.out.println("│ 3. By Specialty                   │");
+        System.out.println("│ 4. By Gender                      │");
+        System.out.println("│ 5. By Years of Experience         │");
+        System.out.println("│ 0. Exit without sorting           │");
+        System.out.println("└" + "─".repeat(35) + "┘");
+        int sortChoice = InputHandler.getInt("Choose option", 0, 5);
 
         Doctor[] sorted = doctors;
         switch (sortChoice) {
@@ -149,6 +152,7 @@ public class DoctorUI {
             case 2 -> sorted = doctorMaintenance.sortByName(true);
             case 3 -> sorted = doctorMaintenance.sortBySpecialty(true);
             case 4 -> sorted = doctorMaintenance.sortByGender(true);
+            case 5 -> sorted = doctorMaintenance.sortByExperience(true);
         }
 
         if (sortChoice != 0) {
@@ -157,21 +161,23 @@ public class DoctorUI {
         }
     }
 
+    // Universally styled doctor table
     private void displayDoctorTable(Doctor[] doctors) {
-        System.out.printf(
-                "%-8s | %-20s | %-15s | %-13s | %-25s | %-25s | %-8s | %-12s\n",
-                "ID", "Name", "Specialty", "Phone", "Email", "Address", "Gender", "DOB");
-        System.out.println("-----------------------------------------------------------------------------------------------"
-                + "------------------------------------------------------");
-
-        for (Doctor doctor : doctors) {
-            System.out.printf(
-                    "%-8s | %-20s | %-15s | %-13s | %-25s | %-25s | %-8s | %-12s\n",
-                    doctor.getDoctorID(), doctor.getName(), doctor.getSpecialty(), doctor.getPhone(),
-                    doctor.getEmail(), doctor.getAddress(), doctor.getGender(), doctor.getDateOfBirth());
+        if (doctors == null || doctors.length == 0) {
+            System.out.println("No doctors to display.");
+            return;
         }
+        System.out.println("+--------+----------------------+-----------------+--------------+------------------------------+-------------------------+--------+-------+");
+        System.out.printf("| %-6s | %-20s | %-15s | %-12s | %-28s | %-23s | %-6s | %-5s |\n",
+                "ID", "Name", "Specialty", "Phone", "Email", "Address", "Gender", "Exp");
+        System.out.println("+--------+----------------------+-----------------+--------------+------------------------------+-------------------------+--------+-------+");
+        for (Doctor doctor : doctors) {
+            System.out.printf("| %-6s | %-20s | %-15s | %-12s | %-28s | %-23s | %-6s | %-5d |\n",
+                    doctor.getDoctorID(), doctor.getName(), doctor.getSpecialty(), doctor.getPhone(),
+                    doctor.getEmail(), doctor.getAddress(), doctor.getGender(), doctor.getYearsOfExperience());
+        }
+        System.out.println("+--------+----------------------+-----------------+--------------+------------------------------+-------------------------+--------+-------+");
     }
-
 
     private void updateDoctor() {
         String id = InputHandler.getString("Enter Doctor ID to update");
@@ -184,14 +190,14 @@ public class DoctorUI {
 
         boolean keepUpdating = true;
         while (keepUpdating) {
-            System.out.println("\n=== Update Doctor Details ===");
-            System.out.println("1. Name        [" + doctor.getName() + "]");
-            System.out.println("2. Specialty   [" + doctor.getSpecialty() + "]");
-            System.out.println("3. Phone       [" + doctor.getPhone() + "]");
-            System.out.println("4. Email       [" + doctor.getEmail() + "]");
-            System.out.println("5. Address     [" + doctor.getAddress() + "]");
-            System.out.println("6. Gender      [" + doctor.getGender() + "]");
-            System.out.println("7. Date of Birth [" + doctor.getDateOfBirth() + "]");
+            System.out.println("========= Update Doctor Details ==========");
+            System.out.println("1. Name                 [" + doctor.getName() + "]");
+            System.out.println("2. Specialty            [" + doctor.getSpecialty() + "]");
+            System.out.println("3. Phone                [" + doctor.getPhone() + "]");
+            System.out.println("4. Email                [" + doctor.getEmail() + "]");
+            System.out.println("5. Address              [" + doctor.getAddress() + "]");
+            System.out.println("6. Gender               [" + doctor.getGender() + "]");
+            System.out.println("7. Years of Experience  [" + doctor.getYearsOfExperience() + "]");
             System.out.println("0. Done");
 
             int choice = InputHandler.getInt("Select field to update", 0, 7);
@@ -222,8 +228,8 @@ public class DoctorUI {
                     doctorMaintenance.updateDoctorField(id, "gender", newGender);
                 }
                 case 7 -> {
-                    String newDob = InputHandler.getString("Enter New Date of Birth (YYYY-MM-DD)");
-                    doctorMaintenance.updateDoctorField(id, "dob", newDob);
+                    int newExp = InputHandler.getInt("Enter New Years of Experience", 0, 100);
+                    doctorMaintenance.updateDoctorField(id, "experience", String.valueOf(newExp));
                 }
                 case 0 -> keepUpdating = false;
             }
@@ -241,15 +247,66 @@ public class DoctorUI {
         }
     }
 
-//    private void viewDoctorSchedule() {
-//        String doctorID = InputHandler.getString("Enter Doctor ID to manage schedule");
-//        scheduleMaintenance.displayCalendar(doctorID);
-//
-//        // Allow them to jump into date-specific management, like ScheduleUI
-//        while (true) {
-//            int day = InputHandler.getInt("Enter a date (1–31) or 0 to exit", 0, 31);
-//            if (day == 0) break;
-//            LocalDate date = LocalDate.now().withDayOfMonth(day);
-//            new ScheduleUI().manageDateSchedule(doctorID, date.toString());
-//        }
+    private void showRecentActionsWithUndo() {
+        System.out.println("\n┌" + "─".repeat(33) + "┐");
+        System.out.println("│   Recent Doctor Actions         │");
+        System.out.println("└" + "─".repeat(33) + "┘");
+        String[] actions = doctorMaintenance.getRecentDoctorActions(10);
+        if (actions.length == 0) {
+            System.out.println("No recent actions.");
+        } else {
+            for (int i = 0; i < actions.length; i++) {
+                System.out.println((i + 1) + ". " + actions[i]);
+            }
+            System.out.println("\nWould you like to undo the last action?");
+            System.out.println("1. Undo Last Action");
+            System.out.println("0. Cancel");
+            int undoChoice = InputHandler.getInt("Choose option", 0, 1);
+            if (undoChoice == 1) {
+                String result = doctorMaintenance.undoLastAction();
+                System.out.println(result);
+            } else {
+                System.out.println("Undo cancelled.");
+            }
+        }
+    }
+
+    private void showSpecializationAnalytics() {
+        System.out.println("\n┌" + "─".repeat(38) + "┐");
+        System.out.println("│   Doctor Specialization Analytics   │");
+        System.out.println("└" + "─".repeat(38) + "┘");
+        var specialtyCounts = doctorMaintenance.getSpecialtyCounts();
+        if (specialtyCounts.size() == 0) {
+            System.out.println("No doctors registered.");
+        } else {
+            Doctor[] doctors = doctorMaintenance.getAllDoctorsArray();
+            String[] specs = new String[doctors.length];
+            int unique = 0;
+
+            for (Doctor d : doctors) {
+                String spec = d.getSpecialty();
+                boolean found = false;
+                for (int i = 0; i < unique; i++) {
+                    if (specs[i].equals(spec)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    specs[unique] = spec;
+                    unique++;
+                }
+            }
+
+            System.out.println("+----------------------+-------+");
+            System.out.printf("| %-20s | %-5s |\n", "Specialty", "Count");
+            System.out.println("+----------------------+-------+");
+            for (int i = 0; i < unique; i++) {
+                String specialty = specs[i];
+                int count = specialtyCounts.get(specialty);
+                System.out.printf("| %-20s | %-5d |\n", specialty, count);
+            }
+            System.out.println("+----------------------+-------+");
+        }
+    }
 }

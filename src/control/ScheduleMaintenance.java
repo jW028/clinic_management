@@ -208,8 +208,6 @@ public class ScheduleMaintenance {
     // Show calendar for the schedules of a specific doctor (with * marking scheduled days)
     public void displayDoctorCalendar(String doctorID) {
         System.out.println("\n=== Doctor " + doctorID + " Schedule Calendar ===");
-        // For each month in the data, display a calendar with * on scheduled days for this doctor
-        // For brevity, just display current month:
         LocalDate today = LocalDate.now();
         int year = today.getYear();
         int month = today.getMonthValue();
@@ -259,6 +257,7 @@ public class ScheduleMaintenance {
         }
         System.out.println("\n* = schedule with status " + statusStr + " exists");
     }
+
     // Assign schedule(s)
     public boolean assignSchedule(String doctorID, String date, String timeSlotInput, boolean available) {
         CustomADT<Integer, String> validSlots = parseAndValidateTimeSlots(timeSlotInput);
@@ -305,25 +304,31 @@ public class ScheduleMaintenance {
         return slots;
     }
 
-    public boolean updateAvailability(String doctorID, String date, String timeSlot, boolean available) {
+    // Update availability (for leave): only if available
+    public boolean markScheduleAsLeave(String doctorID, String date, String timeSlot) {
         Schedule schedule = getSchedule(doctorID, date, timeSlot);
-        if (schedule != null) {
-            schedule.setStatus(available);
+        if (schedule != null && schedule.getStatus()) { // only if available
+            schedule.setStatus(false); // Mark as leave/unavailable
             scheduleDAO.saveToFile(scheduleList);
             IDGenerator.saveCounters("counter.dat");
             return true;
         }
+        System.out.println("Cannot mark as leave: Slot is already unavailable or does not exist.");
         return false;
     }
 
+    // Remove slot: only if available
     public boolean removeSchedule(String doctorID, String date, String timeSlot) {
         String key = generateKey(doctorID, date, timeSlot);
-        boolean removed = scheduleList.remove(key) != null;
-        if (removed) {
+        Schedule schedule = scheduleList.get(key);
+        if (schedule != null && schedule.getStatus()) { // only if available
+            scheduleList.remove(key);
             scheduleDAO.saveToFile(scheduleList);
             IDGenerator.saveCounters("counter.dat");
+            return true;
         }
-        return removed;
+        System.out.println("Cannot remove: Slot is not available or does not exist.");
+        return false;
     }
 
     // Slot parsing and validation

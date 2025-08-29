@@ -152,9 +152,9 @@ public class TreatmentMaintenanceUI {
         Patient patient3 = new Patient("P003", "Muhammad Ali", 31, "Male", "012-111-2222", "789 Jalan Shah Alam", false);
 
         // Create sample doctors
-        Doctor doctor1 = new Doctor("DC001", "Dr. Ahmad Rahman", "Cardiology", "03-1234-5678", "ahmad.rahman@hospital.com", "123 Jalan KL", "Male", "12-12-1992");
-        Doctor doctor2 = new Doctor("DC002", "Dr. Siti Hajar", "Pediatrics", "03-1234-5679", "siti.hajar@hospital.com", "456 Jalan PJ", "Female", "15-05-1990");
-        Doctor doctor3 = new Doctor("DC003", "Dr. Muhammad Hasan", "Internal Medicine", "03-1234-5680", "muhammad.hasan@hospital.com", "789 Jalan Shah Alam", "Male", "20-08-1985");
+        Doctor doctor1 = new Doctor("DC001", "Dr. Ahmad Rahman", "Cardiology", "03-1234-5678", "ahmad.rahman@hospital.com", "123 Jalan KL", "Male", 5);
+        Doctor doctor2 = new Doctor("DC002", "Dr. Siti Hajar", "Pediatrics", "03-1234-5679", "siti.hajar@hospital.com", "456 Jalan PJ", "Female", 6);
+        Doctor doctor3 = new Doctor("DC003", "Dr. Muhammad Hasan", "Internal Medicine", "03-1234-5680", "muhammad.hasan@hospital.com", "789 Jalan Shah Alam", "Male", 6);
 
         // Create sample diagnoses (if needed)
         Diagnosis diagnosis1 = new Diagnosis("DIA001", "Hypertension", "High blood pressure");
