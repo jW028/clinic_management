@@ -2,6 +2,7 @@ package dao;
 
 import adt.CustomADT;
 import entity.Patient;
+import utility.IDGenerator;
 
 public class PatientInitializer {
    public static CustomADT<String, Patient> initializePatients() {
@@ -30,6 +31,16 @@ public class PatientInitializer {
    public static void main(String[] args) {
        CustomADT<String, Patient> patients = initializePatients();
        // Display initialized patients
+
+       String highestID = "P000";
+       for (Patient patient : patients) {
+           String id = patient.getPatientId();
+           if (id.compareTo(highestID) > 0) {
+               highestID = id;
+           }
+       }
+       IDGenerator.updatePatientCounterFromHighestID(highestID);
+       IDGenerator.saveCounters("counter.dat");
        for (int i = 0; i < patients.size(); i++) {
            Patient patient = patients.get(i);
            System.out.println("Patient ID: " + patient.getPatientId() + ", Name: " + patient.getName());

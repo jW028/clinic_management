@@ -19,7 +19,7 @@ public class ClinicManagement {
                     StudentUI studentUI = new StudentUI(patientController);
                     studentUI.displayMenu();
                 } else if (choice == 2) {
-                    AdminUI adminUI = new AdminUI();
+                    AdminUI adminUI = new AdminUI(patientController);
                     adminUI.displayMenu();
                 }
             } while (choice != 0);

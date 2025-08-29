@@ -20,9 +20,14 @@ public class PatientMaintenance {
     private final TreatmentDAO treatmentDAO;
     private ConsultationMaintenance consultationMaintenance;
     private TreatmentMaintenance treatmentMaintenance;
+    private final PatientQueueDAO patientEmergencyQueueDAO = new PatientQueueDAO(1);
+    private final PatientQueueDAO patientNormalQueueDAO = new PatientQueueDAO(2);
+
+    private static PatientMaintenance instance;
+
     public PatientMaintenance() {
-        this.normalQueue = new CustomADT<>();
-        this.emergencyQueue = new CustomADT<>();
+        this.normalQueue = patientNormalQueueDAO.retrieveFromFile();
+        this.emergencyQueue = patientEmergencyQueueDAO.retrieveFromFile();
         this.patientDAO = new PatientDAO();
         this.visitHistoryDAO = new VisitHistoryDAO();
         this.consultationDAO = new ConsultationDAO();
@@ -59,6 +64,13 @@ public class PatientMaintenance {
         }
 
         IDGenerator.loadCounter("counter.dat");
+    }
+
+    public static PatientMaintenance getInstance() {
+        if (instance == null) {
+            instance = new PatientMaintenance();
+        }
+        return instance;
     }
 
     public CustomADT<String, Consultation> getConsultationsByPatient(String patientId) {
@@ -152,6 +164,22 @@ public class PatientMaintenance {
         return true;
     }
 
+    public CustomADT<String, Patient> searchPatients(String searchTerm) {
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return new CustomADT<>();
+        }
+        String term = searchTerm.trim().toLowerCase();
+        return patientRegistry.filter(
+                null,
+                (p, ref) -> {
+                    if (p == null) return -1;
+                    return (p.getPatientId().toLowerCase().contains(term) ||
+                            p.getName().toLowerCase().contains(term)) ? 0 : -1;
+                }
+        );
+    }
+
+
     /**
      * Get all patients as array
      */
@@ -206,8 +234,10 @@ public class PatientMaintenance {
         if (getTotalQueueSize() < MAX_QUEUE_SIZE) {
             if (patient.isEmergency()) {
                 emergencyQueue.offer(patientId, patient);
+                patientEmergencyQueueDAO.saveToFile(emergencyQueue);
             } else {
                 normalQueue.offer(patientId, patient);
+                patientNormalQueueDAO.saveToFile(normalQueue);
             }
         } else {
             System.out.println("Queue is full. Cannot enqueue patient.");
@@ -220,9 +250,14 @@ public class PatientMaintenance {
     public Patient serveNextPatient() {
         // Use CustomADT's poll() method for proper queue behavior (FIFO)
         Patient nextPatient = emergencyQueue.poll();
+
         if (nextPatient == null) {
             nextPatient = normalQueue.poll();
+            patientNormalQueueDAO.saveToFile(normalQueue);
+        } else {
+            patientEmergencyQueueDAO.saveToFile(emergencyQueue);
         }
+
 
         return nextPatient;
     }
