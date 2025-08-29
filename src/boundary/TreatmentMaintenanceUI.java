@@ -1074,6 +1074,18 @@ public class TreatmentMaintenanceUI {
     private StringBuilder buildProcessingStatisticsReport(OrderedMap<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
 
+        // Add university header
+        String now = java.time.ZonedDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
+        
+        report.append("=".repeat(W)).append("\n");
+        report.append(center("TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY")).append("\n");
+        report.append(center("TREATMENT MANAGEMENT SUBSYSTEM")).append("\n");
+        report.append(center("TREATMENT PROCESSING STATISTICS REPORT")).append("\n");
+        report.append("=".repeat(W)).append("\n");
+        report.append(rightInDash("generated at: " + now)).append("\n");
+        report.append("=".repeat(W)).append("\n\n");
+
         // Count treatments by various criteria
         int scheduledCount = 0, inProgressCount = 0, completedCount = 0;
         int emergencyCount = 0, regularCount = 0, criticalCount = 0;
@@ -1112,119 +1124,83 @@ public class TreatmentMaintenanceUI {
         // Get recent activities count
         OrderedMap<String, String> recentActivities = treatmentController.getRecentTreatments();
 
-        // Build formatted report
-        report.append("\n┌").append("─".repeat(60)).append("┐\n");
-        report.append("│").append(centerText("TREATMENT PROCESSING STATISTICS", 60)).append("│\n");
-        report.append("├").append("─".repeat(60)).append("┤\n");
-        report.append("│").append(centerText("📊 OVERALL SUMMARY", 60)).append("│\n");
-        report.append("├").append("─".repeat(60)).append("┤\n");
-        report.append(String.format("│ %-30s : %25d │\n", "Total Treatments", allTreatments.size()));
-        report.append(String.format("│ %-30s : %24.1f%% │\n", "Completion Rate", completionRate));
-        report.append(String.format("│ %-30s : %25d │\n", "Pending Treatments", scheduledCount + inProgressCount));
-        report.append(String.format("│ %-30s : %25d │\n", "Recent Activities", recentActivities.size()));
+        
+        report.append(center("TREATMENT PROCESSING SUMMARY")).append("\n");
+        report.append("-".repeat(W)).append("\n");
 
-        // Status Breakdown Section
-        report.append("├").append("─".repeat(60)).append("┤\n");
-        report.append("│").append(centerText("📋 STATUS BREAKDOWN", 60)).append("│\n");
-        report.append("├").append("─".repeat(60)).append("┤\n");
-        report.append(String.format("│ %-30s : %25d │\n", "Scheduled", scheduledCount));
-        report.append(String.format("│ %-30s : %25d │\n", "In Progress", inProgressCount));
-        report.append(String.format("│ %-30s : %25d │\n", "Completed", completedCount));
+        // Prepare data for multi-column layout
+        String[] overview = {
+                String.format("Total treatments: %d", allTreatments.size()),
+                String.format("Completion rate: %.1f%%", completionRate),
+                String.format("Pending treatments: %d", scheduledCount + inProgressCount),
+                String.format("Recent activities: %d", recentActivities.size())
+        };
 
-        // Type Breakdown Section
-        report.append("├").append("─".repeat(60)).append("┤\n");
-        report.append("│").append(centerText("🏥 TYPE BREAKDOWN", 60)).append("│\n");
-        report.append("├").append("─".repeat(60)).append("┤\n");
-        report.append(String.format("│ %-30s : %25d │\n", "Emergency Treatments", emergencyCount));
-        report.append(String.format("│ %-30s : %25d │\n", "Regular Treatments", regularCount));
+        String[] statusRows = {
+                "Status       Count   %",
+                String.format("Scheduled    %3d   %5s", scheduledCount, pct(scheduledCount, allTreatments.size())),
+                String.format("In Progress  %3d   %5s", inProgressCount, pct(inProgressCount, allTreatments.size())),
+                String.format("Completed    %3d   %5s", completedCount, pct(completedCount, allTreatments.size()))
+        };
 
-        // Priority Breakdown Section
-        report.append("├").append("─".repeat(60)).append("┤\n");
-        report.append("│").append(centerText("⚠️ PRIORITY BREAKDOWN", 60)).append("│\n");
-        report.append("├").append("─".repeat(60)).append("┤\n");
-        report.append(String.format("│ %-30s : %25d │\n", "Critical Treatments", criticalCount));
-        report.append(String.format("│ %-30s : %25d │\n", "Non-Critical Treatments", allTreatments.size() - criticalCount));
+        String[] typeRows = {
+                "Type         Count   %",
+                String.format("Emergency    %3d   %5s", emergencyCount, pct(emergencyCount, allTreatments.size())),
+                String.format("Regular      %3d   %5s", regularCount, pct(regularCount, allTreatments.size())),
+                String.format("Critical     %3d   %5s", criticalCount, pct(criticalCount, allTreatments.size()))
+        };
 
-        report.append("└").append("─".repeat(60)).append("┘\n");
+        int col1 = 34, col2 = 30, col3 = 30;
 
-        // Action Recommendations Table
+        // Header row
+        report.append(String.format("  %-" + col1 + "s │ %-" + col2 + "s │ %-" + col3 + "s%n",
+                "Overview", "Status Breakdown", "Type/Priority"));
+        report.append("-".repeat(W)).append("\n");
+
+        int maxRows = Math.max(overview.length, Math.max(statusRows.length - 1, typeRows.length - 1));
+        for (int i = 0; i < maxRows; i++) {
+            String o = i < overview.length ? overview[i] : "";
+            String s = (i + 1 < statusRows.length) ? statusRows[i + 1] : ""; 
+            String t = (i + 1 < typeRows.length) ? typeRows[i + 1] : "";   
+            report.append(String.format("  %-" + col1 + "s │ %-" + col2 + "s │ %-" + col3 + "s%n", o, s, t));
+        }
+        // Treatment Status Distribution Histogram
+        report.append(center("TREATMENT STATUS DISTRIBUTION")).append("\n");
+        report.append("-".repeat(W)).append("\n");
+        
+        int maxCount = Math.max(scheduledCount, Math.max(inProgressCount, completedCount));
+        
+        String[] statuses = {"Scheduled", "In Progress", "Completed"};
+        int[] counts = {scheduledCount, inProgressCount, completedCount};
+        
+        for (int i = 0; i < statuses.length; i++) {
+            int barLen = maxCount == 0 ? 0 : (int) Math.round((counts[i] * 40.0) / maxCount);
+            String bar = "█".repeat(barLen);
+            report.append(String.format("  %-12s | %-3d | %s%n", statuses[i], counts[i], bar));
+        }
+
+        // Recommendations section
         if (emergencyCount > 0 || criticalCount > 0) {
-            report.append("\n┌").append("─".repeat(70)).append("┐\n");
-            report.append("│").append(centerText("💡 RECOMMENDATIONS & ALERTS", 70)).append("│\n");
-            report.append("├").append("─".repeat(70)).append("┤\n");
+            report.append("\n").append("-".repeat(W)).append("\n");
+            report.append(center("RECOMMENDATIONS & ALERTS")).append("\n");
+            report.append("-".repeat(W)).append("\n");
 
             if (criticalCount > 0) {
-                report.append(String.format("│ ⚠️  ATTENTION: %-53s │\n",
-                        criticalCount + " critical treatments require immediate attention."));
+                report.append(String.format("⚠️  ATTENTION: %d critical treatments require immediate attention.%n", criticalCount));
             }
 
             if (emergencyCount > 0 && scheduledCount > 0) {
-                report.append(String.format("│ 💡 RECOMMENDATION: %-49s │\n",
-                        "Process emergency treatments first"));
-            }
-
-            if (emergencyCount > 0) {
-                report.append(String.format("│ 🚨 PRIORITY: %-55s │\n",
-                        emergencyCount + " emergency treatments pending"));
+                report.append("� RECOMMENDATION: Process emergency treatments first\n");
             }
 
             if (completionRate < 50) {
-                report.append(String.format("│ 📈 PERFORMANCE: %-52s │\n",
-                        "Low completion rate - consider workflow review"));
+                report.append("� NOTICE: Treatment completion rate is below 50%\n");
             }
-
-            report.append("└").append("─".repeat(70)).append("┘\n");
         }
 
-        // Performance Indicators
-        if (allTreatments.size() > 0) {
-            report.append("\n┌").append("─".repeat(65)).append("┐\n");
-            report.append("│").append(centerText("📈 PERFORMANCE INDICATORS", 65)).append("│\n");
-            report.append("├").append("─".repeat(65)).append("┤\n");
-
-            // Efficiency rating
-            String efficiencyRating;
-            if (completionRate >= 80) {
-                efficiencyRating = "🟢 EXCELLENT";
-            } else if (completionRate >= 60) {
-                efficiencyRating = "🟡 GOOD";
-            } else if (completionRate >= 40) {
-                efficiencyRating = "🟠 MODERATE";
-            } else {
-                efficiencyRating = "🔴 NEEDS IMPROVEMENT";
-            }
-
-            report.append(String.format("│ %-30s : %-30s │\n", "Efficiency Rating", efficiencyRating));
-
-            // Workload status
-            int totalPending = scheduledCount + inProgressCount;
-            String workloadStatus;
-            if (totalPending == 0) {
-                workloadStatus = "🟢 NO PENDING";
-            } else if (totalPending <= 5) {
-                workloadStatus = "🟡 LOW";
-            } else if (totalPending <= 15) {
-                workloadStatus = "🟠 MODERATE";
-            } else {
-                workloadStatus = "🔴 HIGH";
-            }
-
-            report.append(String.format("│ %-30s : %-30s │\n", "Current Workload", workloadStatus));
-
-            // Priority status
-            String priorityStatus;
-            if (criticalCount == 0) {
-                priorityStatus = "🟢 NO CRITICAL";
-            } else if (criticalCount <= 2) {
-                priorityStatus = "🟡 MANAGEABLE";
-            } else {
-                priorityStatus = "🔴 HIGH PRIORITY";
-            }
-
-            report.append(String.format("│ %-30s : %-30s │\n", "Priority Status", priorityStatus));
-
-            report.append("└").append("─".repeat(65)).append("┘\n");
-        }
+        report.append("-".repeat(W)).append("\n");
+        report.append(center("END OF REPORT")).append("\n");
+        report.append("=".repeat(W)).append("\n");
 
         return report;
     }
@@ -1234,6 +1210,17 @@ public class TreatmentMaintenanceUI {
      */
     private StringBuilder buildPlainProcessingStatisticsReport(OrderedMap<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
+
+        // Add university header for export
+        String now = java.time.ZonedDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
+        
+        report.append("TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY\n");
+        report.append("TREATMENT MANAGEMENT SUBSYSTEM\n");
+        report.append("TREATMENT PROCESSING STATISTICS REPORT\n");
+        report.append("================================================================================\n");
+        report.append("Generated at: ").append(now).append("\n");
+        report.append("--------------------------------------------------------------------------------\n\n");
 
         // Count treatments by various criteria
         int scheduledCount = 0, inProgressCount = 0, completedCount = 0;
@@ -1708,6 +1695,18 @@ public class TreatmentMaintenanceUI {
     private StringBuilder buildPatientTreatmentSummaryReport(OrderedMap<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
 
+        // Add university header in PatientUI style
+        String now = java.time.ZonedDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
+        
+        report.append("=".repeat(W)).append("\n");
+        report.append(center("TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY")).append("\n");
+        report.append(center("TREATMENT MANAGEMENT SUBSYSTEM")).append("\n");
+        report.append(center("PATIENT TREATMENT SUMMARY REPORT")).append("\n");
+        report.append("=".repeat(W)).append("\n");
+        report.append(rightInDash("generated at: " + now)).append("\n");
+        report.append("=".repeat(W)).append("\n\n");
+
         // Group treatments by patient using a separate ADT to track patient IDs
         OrderedMap<String, OrderedMap<String, Treatment>> patientTreatments = new OrderedMap<>();
         OrderedMap<String, String> patientIds = new OrderedMap<>(); // Track unique patient IDs
@@ -1728,55 +1727,77 @@ public class TreatmentMaintenanceUI {
             }
         }
 
-        report.append("\n┌").append("─".repeat(90)).append("┐\n");
-        report.append("│").append(centerText("PATIENT TREATMENT SUMMARY REPORT", 90)).append("│\n");
-        report.append("├").append("─".repeat(90)).append("┤\n");
-        report.append(String.format("│ Report Generated: %-70s │\n", DateTimeFormatterUtil.getCurrentTimestamp()));
-        report.append("├").append("─".repeat(90)).append("┤\n");
+        // Calculate overall statistics
+        int totalPatients = patientTreatments.size();
+        int totalTreatments = allTreatments.size();
+        int totalCritical = 0;
+        int totalCompleted = 0;
+        double totalCost = 0.0;
 
-        // Iterate through patient IDs
+        for (Treatment treatment : allTreatments) {
+            if (treatment.isCritical()) totalCritical++;
+            if ("COMPLETED".equals(treatment.getStatus().toUpperCase())) totalCompleted++;
+            totalCost += treatment.getTotalProcedureCost();
+        }
+
+        // Build formatted report using PatientUI style
+        report.append(center("PATIENT TREATMENT SUMMARY")).append("\n");
+        report.append("-".repeat(W)).append("\n");
+
+        // Prepare data for multi-column layout
+        String[] overview = {
+                String.format("Total patients: %d", totalPatients),
+                String.format("Total treatments: %d", totalTreatments),
+                String.format("Average per patient: %.1f", totalPatients > 0 ? (double)totalTreatments / totalPatients : 0),
+                String.format("Total cost: $%.2f", totalCost)
+        };
+
+        String[] statusRows = {
+                "Status       Count   %",
+                String.format("Completed    %3d   %5s", totalCompleted, pct(totalCompleted, totalTreatments)),
+                String.format("Critical     %3d   %5s", totalCritical, pct(totalCritical, totalTreatments)),
+                String.format("Avg Cost     %s", String.format("$%.2f", totalTreatments > 0 ? totalCost / totalTreatments : 0))
+        };
+
+        // Find top patients with most treatments
+        String[] topPatients = new String[4];
+        topPatients[0] = "Top Patients    Treatments";
+        int count = 1;
         for (String patientId : patientIds) {
+            if (count >= topPatients.length) break;
             OrderedMap<String, Treatment> treatments = patientTreatments.get(patientId);
             if (treatments != null && !treatments.isEmpty()) {
                 Treatment firstTreatment = treatments.get(0);
-
                 if (firstTreatment.getPatient() != null) {
-                    Patient patient = firstTreatment.getPatient();
-
-                    // Patient header
-                    report.append("├").append("─".repeat(90)).append("┤\n");
-                    report.append(String.format("│ PATIENT: %-79s │\n", patient.getName() + " (ID: " + patientId + ")"));
-                    report.append("├").append("─".repeat(90)).append("┤\n");
-
-                    // Treatment statistics
-                    int completed = 0, inProgress = 0, scheduled = 0, critical = 0;
-                    double totalCost = 0.0;
-
-                    for (Treatment t : treatments) {
-                        switch (t.getStatus().toUpperCase()) {
-                            case "COMPLETED": completed++; break;
-                            case "IN_PROGRESS": inProgress++; break;
-                            case "SCHEDULED": scheduled++; break;
-                        }
-                        if (t.isCritical()) critical++;
-                        totalCost += t.getTotalProcedureCost();
-                    }
-
-                    report.append(String.format("│ %-25s : %2d │ %-25s : %2d │ %-12s : %7.2f │\n",
-                            "Total Treatments", treatments.size(),
-                            "Critical Treatments", critical,
-                            "Total Cost", totalCost));
-                    report.append(String.format("│ %-25s : %2d │ %-25s : %2d │ %-13s : %6d │\n",
-                            "Completed", completed,
-                            "In Progress", inProgress,
-                            "Scheduled", scheduled));
+                    String patientName = firstTreatment.getPatient().getName();
+                    if (patientName.length() > 12) patientName = patientName.substring(0, 12);
+                    topPatients[count] = String.format("%-12s %3d", patientName, treatments.size());
+                    count++;
                 }
             }
         }
+        while (count < topPatients.length) {
+            topPatients[count] = "";
+            count++;
+        }
 
-        report.append("├").append("─".repeat(90)).append("┤\n");
-        report.append(String.format("│ Total Patients with Treatments: %-56d │\n", patientTreatments.size()));
-        report.append("└").append("─".repeat(90)).append("┘\n");
+        int col1 = 34, col2 = 30, col3 = 30;
+
+        // Header row
+        report.append(String.format("  %-" + col1 + "s │ %-" + col2 + "s │ %-" + col3 + "s%n",
+                "Overview", "Treatment Statistics", "Top Patients"));
+        report.append("-".repeat(W)).append("\n");
+
+        int maxRows = Math.max(overview.length, Math.max(statusRows.length - 1, topPatients.length - 1));
+        for (int i = 0; i < maxRows; i++) {
+            String o = i < overview.length ? overview[i] : "";
+            String s = (i + 1 < statusRows.length) ? statusRows[i + 1] : ""; // skip header
+            String t = (i + 1 < topPatients.length) ? topPatients[i + 1] : "";   // skip header
+            report.append(String.format("  %-" + col1 + "s │ %-" + col2 + "s │ %-" + col3 + "s%n", o, s, t));
+        }
+        report.append("-".repeat(W)).append("\n");
+        report.append(center("END OF REPORT")).append("\n");
+        report.append("=".repeat(W)).append("\n");
 
         return report;
     }
@@ -1786,6 +1807,23 @@ public class TreatmentMaintenanceUI {
      */
     private StringBuilder buildPlainPatientTreatmentSummaryReport(OrderedMap<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
+
+        // Add university header for export
+        String now = java.time.ZonedDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
+        
+        report.append("TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY\n");
+        report.append("TREATMENT MANAGEMENT SUBSYSTEM\n");
+        report.append("PATIENT TREATMENT SUMMARY REPORT\n");
+        report.append("================================================================================\n");
+        report.append("Generated on ").append(now).append("\n");
+        report.append("--------------------------------------------------------------------------------\n\n");
+
+        // Calculate overview statistics
+        int totalTreatments = allTreatments.size();
+        int completed = 0, inProgress = 0, scheduled = 0, critical = 0;
+        double totalRevenue = 0.0;
+        int uniquePatients = 0;
 
         // Group treatments by patient
         OrderedMap<String, OrderedMap<String, Treatment>> patientTreatments = new OrderedMap<>();
@@ -1818,33 +1856,50 @@ public class TreatmentMaintenanceUI {
                     report.append("PATIENT: ").append(patient.getName()).append(" (ID: ").append(patientId).append(")\n");
                     report.append("-".repeat(50)).append("\n");
 
-                    // Calculate statistics
-                    int completed = 0, inProgress = 0, scheduled = 0, critical = 0;
-                    double totalCost = 0.0;
+                    // Calculate statistics for this patient
+                    int patientCompleted = 0, patientInProgress = 0, patientScheduled = 0, patientCritical = 0;
+                    double patientTotalCost = 0.0;
 
                     for (Treatment t : treatments) {
+                        switch (t.getStatus().toUpperCase()) {
+                            case "COMPLETED": patientCompleted++; break;
+                            case "IN_PROGRESS": patientInProgress++; break;
+                            case "SCHEDULED": patientScheduled++; break;
+                        }
+                        if (t.isCritical()) patientCritical++;
+                        patientTotalCost += t.getTotalProcedureCost();
+                        
+                        // Update overall totals
                         switch (t.getStatus().toUpperCase()) {
                             case "COMPLETED": completed++; break;
                             case "IN_PROGRESS": inProgress++; break;
                             case "SCHEDULED": scheduled++; break;
                         }
                         if (t.isCritical()) critical++;
-                        totalCost += t.getTotalProcedureCost();
+                        totalRevenue += t.getTotalProcedureCost();
                     }
 
                     report.append("Total Treatments: ").append(treatments.size()).append("\n");
-                    report.append("Completed: ").append(completed).append("\n");
-                    report.append("In Progress: ").append(inProgress).append("\n");
-                    report.append("Scheduled: ").append(scheduled).append("\n");
-                    report.append("Critical Treatments: ").append(critical).append("\n");
-                    report.append("Total Cost: RM ").append(String.format("%.2f", totalCost)).append("\n\n");
+                    report.append("Completed: ").append(patientCompleted).append("\n");
+                    report.append("In Progress: ").append(patientInProgress).append("\n");
+                    report.append("Scheduled: ").append(patientScheduled).append("\n");
+                    report.append("Critical Treatments: ").append(patientCritical).append("\n");
+                    report.append("Total Cost: RM ").append(String.format("%.2f", patientTotalCost)).append("\n\n");
                 }
             }
         }
+        
+        uniquePatients = patientTreatments.size();
 
-        report.append("SUMMARY:\n");
-        report.append("--------\n");
-        report.append("Total Patients with Treatments: ").append(patientTreatments.size()).append("\n");
+        report.append("OVERALL SUMMARY:\n");
+        report.append("-".repeat(40)).append("\n");
+        report.append("Total Patients with Treatments: ").append(uniquePatients).append("\n");
+        report.append("Total Treatments: ").append(totalTreatments).append("\n");
+        report.append("Completed: ").append(completed).append("\n");
+        report.append("In Progress: ").append(inProgress).append("\n");
+        report.append("Scheduled: ").append(scheduled).append("\n");
+        report.append("Critical Treatments: ").append(critical).append("\n");
+        report.append("Total Revenue: RM ").append(String.format("%.2f", totalRevenue)).append("\n");
 
         return report;
     }
@@ -1889,6 +1944,18 @@ public class TreatmentMaintenanceUI {
      */
     private StringBuilder buildFinancialSummaryReport(OrderedMap<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
+
+        // Add university header in PatientUI style
+        String now = java.time.ZonedDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
+        
+        report.append("=".repeat(W)).append("\n");
+        report.append(center("TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY")).append("\n");
+        report.append(center("TREATMENT MANAGEMENT SUBSYSTEM")).append("\n");
+        report.append(center("FINANCIAL SUMMARY REPORT")).append("\n");
+        report.append("=".repeat(W)).append("\n");
+        report.append(rightInDash("generated at: " + now)).append("\n");
+        report.append("=".repeat(W)).append("\n\n");
 
         // Financial calculations
         double totalRevenue = 0.0;
@@ -1959,60 +2026,106 @@ public class TreatmentMaintenanceUI {
             lowestTreatmentCost = 0.0;
         }
 
-        // Build the report
-        report.append("\n┌").append("─".repeat(90)).append("┐\n");
-        report.append("│").append(centerText("FINANCIAL SUMMARY REPORT", 90)).append("│\n");
-        report.append("├").append("─".repeat(90)).append("┤\n");
-        report.append(String.format("│ Report Generated: %-70s │\n",
-                java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
-        report.append("├").append("─".repeat(90)).append("┤\n");
+        // Calculate completion rate
+        double completionRate = totalTreatments > 0 ? (completedTreatments * 100.0 / totalTreatments) : 0.0;
 
-        // Revenue Summary Section
-        report.append("│").append(centerText("REVENUE SUMMARY", 90)).append("│\n");
-        report.append("├").append("─".repeat(90)).append("┤\n");
-        report.append(String.format("│ %-28s : RM %9.2f │ %-28s : RM %8.2f │\n",
-                "Total Revenue", totalRevenue, "Completed Revenue", completedRevenue));
-        report.append(String.format("│ %-28s : RM %9.2f │ %-28s : RM %8.2f │\n",
-                "Pending Revenue", pendingRevenue, "Average Treatment Cost", averageTreatmentCost));
-        report.append(String.format("│ %-28s : RM %9.2f │ %-28s : RM %8.2f │\n",
-                "Highest Treatment Cost", highestTreatmentCost, "Lowest Treatment Cost", lowestTreatmentCost));
+        // Build formatted report using PatientUI style
+        report.append(center("FINANCIAL SUMMARY")).append("\n");
+        report.append("-".repeat(W)).append("\n");
 
-        // Treatment Statistics Section
-        report.append("├").append("─".repeat(90)).append("┤\n");
-        report.append("│").append(centerText("TREATMENT STATISTICS", 90)).append("│\n");
-        report.append("├").append("─".repeat(90)).append("┤\n");
-        report.append(String.format("│ %-30s : %8d │ %-30s : %11d │\n",
-                "Total Treatments", totalTreatments, "Completed Treatments", completedTreatments));
-        report.append(String.format("│ %-30s : %8d │ %-30s : %10.1f%% │\n",
-                "Pending Treatments", pendingTreatments, "Completion Rate",
-                totalTreatments > 0 ? (completedTreatments * 100.0 / totalTreatments) : 0.0));
+        // Prepare data for multi-column layout
+        String[] overview = {
+                String.format("Total revenue: $%.2f", totalRevenue),
+                String.format("Completed revenue: $%.2f", completedRevenue),
+                String.format("Pending revenue: $%.2f", pendingRevenue),
+                String.format("Average cost: $%.2f", averageTreatmentCost)
+        };
 
-        // Treatment Types Section
-        report.append("├").append("─".repeat(90)).append("┤\n");
-        report.append("│").append(centerText("REVENUE BY TREATMENT TYPE", 90)).append("│\n");
-        report.append("├").append("─".repeat(90)).append("┤\n");
+        String[] statsRows = {
+                "Statistics   Value",
+                String.format("Total Treats %3d", totalTreatments),
+                String.format("Completed    %3d", completedTreatments),
+                String.format("Completion   %.1f%%", completionRate)
+        };
 
-        // Create a list to track unique treatment types
+        String[] costRows = {
+                "Cost Analysis      Value",
+                String.format("Highest Cost  $%.2f", highestTreatmentCost),
+                String.format("Lowest Cost   $%.2f", lowestTreatmentCost),
+                String.format("Avg Revenue   $%.2f", totalTreatments > 0 ? totalRevenue/totalTreatments : 0)
+        };
+
+        int col1 = 34, col2 = 30, col3 = 32;
+
+        // Header row
+        report.append(String.format("  %-" + col1 + "s │ %-" + col2 + "s │ %-" + col3 + "s%n",
+                "Revenue Overview", "Treatment Statistics", "Cost Analysis"));
+        report.append("-".repeat(W)).append("\n");
+
+        int maxRows = Math.max(overview.length, Math.max(statsRows.length - 1, costRows.length - 1));
+        for (int i = 0; i < maxRows; i++) {
+            String o = i < overview.length ? overview[i] : "";
+            String s = (i + 1 < statsRows.length) ? statsRows[i + 1] : ""; // skip header
+            String c = (i + 1 < costRows.length) ? costRows[i + 1] : "";   // skip header
+            report.append(String.format("  %-" + col1 + "s │ %-" + col2 + "s │ %-" + col3 + "s%n", o, s, c));
+        }
+
+        // Revenue Distribution Histogram by Treatment Type
+        report.append("\n").append("-".repeat(W)).append("\n");
+        report.append(center("REVENUE DISTRIBUTION BY TREATMENT TYPE")).append("\n");
+        report.append("-".repeat(W)).append("\n");
+
+        // Calculate revenue by treatment type
+        OrderedMap<String, Double> typeRevenue = new OrderedMap<>();
+        OrderedMap<String, Integer> typeCount = new OrderedMap<>();
         OrderedMap<String, String> uniqueTypes = new OrderedMap<>();
+        
         for (Treatment treatment : allTreatments) {
             if (treatment != null && treatment.getType() != null) {
-                uniqueTypes.put(treatment.getType(), treatment.getType());
+                String type = treatment.getType();
+                double cost = treatment.getTotalProcedureCost();
+                
+                // Track unique types
+                uniqueTypes.put(type, type);
+                
+                if (!typeRevenue.containsKey(type)) {
+                    typeRevenue.put(type, 0.0);
+                    typeCount.put(type, 0);
+                }
+                
+                typeRevenue.put(type, typeRevenue.get(type) + cost);
+                typeCount.put(type, typeCount.get(type) + 1);
             }
         }
 
+        // Find maximum revenue for scaling
+        double maxRevenue = 0.0;
         for (String type : uniqueTypes) {
-            Integer count = treatmentsByType.get(type);
-            double typeRevenue = 0.0;
-            for (Treatment treatment : allTreatments) {
-                if (treatment != null && type.equals(treatment.getType())) {
-                    typeRevenue += treatment.getTotalProcedureCost();
+            Double revenue = typeRevenue.get(type);
+            if (revenue != null && revenue > maxRevenue) {
+                maxRevenue = revenue;
+            }
+        }
+
+        // Display histogram
+        if (maxRevenue > 0) {
+            for (String type : uniqueTypes) {
+                Double revenue = typeRevenue.get(type);
+                Integer count = typeCount.get(type);
+                if (revenue != null && count != null) {
+                    int barLen = (int) Math.round((revenue * 40.0) / maxRevenue);
+                    String bar = "█".repeat(Math.max(0, barLen));
+                    report.append(String.format("  %-12s | $%8.2f | %3d | %s%n", 
+                            type, revenue, count, bar));
                 }
             }
-            report.append(String.format("│ %-30s : %8d treatments │ Revenue: RM %21.2f │\n",
-                    type, count, typeRevenue));
+        } else {
+            report.append(center("No revenue data available for histogram")).append("\n");
         }
 
-        report.append("└").append("─".repeat(90)).append("┘\n");
+        report.append("-".repeat(W)).append("\n");
+        report.append(center("END OF REPORT")).append("\n");
+        report.append("=".repeat(W)).append("\n");
 
         return report;
     }
@@ -2022,6 +2135,17 @@ public class TreatmentMaintenanceUI {
      */
     private StringBuilder buildPlainFinancialSummaryReport(OrderedMap<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
+
+        // Add university header for export
+        String now = java.time.ZonedDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
+        
+        report.append("TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY\n");
+        report.append("TREATMENT MANAGEMENT SUBSYSTEM\n");
+        report.append("FINANCIAL SUMMARY REPORT\n");
+        report.append("================================================================================\n");
+        report.append("Generated at: ").append(now).append("\n");
+        report.append("--------------------------------------------------------------------------------\n\n");
 
         // Financial calculations (same as above but simplified output)
         double totalRevenue = 0.0;
@@ -2468,5 +2592,39 @@ public class TreatmentMaintenanceUI {
         public static final int WIDE = 80;      // For wide tables
         public static final int EXTRA_WIDE = 89; // For pharmacy-style tables
         public static final int FULL_WIDTH = 100; // For very wide tables
+    }
+
+    // Report formatting helper methods 
+    private static final int W = 108;
+
+    private static void line() { 
+        System.out.println("=".repeat(W)); 
+    }
+    
+    private static void dash() { 
+        System.out.println("-".repeat(W)); 
+    }
+    
+    private static void blank() { 
+        System.out.println(); 
+    }
+
+    private static String center(String s) {
+        if (s.length() >= W) return s;
+        int pad = (W - s.length()) / 2;
+        return " ".repeat(pad) + s;
+    }
+    
+    private static String rightInDash(String s) {
+        String left = " ".repeat(Math.max(0, W - s.length()));
+        return left.substring(0, Math.max(0, left.length() - 1)) + " " + s;
+    }
+
+    private static int n(Integer v) {
+        return v == null ? 0 : v.intValue();
+    }
+    
+    private static String pct(int part, int total) {
+        return total == 0 ? "0%" : String.format("%.1f%%", (part * 100.0) / total);
     }
 }
