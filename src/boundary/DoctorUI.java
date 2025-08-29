@@ -6,6 +6,7 @@ import boundary.ScheduleUI;
 import entity.Doctor;
 import utility.IDGenerator;
 import utility.InputHandler;
+import adt.CustomADT;
 
 public class DoctorUI {
     private final DoctorMaintenance doctorMaintenance;
@@ -22,7 +23,7 @@ public class DoctorUI {
         int choice;
         do {
             printMenu();
-            choice = InputHandler.getInt("Enter your choice", 0, 8);
+            choice = InputHandler.getInt("Enter your choice", 0, 9);
 
             switch (choice) {
                 case 1 -> registerDoctor();
@@ -33,13 +34,13 @@ public class DoctorUI {
                 case 6 -> scheduleUI.runScheduleMenu();
                 case 7 -> showRecentActionsWithUndo();
                 case 8 -> showSpecializationAnalytics();
+                case 9 -> showDoctorReports();
                 case 0 -> System.out.println("Returning to main menu...");
                 default -> System.out.println("Invalid choice. Please try again.");
             }
         } while (choice != 0);
     }
 
-    // Updated menu UI
     public void printMenu() {
         System.out.println("\n┌" + "─".repeat(42) + "┐");
         System.out.println("│          DOCTOR MANAGEMENT MENU          │");
@@ -52,6 +53,7 @@ public class DoctorUI {
         System.out.println("│ 6. View Doctors Schedule                 │");
         System.out.println("│ 7. Recent History                        │");
         System.out.println("│ 8. Doctor Specialization Analytics       │");
+        System.out.println("│ 9. Reports and Statistics                │");
         System.out.println("│ 0. Back to Main Menu                     │");
         System.out.println("└" + "─".repeat(42) + "┘");
     }
@@ -161,7 +163,6 @@ public class DoctorUI {
         }
     }
 
-    // Universally styled doctor table
     private void displayDoctorTable(Doctor[] doctors) {
         if (doctors == null || doctors.length == 0) {
             System.out.println("No doctors to display.");
@@ -307,6 +308,73 @@ public class DoctorUI {
                 System.out.printf("| %-20s | %-5d |\n", specialty, count);
             }
             System.out.println("+----------------------+-------+");
+        }
+    }
+
+    private void showDoctorReports() {
+        System.out.println("\n" + "=".repeat(44));
+        System.out.printf("%-44s\n", "DOCTOR REPORTS & STATISTICS");
+        System.out.println("=".repeat(44));
+        System.out.println("1. Number of Doctors per Specialty");
+        System.out.println("2. Gender Distribution of Doctors");
+        System.out.println("0. Back");
+        int choice = InputHandler.getInt("Choose report", 0, 2);
+
+        if (choice == 1) {
+            CustomADT<String, Integer> specialtyCount = doctorMaintenance.getDoctorCountPerSpecialty();
+            Doctor[] doctors = doctorMaintenance.getAllDoctorsArray();
+            java.util.HashSet<String> printed = new java.util.HashSet<>();
+            int totalDoctors = 0;
+            int maxCount = 0;
+            // Find max count for graph scaling
+            for (int i = 0; i < doctors.length; i++) {
+                String spec = doctors[i].getSpecialty();
+                if (!printed.contains(spec)) {
+                    int count = specialtyCount.get(spec) == null ? 0 : specialtyCount.get(spec);
+                    if (count > maxCount) maxCount = count;
+                    totalDoctors += count;
+                    printed.add(spec);
+                }
+            }
+            printed.clear();
+            System.out.println("\n" + "-".repeat(54));
+            System.out.printf("| %-25s | %-8s | %-15s |\n", "Specialty", "Count", "Graph");
+            System.out.println("-".repeat(54));
+            for (int i = 0; i < doctors.length; i++) {
+                String spec = doctors[i].getSpecialty();
+                if (!printed.contains(spec)) {
+                    int count = specialtyCount.get(spec) == null ? 0 : specialtyCount.get(spec);
+                    int barLen = maxCount == 0 ? 0 : (int)Math.round(((double)count / maxCount) * 30);
+                    String bar = "#".repeat(barLen);
+                    System.out.printf("| %-25s | %-8d | %-15s |\n", spec, count, bar);
+                    printed.add(spec);
+                }
+            }
+            System.out.println("-".repeat(54));
+            System.out.printf("| %-25s | %-8d |\n", "TOTAL", totalDoctors);
+            System.out.println("-".repeat(54));
+        } else if (choice == 2) {
+            CustomADT<String, Integer> genderMap = doctorMaintenance.getDoctorCountByGender();
+            String[] keys = {"Male", "Female", "Other"};
+            int total = 0;
+            int maxCount = 0;
+            for (String key : keys) {
+                int count = genderMap.get(key) == null ? 0 : genderMap.get(key);
+                if (count > maxCount) maxCount = count;
+                total += count;
+            }
+            System.out.println("\n" + "-".repeat(40));
+            System.out.printf("| %-10s | %-8s | %-15s |\n", "Gender", "Count", "Graph");
+            System.out.println("-".repeat(40));
+            for (String key : keys) {
+                int count = genderMap.get(key) == null ? 0 : genderMap.get(key);
+                int barLen = maxCount == 0 ? 0 : (int)Math.round(((double)count / maxCount) * 30);
+                String bar = "#".repeat(barLen);
+                System.out.printf("| %-10s | %-8d | %-15s |\n", key, count, bar);
+            }
+            System.out.println("-".repeat(40));
+            System.out.printf("| %-10s | %-8d |\n", "TOTAL", total);
+            System.out.println("-".repeat(40));
         }
     }
 }

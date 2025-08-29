@@ -263,4 +263,30 @@ public class DoctorMaintenance {
         }
         return specialtyCounts;
     }
+    public CustomADT<String, Integer> getDoctorCountPerSpecialty() {
+        Doctor[] doctors = getAllDoctorsArray();
+        CustomADT<String, Integer> specialtyCount = new CustomADT<>();
+        for (Doctor d : doctors) {
+            String spec = d.getSpecialty();
+            Integer count = specialtyCount.get(spec);
+            specialtyCount.put(spec, count == null ? 1 : count + 1);
+        }
+        return specialtyCount;
+    }
+
+    public CustomADT<String, Integer> getDoctorCountByGender() {
+        Doctor[] doctors = getAllDoctorsArray();
+        int male = 0, female = 0, other = 0;
+        for (Doctor d : doctors) {
+            String g = d.getGender().toLowerCase();
+            if (g.equals("male")) male++;
+            else if (g.equals("female")) female++;
+            else other++;
+        }
+        CustomADT<String, Integer> genderMap = new CustomADT<>();
+        genderMap.put("Male", male);
+        genderMap.put("Female", female);
+        genderMap.put("Other", other);
+        return genderMap;
+    }
 }
