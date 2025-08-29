@@ -333,8 +333,12 @@ public class PharmacyMaintenance {
      * Save the medicine stock report to a text file
      */
     public String saveMedicineStockReport(StringBuilder report, String date) {
+        java.io.File reportsDir = new java.io.File("reports");
+        if (!reportsDir.exists()) {
+            reportsDir.mkdirs();
+        }
         String dateStr = date.replace(" ", "_").replace(":", "-").replace("/", "-");
-        String filename = String.format("medicine_stock_report_%s.txt", dateStr);
+        String filename = String.format("reports/medicine_stock_report_%s.txt", dateStr);
         try (java.io.FileWriter writer = new java.io.FileWriter(filename)) {
             writer.write(report.toString());
         } catch (java.io.IOException e) {
@@ -347,7 +351,11 @@ public class PharmacyMaintenance {
      * Save the monthly sales report to a text file
      */
     public String saveMonthlySalesReport(StringBuilder report, int year, int month) {
-        String filename = String.format("monthly_sales_report_%04d-%02d.txt", year, month);
+        java.io.File reportsDir = new java.io.File("reports");
+        if (!reportsDir.exists()) {
+            reportsDir.mkdirs();
+        }
+        String filename = String.format("reports/monthly_sales_report_%04d-%02d.txt", year, month);
         try (java.io.FileWriter writer = new java.io.FileWriter(filename)) {
             writer.write(report.toString());
         } catch (java.io.IOException e) {

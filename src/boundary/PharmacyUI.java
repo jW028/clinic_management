@@ -613,14 +613,16 @@ public class PharmacyUI {
     private void generateMedicineStockReport() {
         StringBuilder report = new StringBuilder();
         String reportDate = DateTimeFormatterUtil.formatForDisplay(LocalDateTime.now());
-        report.append("┌─────────────────────────────────────────────────────────────────────────────────────────┐\n");
-        report.append("│").append(centerTextLine("Current Medicine Stock", 89)).append("│\n");
-        report.append("│").append(centerTextLine("Generated on: " + reportDate, 89)).append("│\n");
-        report.append("├─────┬──────────┬────────────────┬──────────┬───────────┬────────────────────────────────┤\n");
-        report.append("│ No. │ ID       │ Name           │ Quantity │ Price(RM) │ Description                    │\n");
-        report.append("├─────┼──────────┼────────────────┼──────────┼───────────┼────────────────────────────────┤\n");
-        // Insertion sort by quantity ascending
-        // Medicine[] sortedMedicines = pharmacyMaintenance.sortMedicinesByQuantityAscending(medicines);
+        int tableWidth = 108;
+        report.append("=".repeat(tableWidth)).append("\n");
+        report.append(centerTextLine("TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY", tableWidth)).append("\n");
+        report.append(centerTextLine("PHARMACY MANAGEMENT SUBSYSTEM", tableWidth)).append("\n");
+        report.append(centerTextLine("CURRENT MEDICINE STOCK REPORT", tableWidth)).append("\n");
+        report.append("=".repeat(tableWidth)).append("\n");
+        report.append(rightInDash("Generated on: " + reportDate, tableWidth)).append("\n");
+        report.append("-".repeat(tableWidth)).append("\n");
+        report.append(String.format("| %-4s | %-8s | %-18s | %-8s | %-10s | %-41s |\n", "No.", "ID", "Name", "Qty", "Price(RM)", "Description"));
+        report.append("-".repeat(tableWidth)).append("\n");
         OrderedMap<String, Medicine> medicineMap = pharmacyMaintenance.getMedicineMap();
         pharmacyMaintenance.sortMedicinesByStock();
         int count = 1;
@@ -639,23 +641,24 @@ public class PharmacyUI {
             } else {
                 qtyDisplay = String.valueOf(quantity);
             }
-            report.append(String.format("│ %2d. │ %-8s │ %-14s │ %8s │ %9.2f │ %-30s │\n",
+            report.append(String.format("| %3d. | %-8s | %-18s | %8s | %10.2f | %-41s |\n",
                     count++, med.getId(), med.getName(), qtyDisplay, price, descLines[0]));
             for (int i = 1; i < descLines.length; i++) {
-                report.append(String.format("│     │          │                │          │           │ %-30s │\n", descLines[i]));
+                report.append(String.format("|      |          |                    |          |            | %-41s |\n", descLines[i]));
             }
             totalStock += quantity;
             totalStockValue += quantity * price;
         }
-        report.append("├─────┴──────────┴────────────────┴──────────┴───────────┴────────────────────────────────┤\n");
-        report.append(String.format("│ Total number of medicines: %-60d │\n", medicineMap.size()));
-        report.append(String.format("│ Total stock quantity: %-65d │\n", totalStock));
-        report.append(String.format("│ Total low stock medicines: %-60d │\n", lowStockCount));
-        report.append(String.format("│ Total stock value (RM): %-63.2f │\n", totalStockValue));
-        report.append("└─────────────────────────────────────────────────────────────────────────────────────────┘\n");
+        report.append("-".repeat(tableWidth)).append("\n");
+        report.append(String.format("| Total number of medicines: %-77d |\n", medicineMap.size()));
+        report.append(String.format("| Total stock quantity: %-82d |\n", totalStock));
+        report.append(String.format("| Total low stock medicines: %-77d |\n", lowStockCount));
+        report.append(String.format("| Total stock value (RM): %-80.2f |\n", totalStockValue));
+        report.append("-".repeat(tableWidth)).append("\n");
+        report.append(centerTextLine("END OF THE REPORT", tableWidth)).append("\n");
+        report.append("=".repeat(tableWidth)).append("\n");
 
         System.out.print(report.toString());
-
 
         boolean choice = InputHandler.getYesNo("Would you like to save this report?");
         if (choice) {
@@ -684,12 +687,16 @@ public class PharmacyUI {
 
         StringBuilder salesReport = new StringBuilder();
         String reportDate = DateTimeFormatterUtil.formatForDisplay(LocalDateTime.now());
-        salesReport.append("┌─────────────────────────────────────────────────────────────────────────────────────────────────────────┐\n");
-        salesReport.append("│").append(centerTextLine("Monthly Sales Report of " + months[month - 1] + " " + year, 105)).append("│\n");
-        salesReport.append("│").append(centerTextLine("Generated on: " + reportDate, 105)).append("│\n");
-        salesReport.append("├─────┬──────────┬────────────────┬────────────────────────────────┬───────────┬───────────┬──────────────┤\n");
-        salesReport.append("│ No. │ ID       │ Name           │ Description                    │ Quantity  │ Price(RM) │ SubTotal(RM) │\n");
-        salesReport.append("├─────┼──────────┼────────────────┼────────────────────────────────┼───────────┼───────────┼──────────────┤\n");
+        int tableWidth = 120;
+        salesReport.append("=".repeat(tableWidth)).append("\n");
+        salesReport.append(centerTextLine("TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY", tableWidth)).append("\n");
+        salesReport.append(centerTextLine("PHARMACY MANAGEMENT SUBSYSTEM", tableWidth)).append("\n");
+        salesReport.append(centerTextLine("MONTHLY SALES REPORT OF " + months[month - 1].toUpperCase() + " " + year, tableWidth)).append("\n");
+        salesReport.append("=".repeat(tableWidth)).append("\n");
+        salesReport.append(rightInDash("Generated on: " + reportDate, tableWidth)).append("\n");
+        salesReport.append("-".repeat(tableWidth)).append("\n");
+        salesReport.append(String.format("| %-4s | %-8s | %-18s | %-37s | %-9s | %-10s | %-12s |\n", "No.", "ID", "Name", "Description", "Quantity", "Price(RM)", "SubTotal(RM)"));
+        salesReport.append("-".repeat(tableWidth)).append("\n");
         int count = 1;
         double totalSales = 0.0;
         boolean found = false;
@@ -701,10 +708,10 @@ public class PharmacyUI {
                 PrescribedMedicine pm = medicines.get(i);
                 Medicine med = pm.getMedicine();
                 String[] descLines = wrapText(med.getDescription(), 30);
-                salesReport.append(String.format("│ %2d. │ %-8s │ %-14s │ %-30s │ %9d │ %9.2f │ %12.2f │\n",
+                salesReport.append(String.format("| %3d. | %-8s | %-18s | %-37s | %9d | %10.2f | %12.2f |\n",
                         count++, med.getId(), med.getName(), descLines[0], pm.getQuantity(), med.getPrice(),  pm.calculateSubtotal()));
                 for (int j = 1; j < descLines.length; j++) {
-                    salesReport.append(String.format("│     │          │                │ %-30s │           │           │              │\n", descLines[j]));
+                    salesReport.append(String.format("|      |          |                    | %-37s |           |            |              |\n", descLines[j]));
                 }
                 totalSales += pm.calculateSubtotal();
                 totalMedicinesSold += pm.getQuantity();
@@ -713,14 +720,16 @@ public class PharmacyUI {
         }
 
         if (!found) {
-            salesReport.append("│ No transactions found for this month. │\n");
+            salesReport.append(centerTextLine("No transactions found for this month.", tableWidth)).append("\n");
         }
-        salesReport.append("├─────┴──────────┴────────────────┴────────────────────────────────┴───────────┴───────────┼──────────────┤\n");
-        salesReport.append(String.format("│ %88s │ %12.2f │\n", "Total Sales(RM)", totalSales));
-        salesReport.append(String.format("│ Total Number of Transactions in the Month: %-45d └──────────────┤\n", transactionInMonth.size()));
-        salesReport.append(String.format("│ Total Number of Medicines Sold: %-71d │\n", totalMedicinesSold));
-        salesReport.append(String.format("│ The Most Sold Medicine: %-79s │\n", pharmacyMaintenance.getMostSoldMedicine(transactionInMonth)));
-        salesReport.append("└─────────────────────────────────────────────────────────────────────────────────────────────────────────┘\n");
+        salesReport.append("-".repeat(tableWidth)).append("\n");
+        salesReport.append(String.format("| Total Sales (RM): %-98.2f |\n", totalSales));
+        salesReport.append(String.format("| Total Number of Transactions in the Month: %-73d |\n", transactionInMonth.size()));
+        salesReport.append(String.format("| Total Number of Medicines Sold: %-84d |\n", totalMedicinesSold));
+        salesReport.append(String.format("| The Most Sold Medicine: %-92s |\n", pharmacyMaintenance.getMostSoldMedicine(transactionInMonth)));
+        salesReport.append("-".repeat(tableWidth)).append("\n");
+        salesReport.append(centerTextLine("END OF THE REPORT", tableWidth)).append("\n");
+        salesReport.append("=".repeat(tableWidth)).append("\n");
         System.out.print(salesReport.toString());
 
         boolean choice = InputHandler.getYesNo("Would you like to save this report?");
@@ -732,6 +741,11 @@ public class PharmacyUI {
         }
 
     }
+    private String rightInDash(String s, int w) {
+        int pad = Math.max(0, w - s.length());
+        return " ".repeat(pad) + s;
+    }
+
 
     public static void printCenteredText(String text) {
         int totalWidth = 89; // width between the box borders
