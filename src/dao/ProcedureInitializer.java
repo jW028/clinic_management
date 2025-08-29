@@ -1,6 +1,6 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.Procedure;
 
 /**
@@ -9,7 +9,7 @@ import entity.Procedure;
  */
 public class ProcedureInitializer {
     public static void main(String[] args) {
-        CustomADT<String, Procedure> procedureMap = new CustomADT<>();
+        OrderedMap<String, Procedure> procedureMap = new OrderedMap<>();
 
         // Treatment Procedures (different from diagnostic consultation services)
         

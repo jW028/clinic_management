@@ -5,7 +5,7 @@
 
 package boundary;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import control.*;
 import entity.*;
 import java.time.LocalDateTime;
@@ -140,46 +140,6 @@ public class TreatmentMaintenanceUI {
         } while (choice != 0);
     }
 
-    /**
-     * TODO: Delete after consultation DAO is usable.
-     */
-    private CustomADT<String, Consultation> createMockConsultations() {
-        CustomADT<String, Consultation> mockConsultations = new CustomADT<>();
-
-        // Create sample patients
-        Patient patient1 = new Patient("P001", "Ahmad Hassan", 35, "Male", "012-345-6789", "123 Jalan KL", false);
-        Patient patient2 = new Patient("P002", "Siti Nurhaliza", 38, "Female", "012-987-6543", "456 Jalan PJ", false);
-        Patient patient3 = new Patient("P003", "Muhammad Ali", 31, "Male", "012-111-2222", "789 Jalan Shah Alam", false);
-
-        // Create sample doctors
-        Doctor doctor1 = new Doctor("DC001", "Dr. Ahmad Rahman", "Cardiology", "03-1234-5678", "ahmad.rahman@hospital.com", "123 Jalan KL", "Male", 5);
-        Doctor doctor2 = new Doctor("DC002", "Dr. Siti Hajar", "Pediatrics", "03-1234-5679", "siti.hajar@hospital.com", "456 Jalan PJ", "Female", 6);
-        Doctor doctor3 = new Doctor("DC003", "Dr. Muhammad Hasan", "Internal Medicine", "03-1234-5680", "muhammad.hasan@hospital.com", "789 Jalan Shah Alam", "Male", 6);
-
-        // Create sample diagnoses (if needed)
-        Diagnosis diagnosis1 = new Diagnosis("DIA001", "Hypertension", "High blood pressure");
-        Diagnosis diagnosis2 = new Diagnosis("DIA002", "Common Cold", "Viral infection");
-        Diagnosis diagnosis3 = new Diagnosis("DIA003", "Diabetes", "Type 2 diabetes");
-
-        // Create mock consultations
-        Consultation consultation1 = new Consultation("CONS001", patient1, doctor1, LocalDateTime.now().minusDays(1), diagnosis1);
-        Consultation consultation2 = new Consultation("CONS002", patient2, doctor2, LocalDateTime.now().minusDays(2), diagnosis2);
-        Consultation consultation3 = new Consultation("CONS003", patient3, doctor3, LocalDateTime.now().minusDays(3), diagnosis3);
-        Consultation consultation4 = new Consultation("CONS004", patient1, doctor2, LocalDateTime.now().minusHours(6), diagnosis2);
-        Consultation consultation5 = new Consultation("CONS005", patient2, doctor1, LocalDateTime.now().minusHours(12), diagnosis1);
-        Consultation consultation6 = new Consultation("CONS006", patient3, doctor2, LocalDateTime.now().minusHours(3), diagnosis3);
-        Consultation consultation7 = new Consultation("CONS007", patient1, doctor3, LocalDateTime.now().minusHours(1), diagnosis1);
-
-        // Add to collection
-        mockConsultations.put("CONS001", consultation1);
-        mockConsultations.put("CONS002", consultation2);
-        mockConsultations.put("CONS003", consultation3);
-        mockConsultations.put("CONS004", consultation4);
-        mockConsultations.put("CONS005", consultation5);
-
-        return mockConsultations;
-    }
-
     /*
      * Complete treatment creation workflow with integrated prescription and procedure addition
      */
@@ -190,7 +150,7 @@ public class TreatmentMaintenanceUI {
 
         try {
             // Step 1: Get available consultations
-            CustomADT<String, Consultation> availableConsultations = treatmentController.getConsultationsWithoutTreatment();
+            OrderedMap<String, Consultation> availableConsultations = treatmentController.getConsultationsWithoutTreatment();
 
             if (availableConsultations.isEmpty()) {
                 System.out.println("\n┌" + "─".repeat(50) + "┐");
@@ -299,7 +259,7 @@ public class TreatmentMaintenanceUI {
     /**
      * Display available consultations
      */
-    public void displayAvailableConsultations(CustomADT<String, Consultation> consultations) {
+    public void displayAvailableConsultations(OrderedMap<String, Consultation> consultations) {
         System.out.println("\n┌" + "─".repeat(TableWidths.FULL_WIDTH) + "┐");
         printCenteredTableHeader("AVAILABLE CONSULTATIONS", TableWidths.FULL_WIDTH);
         System.out.println("├" + "─".repeat(4) + "┬" + "─".repeat(14) + "┬" + "─".repeat(20) + "┬" + "─".repeat(20) + "┬" + "─".repeat(18) + "┬" + "─".repeat(19) + "┤");
@@ -363,7 +323,7 @@ public class TreatmentMaintenanceUI {
      * Display all treatments with interactive options
      */
     public void displayAllTreatments() {
-        CustomADT<String, Treatment> treatments = treatmentController.getAllTreatments();
+        OrderedMap<String, Treatment> treatments = treatmentController.getAllTreatments();
         if (treatments.isEmpty()) {
             System.out.println("No treatments available.");
             return;
@@ -398,7 +358,7 @@ public class TreatmentMaintenanceUI {
     public void updateTreatment() {
         System.out.println("\n=== UPDATE TREATMENT ===");
 
-        CustomADT<String, Treatment> treatments = treatmentController.getAllTreatments();
+        OrderedMap<String, Treatment> treatments = treatmentController.getAllTreatments();
         if (treatments.isEmpty()) {
             System.out.println("No treatments available to update.");
             return;
@@ -425,7 +385,7 @@ public class TreatmentMaintenanceUI {
     public void removeTreatment() {
         System.out.println("\n=== REMOVE TREATMENT ===");
 
-        CustomADT<String, Treatment> treatments = treatmentController.getAllTreatments();
+        OrderedMap<String, Treatment> treatments = treatmentController.getAllTreatments();
         if (treatments.isEmpty()) {
             System.out.println("No treatments available to remove.");
             return;
@@ -453,7 +413,7 @@ public class TreatmentMaintenanceUI {
     public void viewTreatmentsByPatient() {
 
         System.out.println("\n=== VIEW TREATMENTS BY PATIENT ===");
-        CustomADT<String, Patient> patients = treatmentController.getPatientsWithTreatments();
+        OrderedMap<String, Patient> patients = treatmentController.getPatientsWithTreatments();
         if (patients.isEmpty()) {
             System.out.println("No patients with treatments found.");
             return;
@@ -468,7 +428,7 @@ public class TreatmentMaintenanceUI {
         Patient chosenPatient = patients.get(choice - 1);
 
         // Get treatments for selected patient
-        CustomADT<String, Treatment> patientTreatments = treatmentController.getTreatmentsByPatient(chosenPatient);
+        OrderedMap<String, Treatment> patientTreatments = treatmentController.getTreatmentsByPatient(chosenPatient);
 
         if (patientTreatments.isEmpty()) {
             System.out.println("No treatments found for selected patient.");
@@ -529,7 +489,7 @@ public class TreatmentMaintenanceUI {
         String selectedStatus = statusOptions[choice - 1];
 
         // Get treatments by status from controller
-        CustomADT<String, Treatment> statusTreatments = treatmentController.getTreatmentsByStatus(selectedStatus);
+        OrderedMap<String, Treatment> statusTreatments = treatmentController.getTreatmentsByStatus(selectedStatus);
 
         if (statusTreatments.isEmpty()) {
             System.out.println("No treatments found with status: " + selectedStatus);
@@ -562,7 +522,7 @@ public class TreatmentMaintenanceUI {
     /**
      * Display patients with existing treatments
      */
-    public void displayPatientsWithTreatments(CustomADT<String, Patient> patients) {
+    public void displayPatientsWithTreatments(OrderedMap<String, Patient> patients) {
         if (patients.isEmpty()) {
             System.out.println("\n┌" + "─".repeat(50) + "┐");
             printCenteredTableHeader("NO PATIENTS FOUND", 50);
@@ -771,10 +731,10 @@ public class TreatmentMaintenanceUI {
 
     /**
      * Display a list of treatments with essential information
-     * @param treatments CustomADT of treatments to display
+     * @param treatments OrderedMap of treatments to display
      * @param title Title for the list
      */
-    public void displayTreatmentList(CustomADT<String, Treatment> treatments, String title) {
+    public void displayTreatmentList(OrderedMap<String, Treatment> treatments, String title) {
         if (treatments.isEmpty()) {
             System.out.println("No treatments found.");
             return;
@@ -823,7 +783,7 @@ public class TreatmentMaintenanceUI {
     /**
      * Helper method to view details of a selected treatment from a list
      */
-    public void viewSelectedTreatmentDetails(CustomADT<String, Treatment> treatments) {
+    public void viewSelectedTreatmentDetails(OrderedMap<String, Treatment> treatments) {
         if (treatments.isEmpty()) {
             System.out.println("No treatments available.");
             return;
@@ -842,7 +802,7 @@ public class TreatmentMaintenanceUI {
     /**
      * Helper method to update a selected treatment from a list
      */
-    public void updateSelectedTreatment(CustomADT<String, Treatment> treatments) {
+    public void updateSelectedTreatment(OrderedMap<String, Treatment> treatments) {
         if (treatments.isEmpty()) {
             System.out.println("No treatments available.");
             return;
@@ -965,7 +925,6 @@ public class TreatmentMaintenanceUI {
         Treatment treatment = treatmentController.processNextEmergency();
 
         if (treatment != null) {
-            System.out.println("\n┌" + "─".repeat(60) + "┐");
             printCenteredTableHeader("✅ EMERGENCY PROCESSED", 59);
             System.out.println("├" + "─".repeat(60) + "┤");
             System.out.println("│ 🚨 Emergency treatment processed successfully!             │");
@@ -1037,7 +996,7 @@ public class TreatmentMaintenanceUI {
         System.out.println("         RECENT ACTIVITIES");
         System.out.println("=".repeat(50));
 
-        CustomADT<String, String> recents = treatmentController.getRecentTreatments();
+        OrderedMap<String, String> recents = treatmentController.getRecentTreatments();
 
         if (recents.isEmpty()) {
             System.out.println("No recent treatment activities found.");
@@ -1078,7 +1037,7 @@ public class TreatmentMaintenanceUI {
      */
     public void displayProcessingStatistics() {
         // Get all treatments for analysis
-        CustomADT<String, Treatment> allTreatments = treatmentController.getAllTreatments();
+        OrderedMap<String, Treatment> allTreatments = treatmentController.getAllTreatments();
 
         if (allTreatments.isEmpty()) {
             System.out.println("\n┌" + "─".repeat(50) + "┐");
@@ -1112,7 +1071,7 @@ public class TreatmentMaintenanceUI {
     /**
      * Build processing statistics report with table formatting for display
      */
-    private StringBuilder buildProcessingStatisticsReport(CustomADT<String, Treatment> allTreatments) {
+    private StringBuilder buildProcessingStatisticsReport(OrderedMap<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
 
         // Count treatments by various criteria
@@ -1151,7 +1110,7 @@ public class TreatmentMaintenanceUI {
                 (double) completedCount / allTreatments.size() * 100 : 0;
 
         // Get recent activities count
-        CustomADT<String, String> recentActivities = treatmentController.getRecentTreatments();
+        OrderedMap<String, String> recentActivities = treatmentController.getRecentTreatments();
 
         // Build formatted report
         report.append("\n┌").append("─".repeat(60)).append("┐\n");
@@ -1181,7 +1140,7 @@ public class TreatmentMaintenanceUI {
 
         // Priority Breakdown Section
         report.append("├").append("─".repeat(60)).append("┤\n");
-        report.append("│").append(centerText("⚠️ PRIORITY BREAKDOWN", 61)).append("│\n");
+        report.append("│").append(centerText("⚠️ PRIORITY BREAKDOWN", 60)).append("│\n");
         report.append("├").append("─".repeat(60)).append("┤\n");
         report.append(String.format("│ %-30s : %25d │\n", "Critical Treatments", criticalCount));
         report.append(String.format("│ %-30s : %25d │\n", "Non-Critical Treatments", allTreatments.size() - criticalCount));
@@ -1195,7 +1154,7 @@ public class TreatmentMaintenanceUI {
             report.append("├").append("─".repeat(70)).append("┤\n");
 
             if (criticalCount > 0) {
-                report.append(String.format("│ ⚠️  ATTENTION: %-54s │\n",
+                report.append(String.format("│ ⚠️  ATTENTION: %-53s │\n",
                         criticalCount + " critical treatments require immediate attention."));
             }
 
@@ -1273,7 +1232,7 @@ public class TreatmentMaintenanceUI {
     /**
      * Build plain text version of processing statistics report for file export
      */
-    private StringBuilder buildPlainProcessingStatisticsReport(CustomADT<String, Treatment> allTreatments) {
+    private StringBuilder buildPlainProcessingStatisticsReport(OrderedMap<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
 
         // Count treatments by various criteria
@@ -1309,7 +1268,7 @@ public class TreatmentMaintenanceUI {
         double emergencyPercentage = allTreatments.size() > 0 ?
                 (double) emergencyCount / allTreatments.size() * 100 : 0;
 
-        CustomADT<String, String> recentActivities = treatmentController.getRecentTreatments();
+        OrderedMap<String, String> recentActivities = treatmentController.getRecentTreatments();
 
         // Build plain text report
         report.append("TREATMENT PROCESSING STATISTICS REPORT\n");
@@ -1357,7 +1316,7 @@ public class TreatmentMaintenanceUI {
 
         while (true) {
             // Display available procedures
-            CustomADT<String, Procedure> availableProcedures = getAvailableProcedures();
+            OrderedMap<String, Procedure> availableProcedures = getAvailableProcedures();
 
             if (availableProcedures.isEmpty()) {
                 System.out.println("No procedures available to add.");
@@ -1417,7 +1376,7 @@ public class TreatmentMaintenanceUI {
 
             // Add medicines to prescription
             while (true) {
-                CustomADT<String, Medicine> availableMedicines = pharmacyController.getMedicineMap();
+                OrderedMap<String, Medicine> availableMedicines = pharmacyController.getMedicineMap();
                 if (availableMedicines.isEmpty()) {
                     System.out.println("No medicines available.");
                     break;
@@ -1474,14 +1433,14 @@ public class TreatmentMaintenanceUI {
     /**
      * Get available procedures from the initialized data
      */
-    private CustomADT<String, Procedure> getAvailableProcedures() {
+    private OrderedMap<String, Procedure> getAvailableProcedures() {
         return treatmentController.getAllAvailableProcedures();
     }
 
     /**
      * Display procedure selection list in a compact format
      */
-    private void displayProcedureSelectionList(CustomADT<String, Procedure> procedures) {
+    private void displayProcedureSelectionList(OrderedMap<String, Procedure> procedures) {
         System.out.println("┌" + "─".repeat(70) + "┐");
         System.out.println("│" + " ".repeat(25) + "AVAILABLE PROCEDURES" + " ".repeat(25) + "│");
         System.out.println("├" + "─".repeat(70) + "┤");
@@ -1525,7 +1484,7 @@ public class TreatmentMaintenanceUI {
     /**
      * Display medicine list
      */
-    private void displayMedicineList(CustomADT<String, Medicine> medicines) {
+    private void displayMedicineList(OrderedMap<String, Medicine> medicines) {
         System.out.println("┌" + "─".repeat(70) + "┐");
         System.out.println("│" + " ".repeat(25) + "MEDICINES" + " ".repeat(36) + "│");
         System.out.println("├" + "─".repeat(70) + "┤");
@@ -1712,7 +1671,7 @@ public class TreatmentMaintenanceUI {
      * Generate patient treatment summary report using StringBuilder
      */
     private void generatePatientTreatmentSummary() {
-        CustomADT<String, Treatment> allTreatments = treatmentController.getAllTreatments();
+        OrderedMap<String, Treatment> allTreatments = treatmentController.getAllTreatments();
 
         if (allTreatments.isEmpty()) {
             System.out.println("\n┌" + "─".repeat(50) + "┐");
@@ -1746,12 +1705,12 @@ public class TreatmentMaintenanceUI {
     /**
      * Build patient treatment summary report with table formatting for display
      */
-    private StringBuilder buildPatientTreatmentSummaryReport(CustomADT<String, Treatment> allTreatments) {
+    private StringBuilder buildPatientTreatmentSummaryReport(OrderedMap<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
 
         // Group treatments by patient using a separate ADT to track patient IDs
-        CustomADT<String, CustomADT<String, Treatment>> patientTreatments = new CustomADT<>();
-        CustomADT<String, String> patientIds = new CustomADT<>(); // Track unique patient IDs
+        OrderedMap<String, OrderedMap<String, Treatment>> patientTreatments = new OrderedMap<>();
+        OrderedMap<String, String> patientIds = new OrderedMap<>(); // Track unique patient IDs
 
         // Iterate through all treatments and group by patient
         for (Treatment treatment : allTreatments) {
@@ -1762,7 +1721,7 @@ public class TreatmentMaintenanceUI {
                 patientIds.put(patientId, patientId);
 
                 if (!patientTreatments.containsKey(patientId)) {
-                    patientTreatments.put(patientId, new CustomADT<>());
+                    patientTreatments.put(patientId, new OrderedMap<>());
                 }
 
                 patientTreatments.get(patientId).put(treatment.getTreatmentID(), treatment);
@@ -1777,7 +1736,7 @@ public class TreatmentMaintenanceUI {
 
         // Iterate through patient IDs
         for (String patientId : patientIds) {
-            CustomADT<String, Treatment> treatments = patientTreatments.get(patientId);
+            OrderedMap<String, Treatment> treatments = patientTreatments.get(patientId);
             if (treatments != null && !treatments.isEmpty()) {
                 Treatment firstTreatment = treatments.get(0);
 
@@ -1825,12 +1784,12 @@ public class TreatmentMaintenanceUI {
     /**
      * Build plain text version of patient treatment summary report for file export
      */
-    private StringBuilder buildPlainPatientTreatmentSummaryReport(CustomADT<String, Treatment> allTreatments) {
+    private StringBuilder buildPlainPatientTreatmentSummaryReport(OrderedMap<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
 
         // Group treatments by patient
-        CustomADT<String, CustomADT<String, Treatment>> patientTreatments = new CustomADT<>();
-        CustomADT<String, String> patientIds = new CustomADT<>();
+        OrderedMap<String, OrderedMap<String, Treatment>> patientTreatments = new OrderedMap<>();
+        OrderedMap<String, String> patientIds = new OrderedMap<>();
 
         for (Treatment treatment : allTreatments) {
             if (treatment.getPatient() != null) {
@@ -1838,7 +1797,7 @@ public class TreatmentMaintenanceUI {
                 patientIds.put(patientId, patientId);
 
                 if (!patientTreatments.containsKey(patientId)) {
-                    patientTreatments.put(patientId, new CustomADT<>());
+                    patientTreatments.put(patientId, new OrderedMap<>());
                 }
 
                 patientTreatments.get(patientId).put(treatment.getTreatmentID(), treatment);
@@ -1849,7 +1808,7 @@ public class TreatmentMaintenanceUI {
         report.append("================================\n\n");
 
         for (String patientId : patientIds) {
-            CustomADT<String, Treatment> treatments = patientTreatments.get(patientId);
+            OrderedMap<String, Treatment> treatments = patientTreatments.get(patientId);
             if (treatments != null && !treatments.isEmpty()) {
                 Treatment firstTreatment = treatments.get(0);
 
@@ -1894,7 +1853,7 @@ public class TreatmentMaintenanceUI {
      * Generate financial summary report using StringBuilder
      */
     private void generateFinancialSummaryReport() {
-        CustomADT<String, Treatment> allTreatments = treatmentController.getAllTreatments();
+        OrderedMap<String, Treatment> allTreatments = treatmentController.getAllTreatments();
 
         if (allTreatments.isEmpty()) {
             System.out.println("\n┌" + "─".repeat(50) + "┐");
@@ -1928,7 +1887,7 @@ public class TreatmentMaintenanceUI {
     /**
      * Build financial summary report with table formatting for display
      */
-    private StringBuilder buildFinancialSummaryReport(CustomADT<String, Treatment> allTreatments) {
+    private StringBuilder buildFinancialSummaryReport(OrderedMap<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
 
         // Financial calculations
@@ -1939,8 +1898,8 @@ public class TreatmentMaintenanceUI {
         double highestTreatmentCost = 0.0;
         double lowestTreatmentCost = Double.MAX_VALUE;
 
-        CustomADT<String, Double> monthlyRevenue = new CustomADT<>();
-        CustomADT<String, Integer> treatmentsByType = new CustomADT<>();
+        OrderedMap<String, Double> monthlyRevenue = new OrderedMap<>();
+        OrderedMap<String, Integer> treatmentsByType = new OrderedMap<>();
 
         int totalTreatments = 0;
         int completedTreatments = 0;
@@ -2034,7 +1993,7 @@ public class TreatmentMaintenanceUI {
         report.append("├").append("─".repeat(90)).append("┤\n");
 
         // Create a list to track unique treatment types
-        CustomADT<String, String> uniqueTypes = new CustomADT<>();
+        OrderedMap<String, String> uniqueTypes = new OrderedMap<>();
         for (Treatment treatment : allTreatments) {
             if (treatment != null && treatment.getType() != null) {
                 uniqueTypes.put(treatment.getType(), treatment.getType());
@@ -2061,7 +2020,7 @@ public class TreatmentMaintenanceUI {
     /**
      * Build plain text version of financial summary report for file export
      */
-    private StringBuilder buildPlainFinancialSummaryReport(CustomADT<String, Treatment> allTreatments) {
+    private StringBuilder buildPlainFinancialSummaryReport(OrderedMap<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
 
         // Financial calculations (same as above but simplified output)
@@ -2072,7 +2031,7 @@ public class TreatmentMaintenanceUI {
         double highestTreatmentCost = 0.0;
         double lowestTreatmentCost = Double.MAX_VALUE;
 
-        CustomADT<String, Integer> treatmentsByType = new CustomADT<>();
+        OrderedMap<String, Integer> treatmentsByType = new OrderedMap<>();
 
         int totalTreatments = 0;
         int completedTreatments = 0;
@@ -2143,7 +2102,7 @@ public class TreatmentMaintenanceUI {
         report.append("-------------------------\n");
 
         // Create a list to track unique treatment types
-        CustomADT<String, String> uniqueTypes = new CustomADT<>();
+        OrderedMap<String, String> uniqueTypes = new OrderedMap<>();
         for (Treatment treatment : allTreatments) {
             if (treatment != null && treatment.getType() != null) {
                 uniqueTypes.put(treatment.getType(), treatment.getType());
@@ -2230,7 +2189,7 @@ public class TreatmentMaintenanceUI {
             return;
         }
 
-        CustomADT<String, Treatment> results = treatmentController.searchTreatmentsByPatientName(patientName);
+        OrderedMap<String, Treatment> results = treatmentController.searchTreatmentsByPatientName(patientName);
 
         if (results.isEmpty()) {
             System.out.println("No treatments found for patient name containing: " + patientName);
@@ -2264,7 +2223,7 @@ public class TreatmentMaintenanceUI {
                 return;
             }
 
-            CustomADT<String, Treatment> results = treatmentController.getTreatmentsByDateRange(startDate, endDate);
+            OrderedMap<String, Treatment> results = treatmentController.getTreatmentsByDateRange(startDate, endDate);
 
             if (results.isEmpty()) {
                 System.out.println("No treatments found in the specified date range.");
@@ -2295,7 +2254,7 @@ public class TreatmentMaintenanceUI {
             return;
         }
 
-        CustomADT<String, Treatment> results = treatmentController.searchTreatmentByNotes(keyword);
+        OrderedMap<String, Treatment> results = treatmentController.searchTreatmentByNotes(keyword);
 
         if (results.isEmpty()) {
             System.out.println("No treatments found with notes containing: " + keyword);
@@ -2322,7 +2281,7 @@ public class TreatmentMaintenanceUI {
             return;
         }
 
-        CustomADT<String, Treatment> results = treatmentController.searchTreatmentsByProcedure(procedureName);
+        OrderedMap<String, Treatment> results = treatmentController.searchTreatmentsByProcedure(procedureName);
 
         if (results.isEmpty()) {
             System.out.println("No treatments found with procedure containing: " + procedureName);
@@ -2345,7 +2304,7 @@ public class TreatmentMaintenanceUI {
 
         boolean ascending = InputHandler.getYesNo("Sort in ascending order? (No for descending)");
 
-        CustomADT<String, Treatment> sortedTreatments = treatmentController.sortTreatmentsByDate(ascending);
+        OrderedMap<String, Treatment> sortedTreatments = treatmentController.sortTreatmentsByDate(ascending);
 
         if (sortedTreatments.isEmpty()) {
             System.out.println("No treatments available to sort.");
@@ -2369,7 +2328,7 @@ public class TreatmentMaintenanceUI {
 
         boolean ascending = InputHandler.getYesNo("Sort in ascending order? (No for descending)");
 
-        CustomADT<String, Treatment> sortedTreatments = treatmentController.sortTreatmentsByPatientName(ascending);
+        OrderedMap<String, Treatment> sortedTreatments = treatmentController.sortTreatmentsByPatientName(ascending);
 
         if (sortedTreatments.isEmpty()) {
             System.out.println("No treatments available to sort.");
@@ -2393,7 +2352,7 @@ public class TreatmentMaintenanceUI {
 
         boolean ascending = InputHandler.getYesNo("Sort in ascending order? (No for descending)");
 
-        CustomADT<String, Treatment> sortedTreatments = treatmentController.sortTreatmentsByStatus(ascending);
+        OrderedMap<String, Treatment> sortedTreatments = treatmentController.sortTreatmentsByStatus(ascending);
 
         if (sortedTreatments.isEmpty()) {
             System.out.println("No treatments available to sort.");
@@ -2417,7 +2376,7 @@ public class TreatmentMaintenanceUI {
 
         boolean criticalFirst = InputHandler.getYesNo("Show critical treatments first? (No for regular first)");
 
-        CustomADT<String, Treatment> sortedTreatments = treatmentController.sortTreatmentsByCriticalPriority(criticalFirst);
+        OrderedMap<String, Treatment> sortedTreatments = treatmentController.sortTreatmentsByCriticalPriority(criticalFirst);
 
         if (sortedTreatments.isEmpty()) {
             System.out.println("No treatments available to sort.");

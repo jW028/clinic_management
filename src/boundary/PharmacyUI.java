@@ -1,6 +1,6 @@
 package boundary;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import control.PharmacyMaintenance;
 import entity.*;
 import java.time.LocalDateTime;
@@ -70,7 +70,7 @@ public class PharmacyUI {
             System.out.println("├─────┬──────────┬────────────────┬──────────┬───────────┬────────────────────────────────┤");
             System.out.println("│ No. │ ID       │ Name           │ Quantity │ Price(RM) │ Description                    │");
             System.out.println("├─────┼──────────┼────────────────┼──────────┼───────────┼────────────────────────────────┤");
-            CustomADT<String, Medicine> medicines = pharmacyMaintenance.getMedicineMap();
+            OrderedMap<String, Medicine> medicines = pharmacyMaintenance.getMedicineMap();
             int descWidth = 30;
             for (Medicine med : medicines) {
                 String[] descLines = wrapText(med.getDescription(), descWidth);
@@ -243,9 +243,9 @@ public class PharmacyUI {
 
         int choice = 0;
         do{
-            CustomADT<String, Prescription> pendingQueue = pharmacyMaintenance.getPendingPrescriptionMap();
-            CustomADT<String, Prescription> completedList = pharmacyMaintenance.getCompletedPrescriptionMap();
-            CustomADT<String, Prescription> rejectedList = pharmacyMaintenance.getRejectedPrescriptionMap();
+            OrderedMap<String, Prescription> pendingQueue = pharmacyMaintenance.getPendingPrescriptionMap();
+            OrderedMap<String, Prescription> completedList = pharmacyMaintenance.getCompletedPrescriptionMap();
+            OrderedMap<String, Prescription> rejectedList = pharmacyMaintenance.getRejectedPrescriptionMap();
             System.out.println("┌─────────────────────────────────────────────────────────────────────────────────────────┐");
             printCenteredText("Pending Prescriptions");
             System.out.println("├─────┬───────────────┬──────────────┬──────────────────┬───────────────────┬─────────────┤");
@@ -515,7 +515,7 @@ public class PharmacyUI {
     }
 
     public void viewAllTransactions() {
-        CustomADT<String, Transaction> transactionMap = pharmacyMaintenance.getTransactionMap();
+        OrderedMap<String, Transaction> transactionMap = pharmacyMaintenance.getTransactionMap();
         if (transactionMap.isEmpty()) {
             System.out.println("No transactions found.");
             return;
@@ -530,7 +530,7 @@ public class PharmacyUI {
             String transId = transaction.getTransactionID();
             LocalDateTime date = transaction.getDate();
             String patientId = transaction.getPatientId(); // Adjust if you get patient differently
-            CustomADT<String, PrescribedMedicine> meds = transaction.getMedicines();
+            OrderedMap<String, PrescribedMedicine> meds = transaction.getMedicines();
             boolean firstLine = true;
             for (int j = 0; j < meds.size(); j++) {
                 PrescribedMedicine pm = meds.get(j);
@@ -580,7 +580,7 @@ public class PharmacyUI {
         System.out.println("Patient ID: " + transaction.getPatientId());
         System.out.println("Medicines:");
 
-        CustomADT<String, PrescribedMedicine> medicines = transaction.getMedicines();
+        OrderedMap<String, PrescribedMedicine> medicines = transaction.getMedicines();
         for (int i = 0; i < medicines.size(); i++) {
             PrescribedMedicine pm = medicines.get(i);
             Medicine med = pm.getMedicine();
@@ -621,7 +621,7 @@ public class PharmacyUI {
         report.append("├─────┼──────────┼────────────────┼──────────┼───────────┼────────────────────────────────┤\n");
         // Insertion sort by quantity ascending
         // Medicine[] sortedMedicines = pharmacyMaintenance.sortMedicinesByQuantityAscending(medicines);
-        CustomADT<String, Medicine> medicineMap = pharmacyMaintenance.getMedicineMap();
+        OrderedMap<String, Medicine> medicineMap = pharmacyMaintenance.getMedicineMap();
         pharmacyMaintenance.sortMedicinesByStock();
         int count = 1;
         int totalStock = 0;
@@ -694,9 +694,9 @@ public class PharmacyUI {
         double totalSales = 0.0;
         boolean found = false;
         int totalMedicinesSold = 0;
-        CustomADT<String, Transaction> transactionInMonth = pharmacyMaintenance.getTransactionsInMonth(year, month);
+        OrderedMap<String, Transaction> transactionInMonth = pharmacyMaintenance.getTransactionsInMonth(year, month);
         for (Transaction transaction : transactionInMonth) {
-            CustomADT<String, PrescribedMedicine> medicines = transaction.getMedicines();
+            OrderedMap<String, PrescribedMedicine> medicines = transaction.getMedicines();
             for (int i = 0; i < medicines.size(); i++) {
                 PrescribedMedicine pm = medicines.get(i);
                 Medicine med = pm.getMedicine();
@@ -764,7 +764,7 @@ public class PharmacyUI {
         System.out.print("Enter medicine name to search: ");
         String name = scanner.nextLine();
 
-        CustomADT<String, Medicine> results = pharmacyMaintenance.searchMedicinesByName(name.toUpperCase());
+        OrderedMap<String, Medicine> results = pharmacyMaintenance.searchMedicinesByName(name.toUpperCase());
         if (results.isEmpty()) {
             System.out.println("No medicines found matching the name: " + name);
             System.out.println("Press Enter to continue ...");
@@ -826,7 +826,7 @@ public class PharmacyUI {
             System.out.println("├─────┬──────────┬────────────────┬──────────┬───────────┬────────────────────────────────┤");
             System.out.println("│ No. │ ID       │ Name           │ Quantity │ Price(RM) │ Description                    │");
             System.out.println("├─────┼──────────┼────────────────┼──────────┼───────────┼────────────────────────────────┤");
-            CustomADT<String, Medicine> lowStockMedicines = pharmacyMaintenance.getLowStockMedicines();
+            OrderedMap<String, Medicine> lowStockMedicines = pharmacyMaintenance.getLowStockMedicines();
             if (lowStockMedicines.isEmpty()) {
                 printCenteredText("No low stock medicines found.");
                 System.out.println("└─────┴──────────┴────────────────┴──────────┴───────────┴────────────────────────────────┘");

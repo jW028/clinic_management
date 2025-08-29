@@ -1,14 +1,14 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.Medicine;
 import entity.Prescription;
 
 public class PrescriptionInitializer {
     public static void main(String[] args) {
-        CustomADT<String, Prescription> pendingPrescriptionQueue = new CustomADT<>();
-        CustomADT<String, Prescription> processedPrescriptionList = new CustomADT<>();
-        CustomADT<String, Medicine> medicationMap = new CustomADT<>();
+        OrderedMap<String, Prescription> pendingPrescriptionQueue = new OrderedMap<>();
+        OrderedMap<String, Prescription> processedPrescriptionList = new OrderedMap<>();
+        OrderedMap<String, Medicine> medicationMap = new OrderedMap<>();
         MedicineDAO medicineDAO = new MedicineDAO();
         medicationMap = medicineDAO.retrieveFromFile();
 

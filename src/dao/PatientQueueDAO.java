@@ -1,6 +1,6 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.Patient;
 
 import java.io.*;
@@ -20,7 +20,7 @@ public class PatientQueueDAO {
         }
     }
 
-    public void saveToFile(CustomADT<String, Patient> patients) {
+    public void saveToFile(OrderedMap<String, Patient> patients) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName))){
             oos.writeObject(patients);
         } catch (IOException e){
@@ -29,10 +29,10 @@ public class PatientQueueDAO {
         }
     }
 
-    public CustomADT<String, Patient> retrieveFromFile() {
-        CustomADT<String, Patient> patients = new CustomADT<>();
+    public OrderedMap<String, Patient> retrieveFromFile() {
+        OrderedMap<String, Patient> patients = new OrderedMap<>();
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName))) {
-            patients = (CustomADT<String, Patient>) ois.readObject();
+            patients = (OrderedMap<String, Patient>) ois.readObject();
         } catch (FileNotFoundException e) {
             System.out.println("File not found: " + fileName);
         } catch (IOException | ClassNotFoundException e) {

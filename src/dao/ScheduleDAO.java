@@ -1,6 +1,6 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.Schedule;
 import java.io.*;
 
@@ -11,7 +11,7 @@ public class ScheduleDAO {
         this.fileName = "src/data/schedules.dat";
     }
 
-    public void saveToFile(CustomADT<String, Schedule> schedules) {
+    public void saveToFile(OrderedMap<String, Schedule> schedules) {
         try {
             // Ensure the directory exists
             File file = new File(fileName);
@@ -25,11 +25,11 @@ public class ScheduleDAO {
         }
     }
 
-    public CustomADT<String, Schedule> retrieveFromFile() {
-        CustomADT<String, Schedule> schedules = new CustomADT<>();
+    public OrderedMap<String, Schedule> retrieveFromFile() {
+        OrderedMap<String, Schedule> schedules = new OrderedMap<>();
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName))) {
             @SuppressWarnings("unchecked")
-            CustomADT<String, Schedule> loadedSchedules = (CustomADT<String, Schedule>) ois.readObject();
+            OrderedMap<String, Schedule> loadedSchedules = (OrderedMap<String, Schedule>) ois.readObject();
             schedules = loadedSchedules;
             System.out.println("Schedules loaded successfully from: " + fileName);
         } catch (IOException | ClassNotFoundException e) {

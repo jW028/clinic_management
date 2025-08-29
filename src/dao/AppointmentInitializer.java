@@ -1,12 +1,12 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.Appointment;
 import java.time.LocalDateTime;
 
 public class AppointmentInitializer {
     public static void main(String[] args) {
-        CustomADT<String, Appointment> appointmentMap = new CustomADT<>();
+        OrderedMap<String, Appointment> appointmentMap = new OrderedMap<>();
 
         appointmentMap.put("A001", new Appointment("A001", "P001", "DC001", LocalDateTime.of(2025, 8, 1, 9, 0), "Scheduled", "walk-in"));
         appointmentMap.put("A002", new Appointment("A002", "P002", "DC002", LocalDateTime.of(2025, 8, 1, 9, 30), "Completed", "appointment"));

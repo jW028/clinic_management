@@ -1,11 +1,11 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.ConsultationService;
 
 public class ConsultationServiceInitializer {
     public static void main(String[] args) {
-        CustomADT<String, ConsultationService> serviceMap = new CustomADT<>();
+        OrderedMap<String, ConsultationService> serviceMap = new OrderedMap<>();
         serviceMap.put("S001", new ConsultationService("S001", "Blood Test", 50.0));
         serviceMap.put("S002", new ConsultationService("S002", "X-Ray", 100.0));
         serviceMap.put("S003", new ConsultationService("S003", "ECG", 150.0));

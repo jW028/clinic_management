@@ -1,6 +1,6 @@
 package boundary;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import control.ConsultationMaintenance;
 import control.PatientMaintenance;
 import control.PaymentMaintenance;
@@ -209,7 +209,7 @@ public class StudentUI {
 
     private void viewVisitHistory() {
         System.out.println("\n--- Visit History ---");
-        CustomADT<String, VisitHistory> visits = patientMaintenance.getPatientVisitHistory(currentPatient.getPatientId());
+        OrderedMap<String, VisitHistory> visits = patientMaintenance.getPatientVisitHistory(currentPatient.getPatientId());
         if (visits.size() == 0) {
             System.out.println("No visit history.");
             return;
@@ -230,7 +230,7 @@ public class StudentUI {
         }
         System.out.println("└────┴───────────────┴───────────────┴────────────────────┴────────────┘");
 
-        CustomADT<String, Consultation> consults = patientMaintenance.getConsultationsByPatient(currentPatient.getPatientId());
+        OrderedMap<String, Consultation> consults = patientMaintenance.getConsultationsByPatient(currentPatient.getPatientId());
         if (consults.size() == 0) {
             System.out.println("No consultation history.");
         } else {
@@ -258,7 +258,7 @@ public class StudentUI {
         System.out.println("\n=== Treatment Bills & Payment ===");
         
         // Get all treatments for the current patient
-        CustomADT<String, Treatment> patientTreatments = treatmentMaintenance.getTreatmentsByPatient(currentPatient);
+        OrderedMap<String, Treatment> patientTreatments = treatmentMaintenance.getTreatmentsByPatient(currentPatient);
         
         if (patientTreatments.size() == 0) {
             System.out.println("No treatments found for your account.");
@@ -266,7 +266,7 @@ public class StudentUI {
         }
         
         // Filter for completed treatments that need payment
-        CustomADT<String, Treatment> unpaidTreatments = new CustomADT<>();
+        OrderedMap<String, Treatment> unpaidTreatments = new OrderedMap<>();
         for (Treatment treatment : patientTreatments.toArray(new Treatment[0])) {
             if ("COMPLETED".equals(treatment.getStatus())) {
                 // Check if payment exists and is not completed
@@ -342,7 +342,7 @@ public class StudentUI {
         System.out.println("│ Service                 │ Amount (RM)  │");
         System.out.println("├─────────────────────────┼──────────────┤");
         
-        CustomADT<String, Double> breakdown = payment.getPaymentBreakdown();
+        OrderedMap<String, Double> breakdown = payment.getPaymentBreakdown();
         double total = 0.0;
         
         // Iterate through breakdown items

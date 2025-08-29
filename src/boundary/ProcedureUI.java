@@ -2,7 +2,7 @@
  *@author Tan Jin Wei
  */
 package boundary;
-import adt.CustomADT;
+import adt.OrderedMap;
 import control.ProcedureMaintenance;
 import entity.Procedure;
 import utility.InputHandler;
@@ -98,7 +98,7 @@ public class ProcedureUI {
     private void viewAllProcedures() {
         System.out.println("\n--- ALL PROCEDURES ---");
         
-        CustomADT<String, Procedure> allProcedures = procedureMaintenance.getAllProcedures();
+        OrderedMap<String, Procedure> allProcedures = procedureMaintenance.getAllProcedures();
         
         if (allProcedures.isEmpty()) {
             System.out.println("No procedures found.");

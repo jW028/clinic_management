@@ -1,6 +1,10 @@
+/**
+ * @author Lim Xin Hui
+ */
+
 package control;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import dao.ScheduleDAO;
 import entity.Schedule;
 import utility.IDGenerator;
@@ -11,7 +15,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class ScheduleMaintenance {
-    private CustomADT<String, Schedule> scheduleList;
+    private OrderedMap<String, Schedule> scheduleList;
     private final ScheduleDAO scheduleDAO;
 
     public ScheduleMaintenance() {
@@ -63,8 +67,8 @@ public class ScheduleMaintenance {
     }
 
     // List all schedules
-    public CustomADT<Integer, Schedule> getAllSchedules() {
-        CustomADT<Integer, Schedule> result = new CustomADT<>();
+    public OrderedMap<Integer, Schedule> getAllSchedules() {
+        OrderedMap<Integer, Schedule> result = new OrderedMap<>();
         for (int i = 0; i < scheduleList.size(); i++) {
             result.put(i, scheduleList.get(i));
         }
@@ -72,8 +76,8 @@ public class ScheduleMaintenance {
     }
 
     // By date
-    public CustomADT<Integer, Schedule> getSchedulesByDate(String date) {
-        CustomADT<Integer, Schedule> result = new CustomADT<>();
+    public OrderedMap<Integer, Schedule> getSchedulesByDate(String date) {
+        OrderedMap<Integer, Schedule> result = new OrderedMap<>();
         int idx = 0;
         for (int i = 0; i < scheduleList.size(); i++) {
             Schedule s = scheduleList.get(i);
@@ -85,8 +89,8 @@ public class ScheduleMaintenance {
     }
 
     // By doctor
-    public CustomADT<Integer, Schedule> getSchedulesByDoctor(String doctorID) {
-        CustomADT<Integer, Schedule> result = new CustomADT<>();
+    public OrderedMap<Integer, Schedule> getSchedulesByDoctor(String doctorID) {
+        OrderedMap<Integer, Schedule> result = new OrderedMap<>();
         int idx = 0;
         for (int i = 0; i < scheduleList.size(); i++) {
             Schedule s = scheduleList.get(i);
@@ -96,8 +100,8 @@ public class ScheduleMaintenance {
         }
         return result;
     }
-    public CustomADT<Integer, String> getDoctorIDsByDate(String date) {
-        CustomADT<Integer, String> doctorIDs = new CustomADT<>();
+    public OrderedMap<Integer, String> getDoctorIDsByDate(String date) {
+        OrderedMap<Integer, String> doctorIDs = new OrderedMap<>();
         int idx = 0;
         for (int i = 0; i < scheduleList.size(); i++) {
             Schedule s = scheduleList.get(i);
@@ -108,15 +112,15 @@ public class ScheduleMaintenance {
         return doctorIDs;
     }
 
-    private boolean containsIgnoreCase(CustomADT<Integer, String> adt, String value) {
+    private boolean containsIgnoreCase(OrderedMap<Integer, String> adt, String value) {
         for (int i = 0; i < adt.size(); i++) {
             if (adt.get(i).equalsIgnoreCase(value)) return true;
         }
         return false;
     }
     // By date and doctor
-    public CustomADT<Integer, Schedule> getSchedulesByDateAndDoctor(String date, String doctorID) {
-        CustomADT<Integer, Schedule> result = new CustomADT<>();
+    public OrderedMap<Integer, Schedule> getSchedulesByDateAndDoctor(String date, String doctorID) {
+        OrderedMap<Integer, Schedule> result = new OrderedMap<>();
         int idx = 0;
         for (int i = 0; i < scheduleList.size(); i++) {
             Schedule s = scheduleList.get(i);
@@ -128,9 +132,9 @@ public class ScheduleMaintenance {
     }
 
     // By status
-    public CustomADT<Integer, Schedule> getSchedulesByStatus(String statusStr) {
+    public OrderedMap<Integer, Schedule> getSchedulesByStatus(String statusStr) {
         boolean status = statusStr.equalsIgnoreCase("true");
-        CustomADT<Integer, Schedule> result = new CustomADT<>();
+        OrderedMap<Integer, Schedule> result = new OrderedMap<>();
         int idx = 0;
         for (int i = 0; i < scheduleList.size(); i++) {
             Schedule s = scheduleList.get(i);
@@ -142,9 +146,9 @@ public class ScheduleMaintenance {
     }
 
     // By status and date
-    public CustomADT<Integer, Schedule> getSchedulesByStatusAndDate(String statusStr, String date) {
+    public OrderedMap<Integer, Schedule> getSchedulesByStatusAndDate(String statusStr, String date) {
         boolean status = statusStr.equalsIgnoreCase("true");
-        CustomADT<Integer, Schedule> result = new CustomADT<>();
+        OrderedMap<Integer, Schedule> result = new OrderedMap<>();
         int idx = 0;
         for (int i = 0; i < scheduleList.size(); i++) {
             Schedule s = scheduleList.get(i);
@@ -156,17 +160,17 @@ public class ScheduleMaintenance {
     }
 
     // Sorting: 1-Date, 2-Doctor, 3-TimeSlot, 4-Status
-    public CustomADT<Integer, Schedule> sortSchedules(CustomADT<Integer, Schedule> schedules, int sortOption) {
+    public OrderedMap<Integer, Schedule> sortSchedules(OrderedMap<Integer, Schedule> schedules, int sortOption) {
         if (sortOption == 0 || schedules.size() <= 1) return schedules;
         return mergeSort(schedules, sortOption);
     }
 
-    private CustomADT<Integer, Schedule> mergeSort(CustomADT<Integer, Schedule> schedules, int sortOption) {
+    private OrderedMap<Integer, Schedule> mergeSort(OrderedMap<Integer, Schedule> schedules, int sortOption) {
         int n = schedules.size();
         if (n <= 1) return schedules;
         int mid = n / 2;
-        CustomADT<Integer, Schedule> left = new CustomADT<>();
-        CustomADT<Integer, Schedule> right = new CustomADT<>();
+        OrderedMap<Integer, Schedule> left = new OrderedMap<>();
+        OrderedMap<Integer, Schedule> right = new OrderedMap<>();
         for (int i = 0; i < mid; i++) left.put(i, schedules.get(i));
         for (int i = mid; i < n; i++) right.put(i - mid, schedules.get(i));
         left = mergeSort(left, sortOption);
@@ -174,8 +178,8 @@ public class ScheduleMaintenance {
         return merge(left, right, sortOption);
     }
 
-    private CustomADT<Integer, Schedule> merge(CustomADT<Integer, Schedule> left, CustomADT<Integer, Schedule> right, int sortOption) {
-        CustomADT<Integer, Schedule> result = new CustomADT<>();
+    private OrderedMap<Integer, Schedule> merge(OrderedMap<Integer, Schedule> left, OrderedMap<Integer, Schedule> right, int sortOption) {
+        OrderedMap<Integer, Schedule> result = new OrderedMap<>();
         int i = 0, j = 0, k = 0;
         while (i < left.size() && j < right.size()) {
             Schedule s1 = left.get(i);
@@ -260,7 +264,7 @@ public class ScheduleMaintenance {
 
     // Assign schedule(s)
     public boolean assignSchedule(String doctorID, String date, String timeSlotInput, boolean available) {
-        CustomADT<Integer, String> validSlots = parseAndValidateTimeSlots(timeSlotInput);
+        OrderedMap<Integer, String> validSlots = parseAndValidateTimeSlots(timeSlotInput);
         if (validSlots == null || validSlots.size() == 0)
             return false;
         boolean allAssigned = true;
@@ -292,8 +296,8 @@ public class ScheduleMaintenance {
         return scheduleList.get(key);
     }
 
-    public CustomADT<Integer, String> getTimeSlotsForDate(String doctorID, String date) {
-        CustomADT<Integer, String> slots = new CustomADT<>();
+    public OrderedMap<Integer, String> getTimeSlotsForDate(String doctorID, String date) {
+        OrderedMap<Integer, String> slots = new OrderedMap<>();
         int idx = 0;
         for (int i = 0; i < scheduleList.size(); i++) {
             Schedule s = scheduleList.get(i);
@@ -332,8 +336,8 @@ public class ScheduleMaintenance {
     }
 
     // Slot parsing and validation
-    public CustomADT<Integer, String> parseAndValidateTimeSlots(String input) {
-        CustomADT<Integer, String> slots = new CustomADT<>();
+    public OrderedMap<Integer, String> parseAndValidateTimeSlots(String input) {
+        OrderedMap<Integer, String> slots = new OrderedMap<>();
         input = input.trim();
 
         // Format 1: HH:mm–HH:mm (en dash)
@@ -437,9 +441,9 @@ public class ScheduleMaintenance {
     private String generateKey(String doctorID, String date, String timeSlot) {
         return doctorID + "_" + date + "_" + timeSlot;
     }
-    public CustomADT<String, Integer> getScheduleCountPerDoctor() {
-        CustomADT<Integer, Schedule> allSchedules = getAllSchedules();
-        CustomADT<String, Integer> countPerDoctor = new CustomADT<>();
+    public OrderedMap<String, Integer> getScheduleCountPerDoctor() {
+        OrderedMap<Integer, Schedule> allSchedules = getAllSchedules();
+        OrderedMap<String, Integer> countPerDoctor = new OrderedMap<>();
         for (int i = 0; i < allSchedules.size(); i++) {
             Schedule s = allSchedules.get(i);
             String docId = s.getDoctorID();
@@ -449,15 +453,15 @@ public class ScheduleMaintenance {
         return countPerDoctor;
     }
 
-    public CustomADT<String, Integer> getScheduleCountByStatus() {
-        CustomADT<Integer, Schedule> allSchedules = getAllSchedules();
+    public OrderedMap<String, Integer> getScheduleCountByStatus() {
+        OrderedMap<Integer, Schedule> allSchedules = getAllSchedules();
         int available = 0, leave = 0;
         for (int i = 0; i < allSchedules.size(); i++) {
             Schedule s = allSchedules.get(i);
             if (s.getStatus()) available++;
             else leave++;
         }
-        CustomADT<String, Integer> statusMap = new CustomADT<>();
+        OrderedMap<String, Integer> statusMap = new OrderedMap<>();
         statusMap.put("Available", available);
         statusMap.put("Leave", leave);
         return statusMap;

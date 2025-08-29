@@ -1,13 +1,13 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.Appointment;
 import java.io.*;
 
 public class AppointmentDAO {
     private final String fileName = "src/data/appointment.dat";
 
-    public void saveToFile(CustomADT<String, Appointment> appointments) {
+    public void saveToFile(OrderedMap<String, Appointment> appointments) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName))) {
             oos.writeObject(appointments);
         } catch (IOException e) {
@@ -16,10 +16,10 @@ public class AppointmentDAO {
         }
     }
 
-    public CustomADT<String, Appointment> retrieveFromFile() {
-        CustomADT<String, Appointment> appointments = new CustomADT<>();
+    public OrderedMap<String, Appointment> retrieveFromFile() {
+        OrderedMap<String, Appointment> appointments = new OrderedMap<>();
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName))) {
-            appointments = (CustomADT<String, Appointment>) ois.readObject();
+            appointments = (OrderedMap<String, Appointment>) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("No existing appointment file found or error reading it. ");
         }

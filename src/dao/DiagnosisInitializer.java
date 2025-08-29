@@ -1,6 +1,6 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.Diagnosis;
 import utility.IDGenerator;
 
@@ -11,8 +11,8 @@ public class DiagnosisInitializer {
     public void initializeDiagnoses() {
         System.out.println("🔧 Initializing diagnosis data...");
         
-        // Create CustomADT to store diagnoses
-        CustomADT<String, Diagnosis> diagnoses = new CustomADT<>();
+        // Create OrderedMap to store diagnoses
+        OrderedMap<String, Diagnosis> diagnoses = new OrderedMap<>();
         
         // Create sample diagnoses
         createSampleDiagnoses(diagnoses);
@@ -24,7 +24,7 @@ public class DiagnosisInitializer {
         System.out.println("📊 Total diagnoses created: " + diagnoses.size());
     }
     
-    private void createSampleDiagnoses(CustomADT<String, Diagnosis> diagnoses) {
+    private void createSampleDiagnoses(OrderedMap<String, Diagnosis> diagnoses) {
         // Common medical diagnoses with varying severities
         
         // Respiratory conditions

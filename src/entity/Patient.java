@@ -1,6 +1,5 @@
 package entity;
 
-import adt.CustomADT;
 import java.io.Serializable;
 
 public class Patient implements Serializable {

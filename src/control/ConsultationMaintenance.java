@@ -1,6 +1,9 @@
+/**
+ * @author Lee Jia Shin
+ */
 package control;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import dao.AppointmentDAO;
 import dao.ConsultationDAO;
 import dao.ConsultationServiceDAO;
@@ -22,13 +25,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 
 public class ConsultationMaintenance {
-    private final CustomADT<String, Consultation> consultationMap;
-    private final CustomADT<String, Patient> patientMap;
-    private final CustomADT<String, Appointment> appointmentMap;
-    private final CustomADT<String, ConsultationService> serviceMap;
-    private final CustomADT<String, Diagnosis> diagnosisMap;
-    private final CustomADT<String, Doctor> doctorMap;
-    private final CustomADT<String, Schedule> scheduleMap;
+    private final OrderedMap<String, Consultation> consultationMap;
+    private final OrderedMap<String, Patient> patientMap;
+    private final OrderedMap<String, Appointment> appointmentMap;
+    private final OrderedMap<String, ConsultationService> serviceMap;
+    private final OrderedMap<String, Diagnosis> diagnosisMap;
+    private final OrderedMap<String, Doctor> doctorMap;
+    private final OrderedMap<String, Schedule> scheduleMap;
 
     private final ConsultationDAO consultationDAO = new ConsultationDAO();
     private final PatientDAO patientDAO = new PatientDAO();
@@ -240,7 +243,7 @@ public class ConsultationMaintenance {
         if (doctorId == null) return new String[0];
 
         // Collect available slots for doctor
-        CustomADT<String, String> slotMap = new CustomADT<>();
+        OrderedMap<String, String> slotMap = new OrderedMap<>();
         int slotCounter = 1;
         for (int i = 0; i < scheduleMap.size(); i++) {
             Schedule sched = scheduleMap.get(i);
@@ -253,8 +256,8 @@ public class ConsultationMaintenance {
     }
 
     // --- Searching and Sorting for Consultations ---
-    public CustomADT<String, Consultation> searchConsultationsByPatientName(String name) {
-        CustomADT<String, Consultation> result = new CustomADT<>();
+    public OrderedMap<String, Consultation> searchConsultationsByPatientName(String name) {
+        OrderedMap<String, Consultation> result = new OrderedMap<>();
         String search = name.toLowerCase();
         for (int i = 0; i < consultationMap.size(); i++) {
             Consultation c = consultationMap.get(i);
@@ -266,8 +269,8 @@ public class ConsultationMaintenance {
         return result;
     }
 
-    public CustomADT<String, Consultation> searchConsultationsByDoctorName(String name) {
-        CustomADT<String, Consultation> result = new CustomADT<>();
+    public OrderedMap<String, Consultation> searchConsultationsByDoctorName(String name) {
+        OrderedMap<String, Consultation> result = new OrderedMap<>();
         String search = name.toLowerCase();
         for (int i = 0; i < consultationMap.size(); i++) {
             Consultation c = consultationMap.get(i);
@@ -296,8 +299,8 @@ public class ConsultationMaintenance {
     }
 
     // --- Searching and Sorting for Appointments ---
-    public CustomADT<String, Appointment> searchAppointmentsByPatientName(String name) {
-        CustomADT<String, Appointment> result = new CustomADT<>();
+    public OrderedMap<String, Appointment> searchAppointmentsByPatientName(String name) {
+        OrderedMap<String, Appointment> result = new OrderedMap<>();
         String search = name.toLowerCase();
         for (int i = 0; i < appointmentMap.size(); i++) {
             Appointment appt = appointmentMap.get(i);
@@ -309,8 +312,8 @@ public class ConsultationMaintenance {
         return result;
     }
 
-    public CustomADT<String, Appointment> searchAppointmentsByDoctorName(String name) {
-        CustomADT<String, Appointment> result = new CustomADT<>();
+    public OrderedMap<String, Appointment> searchAppointmentsByDoctorName(String name) {
+        OrderedMap<String, Appointment> result = new OrderedMap<>();
         String search = name.toLowerCase();
         for (int i = 0; i < appointmentMap.size(); i++) {
             Appointment appt = appointmentMap.get(i);
@@ -376,8 +379,8 @@ public class ConsultationMaintenance {
         }
 
         // By patient
-        CustomADT<String, Integer> byPatient = new CustomADT<>();
-        CustomADT<String, String> patientIds = new CustomADT<>();
+        OrderedMap<String, Integer> byPatient = new OrderedMap<>();
+        OrderedMap<String, String> patientIds = new OrderedMap<>();
 
         for (Consultation c : consultations) {
             String pid = c.getPatient().getPatientId();
@@ -403,7 +406,7 @@ public class ConsultationMaintenance {
                 this.id = id; this.name = name; this.count = count;
             }
         }
-        CustomADT<Integer, PatientRow> rows = new CustomADT<>();
+        OrderedMap<Integer, PatientRow> rows = new OrderedMap<>();
         String[] pidArray = patientIds.toArray(new String[0]);
         for (String pid : pidArray) {
             Patient patient = patientMap.get(pid);
@@ -430,8 +433,8 @@ public class ConsultationMaintenance {
         dash(); blank();
 
         // By doctor
-        CustomADT<String, Integer> byDoctor = new CustomADT<>();
-        CustomADT<String, String> doctorIds = new CustomADT<>();
+        OrderedMap<String, Integer> byDoctor = new OrderedMap<>();
+        OrderedMap<String, String> doctorIds = new OrderedMap<>();
 
         for (Consultation c : consultations) {
             String did = c.getDoctor().getDoctorID();
@@ -457,7 +460,7 @@ public class ConsultationMaintenance {
                 this.id = id; this.name = name; this.count = count;
             }
         }
-        CustomADT<Integer, DoctorRow> doctorRows = new CustomADT<>();
+        OrderedMap<Integer, DoctorRow> doctorRows = new OrderedMap<>();
         String[] didArray = doctorIds.toArray(new String[0]);
         for (String did : didArray) {
             Doctor doctor = doctorMap.get(did);
@@ -506,8 +509,8 @@ public class ConsultationMaintenance {
             return;
         }
 
-        CustomADT<String, Integer> serviceUsage = new CustomADT<>();
-        CustomADT<String, String> serviceIdsADT = new CustomADT<>();
+        OrderedMap<String, Integer> serviceUsage = new OrderedMap<>();
+        OrderedMap<String, String> serviceIdsADT = new OrderedMap<>();
         for (Consultation c : consultations) {
             for (ConsultationService s : c.getServicesUsed().toArray(new ConsultationService[0])) {
                 String sid = s.getServiceId();
@@ -532,7 +535,7 @@ public class ConsultationMaintenance {
             int count;
             ServiceRow(String id, String name, int count) { this.id = id; this.name = name; this.count = count; }
         }
-        CustomADT<Integer, ServiceRow> rows = new CustomADT<>();
+        OrderedMap<Integer, ServiceRow> rows = new OrderedMap<>();
         String[] sidArray = serviceIdsADT.toArray(new String[0]);
         for (String sid : sidArray) {
             ConsultationService service = serviceMap.get(sid);
@@ -587,8 +590,8 @@ public class ConsultationMaintenance {
         }
 
         // Count appointments per doctor
-        CustomADT<String, Integer> byDoctor = new CustomADT<>();
-        CustomADT<String, String> doctorIds = new CustomADT<>();
+        OrderedMap<String, Integer> byDoctor = new OrderedMap<>();
+        OrderedMap<String, String> doctorIds = new OrderedMap<>();
         for (Appointment a : appointments) {
             String did = a.getDoctorId();
             Integer count = byDoctor.get(did);
@@ -611,7 +614,7 @@ public class ConsultationMaintenance {
             int count;
             DoctorRow(String id, String name, int count) { this.id = id; this.name = name; this.count = count; }
         }
-        CustomADT<Integer, DoctorRow> doctorRows = new CustomADT<>();
+        OrderedMap<Integer, DoctorRow> doctorRows = new OrderedMap<>();
         String[] didArray = doctorIds.toArray(new String[0]);
         for (String did : didArray) {
             Doctor doctor = doctorMap.get(did);

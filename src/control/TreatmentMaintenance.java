@@ -4,7 +4,7 @@
 
 package control;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import dao.ProcedureDAO;
 import dao.TreatmentDAO;
 import entity.*;
@@ -13,14 +13,14 @@ import java.util.Comparator;
 import utility.IDGenerator;
 
 public class TreatmentMaintenance {
-    private CustomADT<String, Treatment> treatments;
+    private OrderedMap<String, Treatment> treatments;
 
-    private CustomADT<String, Treatment> emergencyQueue;
-    private CustomADT<String, Treatment> regularQueue;
+    private OrderedMap<String, Treatment> emergencyQueue;
+    private OrderedMap<String, Treatment> regularQueue;
 
-    private CustomADT<String, String> recentTreatments;
-    private CustomADT<String, Prescription> prescriptions;
-    private CustomADT<String, Consultation> consultations;
+    private OrderedMap<String, String> recentTreatments;
+    private OrderedMap<String, Prescription> prescriptions;
+    private OrderedMap<String, Consultation> consultations;
     private final ConsultationMaintenance consultationController;
     private final PharmacyMaintenance prescriptionController;
 
@@ -31,14 +31,14 @@ public class TreatmentMaintenance {
     public TreatmentMaintenance() {
         this.treatmentDAO = new TreatmentDAO();
         this.procedureDAO = new ProcedureDAO();
-        this.treatments = new CustomADT<>();
+        this.treatments = new OrderedMap<>();
         this.paymentMaintenance = PaymentMaintenance.getInstance();
-        this.emergencyQueue = new CustomADT<>();
-        this.regularQueue = new CustomADT<>();
-        this.recentTreatments = new CustomADT<>();
+        this.emergencyQueue = new OrderedMap<>();
+        this.regularQueue = new OrderedMap<>();
+        this.recentTreatments = new OrderedMap<>();
 
-        this.prescriptions = new CustomADT<>();
-        this.consultations = new CustomADT<>();
+        this.prescriptions = new OrderedMap<>();
+        this.consultations = new OrderedMap<>();
         this.consultationController = new ConsultationMaintenance();
         this.prescriptionController = new PharmacyMaintenance();
 
@@ -146,12 +146,12 @@ public class TreatmentMaintenance {
 
     /**
      * Get available consultations that don't have treatments yet
-     * @return CustomADT of available consultations
+     * @return OrderedMap of available consultations
      */
-    public CustomADT<String, Consultation> getConsultationsWithoutTreatment() {
+    public OrderedMap<String, Consultation> getConsultationsWithoutTreatment() {
         Consultation[] availableArr = consultationController.getAllConsultations();
 
-        CustomADT<String, Consultation> available = new CustomADT<>();
+        OrderedMap<String, Consultation> available = new OrderedMap<>();
 
         for (Consultation consultation : availableArr) {
             if (consultation == null) {
@@ -220,9 +220,9 @@ public class TreatmentMaintenance {
 
     /**
      * Retrieve all treatments 
-     * @return CustomADT of all treatments
+     * @return OrderedMap of all treatments
      */
-    public CustomADT<String, Treatment> getAllTreatments() {
+    public OrderedMap<String, Treatment> getAllTreatments() {
         return treatments;
     }
 
@@ -281,9 +281,9 @@ public class TreatmentMaintenance {
 
     /**
      * Get recent treatments using Stack functionality (LIFO)
-     * @return CustomADT of recent treatments
+     * @return OrderedMap of recent treatments
      */
-    public CustomADT<String, String> getRecentTreatments() {
+    public OrderedMap<String, String> getRecentTreatments() {
         return recentTreatments;
     }
 
@@ -305,10 +305,10 @@ public class TreatmentMaintenance {
 
     /**
      * Get all patients who have existing treatments
-     * @return CustomADT of patients with treatments
+     * @return OrderedMap of patients with treatments
      */
-    public CustomADT<String, Patient> getPatientsWithTreatments() {
-        CustomADT<String, Patient> patientsWithTreatments = new CustomADT<>();
+    public OrderedMap<String, Patient> getPatientsWithTreatments() {
+        OrderedMap<String, Patient> patientsWithTreatments = new OrderedMap<>();
         // Iterate through all treatments and collect unique patient IDs
         for (Treatment treatment : treatments){
             Patient patient = treatment.getPatient();
@@ -324,10 +324,10 @@ public class TreatmentMaintenance {
 
     /**
      * Get patients with active treatments only
-     * @return CustomADT of patients with active treatments
+     * @return OrderedMap of patients with active treatments
      */
-    public CustomADT<String, Patient> getPatientsWithActiveTreatments() {
-        CustomADT<String, Patient> activePatients = new CustomADT<>();
+    public OrderedMap<String, Patient> getPatientsWithActiveTreatments() {
+        OrderedMap<String, Patient> activePatients = new OrderedMap<>();
         for (Treatment treatment : treatments) {
             if (("SCHEDULED".equals(treatment.getStatus()) || 
                  "IN_PROGRESS".equals(treatment.getStatus())) && 
@@ -343,10 +343,10 @@ public class TreatmentMaintenance {
 
     /**
      * Get patients with critical treatments
-     * @return CustomADT of patients with critical treatments
+     * @return OrderedMap of patients with critical treatments
      */
-    public CustomADT<String, Patient> getPatientsWithCriticalTreatments() {
-        CustomADT<String, Patient> criticalPatients = new CustomADT<>();
+    public OrderedMap<String, Patient> getPatientsWithCriticalTreatments() {
+        OrderedMap<String, Patient> criticalPatients = new OrderedMap<>();
         for (Treatment treatment : treatments) {
             if (treatment.isCritical() && treatment.getPatient() != null) {
                 Patient patient = treatment.getPatient();
@@ -387,10 +387,10 @@ public class TreatmentMaintenance {
     /**
      * Get a list of treatments for a specific patient
      * @param patient Patient object to filter treatments for
-     * @return CustomADT of treatments for the patient
+     * @return OrderedMap of treatments for the patient
      */
-    public CustomADT<String, Treatment> getTreatmentsByPatient(Patient patient) {
-        if (patient == null) return new CustomADT<>();
+    public OrderedMap<String, Treatment> getTreatmentsByPatient(Patient patient) {
+        if (patient == null) return new OrderedMap<>();
 
         Treatment dummyTreatment = new Treatment("", "", patient, (Doctor)null, LocalDateTime.now(), "", false);
         
@@ -407,9 +407,9 @@ public class TreatmentMaintenance {
     /**
      * Get treatments by status
      * @param status The status to filter by
-     * @return CustomADT of treatments with the specified status
+     * @return OrderedMap of treatments with the specified status
      */
-    public CustomADT<String, Treatment> getTreatmentsByStatus(String status) {
+    public OrderedMap<String, Treatment> getTreatmentsByStatus(String status) {
         // Create dummy treatment with the specified status
         Treatment dummyTreatment = new Treatment("", "", (Patient)null, (Doctor)null, LocalDateTime.now(), "", false);
         dummyTreatment.setStatus(status);
@@ -425,10 +425,10 @@ public class TreatmentMaintenance {
     /**
      * Search treatments by notes keyword
      * @param keyword The keyword to search for in treatment notes
-     * @return CustomADT of treatments containing the keyword in their notes
+     * @return OrderedMap of treatments containing the keyword in their notes
      */
-    public CustomADT<String, Treatment> searchTreatmentByNotes(String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) return new CustomADT<>();
+    public OrderedMap<String, Treatment> searchTreatmentByNotes(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) return new OrderedMap<>();
 
         Treatment dummyTreatment = new Treatment("", "", (Patient)null, (Doctor)null, LocalDateTime.now(), "", false);
         dummyTreatment.setNotes(keyword);
@@ -445,10 +445,10 @@ public class TreatmentMaintenance {
      * Search treatments by date range
      * @param startDate
      * @param endDate
-     * @return CustomADT of treatments within the date range
+     * @return OrderedMap of treatments within the date range
      */
-    public CustomADT<String, Treatment> getTreatmentsByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
-        if (startDate == null || endDate == null) return new CustomADT<>();
+    public OrderedMap<String, Treatment> getTreatmentsByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+        if (startDate == null || endDate == null) return new OrderedMap<>();
 
         // Sort by date first for efficient range search
         treatments.sort(Comparator.comparing(Treatment::getTreatmentDate));
@@ -466,10 +466,10 @@ public class TreatmentMaintenance {
      * Binary search for treatments by procedure
      * Requires treatments to be sorted by procedures
      * @param procedureName
-     * @return CustomADT of treatments containing the specified procedure
+     * @return OrderedMap of treatments containing the specified procedure
      */
-    public CustomADT<String, Treatment> searchTreatmentsByProcedure(String procedureName) {
-        if (procedureName == null || procedureName.isEmpty()) return new CustomADT<>();
+    public OrderedMap<String, Treatment> searchTreatmentsByProcedure(String procedureName) {
+        if (procedureName == null || procedureName.isEmpty()) return new OrderedMap<>();
 
         Treatment dummyTreatment = new Treatment("", "", (Patient)null, (Doctor)null, LocalDateTime.now(), "", false);
 
@@ -499,10 +499,10 @@ public class TreatmentMaintenance {
     /**
      * Search treatments by patient name
      * @param patientName The patient name to search for
-     * @return CustomADT of treatments for patients with matching names
+     * @return OrderedMap of treatments for patients with matching names
      */
-    public CustomADT<String, Treatment> searchTreatmentsByPatientName(String patientName) {
-        if (patientName == null || patientName.trim().isEmpty()) return new CustomADT<>();
+    public OrderedMap<String, Treatment> searchTreatmentsByPatientName(String patientName) {
+        if (patientName == null || patientName.trim().isEmpty()) return new OrderedMap<>();
 
         Treatment dummyTreatment = new Treatment("", "", (Patient)null, (Doctor)null, LocalDateTime.now(), "", false);
 
@@ -518,17 +518,17 @@ public class TreatmentMaintenance {
     /**
      * Sort treatments by date
      * @param ascending true for ascending order, false for descending
-     * @return CustomADT of sorted treatments
+     * @return OrderedMap of sorted treatments
      */
-    public CustomADT<String, Treatment> sortTreatmentsByDate(boolean ascending) {
-        CustomADT<String, Treatment> sortedTreatments = new CustomADT<>();
+    public OrderedMap<String, Treatment> sortTreatmentsByDate(boolean ascending) {
+        OrderedMap<String, Treatment> sortedTreatments = new OrderedMap<>();
         
-        // Copy all treatments to new CustomADT
+        // Copy all treatments to new OrderedMap
         for (Treatment treatment : treatments) {
             sortedTreatments.put(treatment.getTreatmentID(), treatment);
         }
         
-        // Sort using CustomADT sort method
+        // Sort using OrderedMap sort method
         if (ascending) {
             sortedTreatments.sort(Comparator.comparing(Treatment::getTreatmentDate));
         } else {
@@ -541,17 +541,17 @@ public class TreatmentMaintenance {
     /**
      * Sort treatments by patient name
      * @param ascending true for ascending order, false for descending
-     * @return CustomADT of sorted treatments
+     * @return OrderedMap of sorted treatments
      */
-    public CustomADT<String, Treatment> sortTreatmentsByPatientName(boolean ascending) {
-        CustomADT<String, Treatment> sortedTreatments = new CustomADT<>();
+    public OrderedMap<String, Treatment> sortTreatmentsByPatientName(boolean ascending) {
+        OrderedMap<String, Treatment> sortedTreatments = new OrderedMap<>();
         
-        // Copy all treatments to new CustomADT
+        // Copy all treatments to new OrderedMap
         for (Treatment treatment : treatments) {
             sortedTreatments.put(treatment.getTreatmentID(), treatment);
         }
         
-        // Sort using CustomADT sort method
+        // Sort using OrderedMap sort method
         if (ascending) {
             sortedTreatments.sort(Comparator.comparing(t -> 
                 t.getPatient() != null ? t.getPatient().getName() : ""));
@@ -566,17 +566,17 @@ public class TreatmentMaintenance {
     /**
      * Sort treatments by status
      * @param ascending true for ascending order, false for descending
-     * @return CustomADT of sorted treatments
+     * @return OrderedMap of sorted treatments
      */
-    public CustomADT<String, Treatment> sortTreatmentsByStatus(boolean ascending) {
-        CustomADT<String, Treatment> sortedTreatments = new CustomADT<>();
+    public OrderedMap<String, Treatment> sortTreatmentsByStatus(boolean ascending) {
+        OrderedMap<String, Treatment> sortedTreatments = new OrderedMap<>();
         
-        // Copy all treatments to new CustomADT
+        // Copy all treatments to new OrderedMap
         for (Treatment treatment : treatments) {
             sortedTreatments.put(treatment.getTreatmentID(), treatment);
         }
         
-        // Sort using CustomADT sort method
+        // Sort using OrderedMap sort method
         if (ascending) {
             sortedTreatments.sort(Comparator.comparing(Treatment::getStatus));
         } else {
@@ -589,17 +589,17 @@ public class TreatmentMaintenance {
     /**
      * Sort treatments by critical priority
      * @param criticalFirst true to show critical treatments first, false for regular first
-     * @return CustomADT of sorted treatments
+     * @return OrderedMap of sorted treatments
      */
-    public CustomADT<String, Treatment> sortTreatmentsByCriticalPriority(boolean criticalFirst) {
-        CustomADT<String, Treatment> sortedTreatments = new CustomADT<>();
+    public OrderedMap<String, Treatment> sortTreatmentsByCriticalPriority(boolean criticalFirst) {
+        OrderedMap<String, Treatment> sortedTreatments = new OrderedMap<>();
         
-        // Copy all treatments to new CustomADT
+        // Copy all treatments to new OrderedMap
         for (Treatment treatment : treatments) {
             sortedTreatments.put(treatment.getTreatmentID(), treatment);
         }
         
-        // Sort using CustomADT sort method
+        // Sort using OrderedMap sort method
         if (criticalFirst) {
             // Critical treatments first (true > false)
             sortedTreatments.sort(Comparator.comparing((Treatment t) -> !t.isCritical()));
@@ -632,9 +632,9 @@ public class TreatmentMaintenance {
 
     /**
      * Get all available procedures from the DAO
-     * @return CustomADT of all procedures
+     * @return OrderedMap of all procedures
      */
-    public CustomADT<String, Procedure> getAllAvailableProcedures() {
+    public OrderedMap<String, Procedure> getAllAvailableProcedures() {
         return procedureDAO.retrieveFromFile();
     }
 
@@ -644,7 +644,7 @@ public class TreatmentMaintenance {
      * @return Procedure object if found, null otherwise
      */
     public Procedure getProcedureByID(String procedureID) {
-        CustomADT<String, Procedure> procedures = procedureDAO.retrieveFromFile();
+        OrderedMap<String, Procedure> procedures = procedureDAO.retrieveFromFile();
         return procedures.get(procedureID);
     }
 
@@ -715,7 +715,7 @@ public class TreatmentMaintenance {
             double totalAmount = consultationCost + treatmentCost + prescriptionCost;
 
             // Create payment breakdown
-            CustomADT<String, Double> breakdown = new CustomADT<>();
+            OrderedMap<String, Double> breakdown = new OrderedMap<>();
             breakdown.put("Consultation Services", consultationCost);
             breakdown.put("Treatment Procedures", treatmentCost);
             breakdown.put("Prescription Medicines", prescriptionCost);
@@ -800,7 +800,7 @@ public class TreatmentMaintenance {
         if (procedureDAO == null) {
             return new Procedure[0];
         }
-        CustomADT<String, Procedure> procedureMap = procedureDAO.retrieveFromFile();
+        OrderedMap<String, Procedure> procedureMap = procedureDAO.retrieveFromFile();
         return procedureMap.toArray(new Procedure[0]);
     }
 

@@ -1,13 +1,13 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.Medicine;
 import java.io.*;
 
 public class MedicineDAO {
     private final String fileName = "src/data/medicine.dat";
 
-    public void saveToFile(CustomADT<String, Medicine> medicines) {
+    public void saveToFile(OrderedMap<String, Medicine> medicines) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName))){
             oos.writeObject(medicines);
         } catch (IOException e){
@@ -16,10 +16,10 @@ public class MedicineDAO {
         }
     }
 
-    public CustomADT<String, Medicine> retrieveFromFile() {
-        CustomADT<String, Medicine> medicines = new CustomADT<>();
+    public OrderedMap<String, Medicine> retrieveFromFile() {
+        OrderedMap<String, Medicine> medicines = new OrderedMap<>();
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName))) {
-            medicines = (CustomADT<String, Medicine>) ois.readObject();
+            medicines = (OrderedMap<String, Medicine>) ois.readObject();
         } catch (FileNotFoundException e) {
             System.out.println("File not found: " + fileName);
         } catch (IOException | ClassNotFoundException e) {

@@ -6,7 +6,7 @@ import boundary.ScheduleUI;
 import entity.Doctor;
 import utility.IDGenerator;
 import utility.InputHandler;
-import adt.CustomADT;
+import adt.OrderedMap;
 
 public class DoctorUI {
     private final DoctorMaintenance doctorMaintenance;
@@ -333,7 +333,7 @@ public class DoctorUI {
             System.out.println(rightInDash("generated at: " + now, 80));
             dash(80); blank();
 
-            CustomADT<String, Integer> specialtyCount = doctorMaintenance.getDoctorCountPerSpecialty();
+            OrderedMap<String, Integer> specialtyCount = doctorMaintenance.getDoctorCountPerSpecialty();
             Doctor[] doctors = doctorMaintenance.getAllDoctorsArray();
             java.util.HashSet<String> printed = new java.util.HashSet<>();
             int totalDoctors = 0;
@@ -384,7 +384,7 @@ public class DoctorUI {
             System.out.println(rightInDash("generated at: " + now, 80));
             dash(80); blank();
 
-            CustomADT<String, Integer> genderMap = doctorMaintenance.getDoctorCountByGender();
+            OrderedMap<String, Integer> genderMap = doctorMaintenance.getDoctorCountByGender();
             String[] keys = {"Male", "Female", "Other"};
             int total = 0;
             int maxCount = 0;

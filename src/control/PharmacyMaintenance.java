@@ -4,7 +4,7 @@
 
 package control;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import dao.*;
 import entity.*;
 import java.time.LocalDateTime;
@@ -12,11 +12,11 @@ import java.util.Comparator;
 import utility.IDGenerator;
 
 public class PharmacyMaintenance {
-    private final CustomADT<String, Medicine> medicineMap;
-    private final CustomADT<String, Prescription> pendingPrescriptionMap;
-    private CustomADT<String, Prescription> processedPrescriptionMap;
-    private final CustomADT<String, Transaction> transactionMap;
-    private final CustomADT<String, Treatment> treatmentMap;
+    private final OrderedMap<String, Medicine> medicineMap;
+    private final OrderedMap<String, Prescription> pendingPrescriptionMap;
+    private OrderedMap<String, Prescription> processedPrescriptionMap;
+    private final OrderedMap<String, Transaction> transactionMap;
+    private final OrderedMap<String, Treatment> treatmentMap;
     private final TreatmentDAO treatmentDAO = new TreatmentDAO();
     private final MedicineDAO medicineDAO = new MedicineDAO();
     private final PrescriptionDAO pendingPrescriptionDAO = new PrescriptionDAO(1);
@@ -39,7 +39,7 @@ public class PharmacyMaintenance {
      * Getters for the medicine map
      * @return medicineMap
      */
-    public CustomADT<String, Medicine> getMedicineMap() {
+    public OrderedMap<String, Medicine> getMedicineMap() {
         return medicineMap;
     }
 
@@ -134,7 +134,7 @@ public class PharmacyMaintenance {
      * Getters for the pending prescription queue
      * @return pendingPrescriptionQueue
      */
-    public CustomADT<String, Prescription> getPendingPrescriptionMap() {
+    public OrderedMap<String, Prescription> getPendingPrescriptionMap() {
         return pendingPrescriptionMap;
     }
 
@@ -142,7 +142,7 @@ public class PharmacyMaintenance {
      * Getters for the processed prescription list
      * @return processedPrescriptionList
      */
-    public CustomADT<String, Prescription> getCompletedPrescriptionMap() {
+    public OrderedMap<String, Prescription> getCompletedPrescriptionMap() {
         return processedPrescriptionMap.filter( new Prescription(null,null),
                 (p1, p2) -> p1.getStatus().equals(STATUS_COMPLETED) ? 0 : 1);
     }
@@ -317,7 +317,7 @@ public class PharmacyMaintenance {
      * Getters for the transaction map
      * @return transactionMap
      */
-    public CustomADT<String, Transaction> getTransactionMap() {
+    public OrderedMap<String, Transaction> getTransactionMap() {
         return transactionMap;
     }
 
@@ -359,9 +359,9 @@ public class PharmacyMaintenance {
     /*
      * Search for medicines by name (case-insensitive, partial match)
      * @param name the name or partial name of the medicine to search for
-     * @return a CustomADT containing the matching medicines
+     * @return a OrderedMap containing the matching medicines
      */
-    public CustomADT<String, Medicine> searchMedicinesByName(String name) {
+    public OrderedMap<String, Medicine> searchMedicinesByName(String name) {
         return medicineMap.filter(
                 new Medicine(null, name, 0, 0.0, null),
                 (med1, med2) -> med1.getName().toLowerCase().contains(med2.getName().toLowerCase()) ? 0 : 1
@@ -372,9 +372,9 @@ public class PharmacyMaintenance {
      * Get all transactions that occurred within a specific month and year
      * @param year the year of the transactions to retrieve
      * @param month the month of the transactions to retrieve (1-12)
-     * @return a CustomADT containing the transactions within the specified month
+     * @return a OrderedMap containing the transactions within the specified month
      */
-    public CustomADT<String, Transaction> getTransactionsInMonth(int year, int month) {
+    public OrderedMap<String, Transaction> getTransactionsInMonth(int year, int month) {
         LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
         LocalDateTime end = start.withDayOfMonth(start.toLocalDate().lengthOfMonth()).withHour(23).withMinute(59).withSecond(59);
         Transaction min = new Transaction();
@@ -387,10 +387,10 @@ public class PharmacyMaintenance {
 
     /*
      * Get all medicines that are low in stock (quantity below a specified threshold)
-     * @return a CustomADT containing the low stock medicines
+     * @return a OrderedMap containing the low stock medicines
      */
-    public CustomADT<String, Medicine> getLowStockMedicines() {
-        CustomADT<String, Medicine> lowStockMedicines = new CustomADT<>();
+    public OrderedMap<String, Medicine> getLowStockMedicines() {
+        OrderedMap<String, Medicine> lowStockMedicines = new OrderedMap<>();
         for (Medicine medicine : medicineMap) {
             if (medicine.getQuantity() < 10) {
                 lowStockMedicines.put(medicine.getId(), medicine);
@@ -420,7 +420,7 @@ public class PharmacyMaintenance {
      * @param transactions the list of transactions to analyze
      * @return a string representation of the most sold medicine and its quantity, or "N/A" if no sales
      */
-    public String getMostSoldMedicine(CustomADT<String, Transaction> transactions) {
+    public String getMostSoldMedicine(OrderedMap<String, Transaction> transactions) {
         class MedStat{
             Medicine med;
             int qty;
@@ -480,7 +480,7 @@ public class PharmacyMaintenance {
      * Getters for the rejected prescription list
      * @return rejectedPrescriptionList
      */
-    public CustomADT<String, Prescription> getRejectedPrescriptionMap(){
+    public OrderedMap<String, Prescription> getRejectedPrescriptionMap(){
         return processedPrescriptionMap.filter( new Prescription(null,null),
                 (p1, p2) -> p1.getStatus().equals(STATUS_REJECTED) ? 0 : 1);
     }

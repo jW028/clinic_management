@@ -1,11 +1,14 @@
+/**
+ * @author Lee Jia Shin
+ */
 package control;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import dao.PaymentDAO;
 import entity.Payment;
 
 public class PaymentMaintenance {
-    private final CustomADT<String, Payment> paymentMap;
+    private final OrderedMap<String, Payment> paymentMap;
     private final PaymentDAO paymentDAO = new PaymentDAO();
     private static PaymentMaintenance instance;
 

@@ -1,6 +1,7 @@
 package entity;
 
-import adt.CustomADT;
+import adt.OrderedMap;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -13,14 +14,14 @@ public class Consultation implements Serializable {
     private Patient patient;
     private Doctor doctor;
     private LocalDateTime consultationTime;
-    private CustomADT<String, ConsultationService> servicesUsed;
+    private OrderedMap<String, ConsultationService> servicesUsed;
     private Diagnosis diagnosis;
     private String notes;
     private Payment payment;
     private boolean followUpNeeded;
     private LocalDateTime followUpDate;
 
-    public Consultation(String consultationId, Appointment appointment, Patient patient, Doctor doctor, LocalDateTime consultationTime, CustomADT<String, ConsultationService> servicesUsed,
+    public Consultation(String consultationId, Appointment appointment, Patient patient, Doctor doctor, LocalDateTime consultationTime, OrderedMap<String, ConsultationService> servicesUsed,
                         Diagnosis diagnosis, String notes, Payment payment, boolean followUpNeeded, LocalDateTime followUpDate) {
         this.consultationId = consultationId;
         this.appointment = appointment;
@@ -45,7 +46,7 @@ public class Consultation implements Serializable {
         // Set defaults for other fields
         this.appointment = null;
         this.followUpAppointment = null;
-        this.servicesUsed = new CustomADT<>();
+        this.servicesUsed = new OrderedMap<>();
         this.notes = "";
         this.payment = null;
         this.followUpNeeded = false;
@@ -78,7 +79,7 @@ public class Consultation implements Serializable {
         return consultationTime;
     }
 
-    public CustomADT<String, ConsultationService> getServicesUsed() {
+    public OrderedMap<String, ConsultationService> getServicesUsed() {
         return servicesUsed;
     }
 
@@ -126,7 +127,7 @@ public class Consultation implements Serializable {
         this.consultationTime = consultationTime;
     }
 
-    public void setServicesUsed(CustomADT<String, ConsultationService> servicesUsed) {
+    public void setServicesUsed(OrderedMap<String, ConsultationService> servicesUsed) {
         this.servicesUsed = servicesUsed;
     }
 

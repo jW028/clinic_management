@@ -1,21 +1,21 @@
 package entity;
 
 import java.io.Serializable;
-import adt.CustomADT;
+import adt.OrderedMap;
 import utility.*;
 import java.time.LocalDateTime;
 
 public class Transaction implements Serializable {
     private String transactionID;
     private String patientID;
-    private CustomADT<String, PrescribedMedicine> medicines;
+    private OrderedMap<String, PrescribedMedicine> medicines;
     private LocalDateTime date;
     private double totalPrice;
 
     public Transaction() {
         this.transactionID = "";
         this.patientID = "";
-        this.medicines = new CustomADT<>();
+        this.medicines = new OrderedMap<>();
         this.date = LocalDateTime.now();
         this.totalPrice = 0.0;
     }
@@ -23,7 +23,7 @@ public class Transaction implements Serializable {
     public Transaction(String patientID) {
         this.transactionID = IDGenerator.generateTransactionID();
         this.patientID = patientID;
-        this.medicines = new CustomADT<>();
+        this.medicines = new OrderedMap<>();
         this.totalPrice = 0.0;
         this.date = LocalDateTime.now();
     }
@@ -35,7 +35,7 @@ public class Transaction implements Serializable {
         }
     }
 
-    public CustomADT<String, PrescribedMedicine> getMedicines() {
+    public OrderedMap<String, PrescribedMedicine> getMedicines() {
         return medicines;
     }
 

@@ -1,12 +1,12 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.Patient;
 
 public class PatientQueueInitializer {
     public static void main(String[] args) {
-        CustomADT<String, Patient> patientEmergencyQueue = new CustomADT<>();
-        CustomADT<String, Patient> patientNormalQueue = new CustomADT<>();
+        OrderedMap<String, Patient> patientEmergencyQueue = new OrderedMap<>();
+        OrderedMap<String, Patient> patientNormalQueue = new OrderedMap<>();
 
         PatientQueueDAO emergencyQueueDAO = new PatientQueueDAO(1);
         emergencyQueueDAO.saveToFile(patientEmergencyQueue);

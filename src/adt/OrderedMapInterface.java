@@ -1,7 +1,5 @@
 package adt;
 
-import org.w3c.dom.Node;
-
 import java.util.Comparator;
 
 /**
@@ -17,7 +15,7 @@ import java.util.Comparator;
  * @param <K> the type of keys maintained by this ADT
  * @param <V> the type of mapped values
  */
-public interface CustomADTInterface<K, V> {
+public interface OrderedMapInterface<K, V> {
 
     // ===============================
     // MAP OPERATIONS
@@ -251,9 +249,9 @@ public interface CustomADTInterface<K, V> {
      *
      * @param referenceValue the value to compare each element against
      * @param condition the comparator that defines the filtering condition
-     * @return a new CustomADT containing only the elements that satisfy the filtering condition
+     * @return a new OrderedMap containing only the elements that satisfy the filtering condition
      */
-    CustomADT<K, V> filter(V referenceValue, Comparator<V> condition);
+    OrderedMapInterface<K, V> filter(V referenceValue, Comparator<V> condition);
 
     /**
      * Performs a range search on the elements in this collection based on the specified minimum and maximum values.
@@ -261,7 +259,7 @@ public interface CustomADTInterface<K, V> {
      * @param min the minimum value of the range (inclusive)
      * @param max the maximum value of the range (inclusive)
      * @param comparator the comparator that defines the ordering of the elements
-     * @return a new CustomADT containing only the elements that fall within the specified range
+     * @return a new OrderedMap containing only the elements that fall within the specified range
      */
-    CustomADT<K, V> rangeSearch(V min, V max, Comparator<V> comparator);
+    OrderedMapInterface<K, V> rangeSearch(V min, V max, Comparator<V> comparator);
 }

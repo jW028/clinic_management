@@ -262,7 +262,7 @@ public class PatientUI {
 
         String id = InputHandler.getString("Enter Patient ID to delete");
 
-        // Use CustomADT's containsKey for efficient existence check
+        // Use OrderedMap's containsKey for efficient existence check
         if (!patientMaintenance.getAllPatients().containsKey(id)) {
             System.out.println("✗ Patient not found with ID: " + id);
             return;
@@ -291,7 +291,7 @@ public class PatientUI {
     public void viewPatientList() {
         System.out.println("\n=== PATIENT LIST ===");
 
-        CustomADT<String, Patient> patients = patientMaintenance.getAllPatients();
+        OrderedMap<String, Patient> patients = patientMaintenance.getAllPatients();
         if (patients.isEmpty()) {
             System.out.println("No patients registered.");
             return;
@@ -314,7 +314,7 @@ public class PatientUI {
     }
 
     /*
-    * View next patient using CustomADT's peek method
+    * View next patient using OrderedMap's peek method
      */
     private void viewNextPatient() {
         System.out.println("\n=== NEXT PATIENT IN QUEUE ===");
@@ -337,7 +337,7 @@ public class PatientUI {
     }
 
     /**
-     * Clear all queues using CustomADT operations
+     * Clear all queues using OrderedMap operations
      */
     private void clearAllQueues() {
         System.out.println("\n=== CLEAR ALL QUEUES ===");
@@ -371,7 +371,7 @@ public class PatientUI {
             System.out.println("Current Status: REGISTERED (Not in queue)");
         }
 
-        CustomADT<String, VisitHistory> visitHistories = patientMaintenance.getPatientVisitHistory(id);
+        OrderedMap<String, VisitHistory> visitHistories = patientMaintenance.getPatientVisitHistory(id);
         displayPatientVisitHistory(id);
         displayConsultationsForPatient(id);
         displayTreatmentsForPatient(id);
@@ -412,7 +412,7 @@ public class PatientUI {
     }
 
     private void displayConsultationsForPatient(String patientId) {
-        CustomADT<String, Consultation> consults = patientMaintenance.getConsultationsByPatient(patientId);
+        OrderedMap<String, Consultation> consults = patientMaintenance.getConsultationsByPatient(patientId);
         System.out.println("\n=== CONSULTATIONS ===");
         if (consults.isEmpty()) {
             System.out.println("No consultations found.");
@@ -438,7 +438,7 @@ public class PatientUI {
     }
 
     private void displayTreatmentsForPatient(String patientId) {
-        CustomADT<String, Treatment> treatments = patientMaintenance.getTreatmentsForPatient(patientId);
+        OrderedMap<String, Treatment> treatments = patientMaintenance.getTreatmentsForPatient(patientId);
         System.out.println("\n=== TREATMENTS ===");
         if (treatments.isEmpty()) {
             System.out.println("No treatments found.");
@@ -468,7 +468,7 @@ public class PatientUI {
         System.out.println("\n=== SEARCH PATIENT RECORDS ===");
 
         String searchTerm = InputHandler.getString("Enter patient name or ID to search");
-        CustomADT<String, Patient> searchResults = patientMaintenance.searchPatients(searchTerm);
+        OrderedMap<String, Patient> searchResults = patientMaintenance.searchPatients(searchTerm);
 
         if (searchResults.isEmpty()) {
             System.out.println("❌ No patients found matching the search term.");
@@ -516,7 +516,7 @@ public class PatientUI {
     /**
      * Display a list of patients with essential information
      */
-    public void displayPatientList(CustomADT<String, Patient> patients, String title) {
+    public void displayPatientList(OrderedMap<String, Patient> patients, String title) {
         if (patients.isEmpty()) {
             System.out.println("No patients found.");
             return;
@@ -591,7 +591,7 @@ public class PatientUI {
         System.out.println("\n┌────┬───────────────┬────────────────────┬─────┬─────────┬───────────────┬────────────┐");
         System.out.printf("│ #  │ Patient ID    │ Name               │ Age │ Gender  │ Contact       │ Emergency  │%n");
         System.out.println("├────┼───────────────┼────────────────────┼─────┼─────────┼───────────────┼────────────┤");
-        CustomADT<String, Patient> queue = queueType.equals("emergency")
+        OrderedMap<String, Patient> queue = queueType.equals("emergency")
                 ? patientMaintenance.getEmergencyQueue()
                 : patientMaintenance.getNormalQueue();
         int position = 1;
@@ -627,7 +627,7 @@ public class PatientUI {
     /**
      * Helper method to view details of a selected patient from a list
      */
-    public void viewSelectedPatientDetails(CustomADT<String, Patient> patients) {
+    public void viewSelectedPatientDetails(OrderedMap<String, Patient> patients) {
         if (patients.isEmpty()) {
             System.out.println("No patients available.");
             return;
@@ -655,7 +655,7 @@ public class PatientUI {
      * Display patient visit history
      */
     public void displayPatientVisitHistory(String patientId) {
-        CustomADT<String, VisitHistory> visitHistories = patientMaintenance.getPatientVisitHistory(patientId);
+        OrderedMap<String, VisitHistory> visitHistories = patientMaintenance.getPatientVisitHistory(patientId);
         System.out.println("\n┌────┬───────────────┬────────────────────┬────────────────────┬────────────┐");
         System.out.printf("│ #  │ Visit ID      │ Visit Date         │ Reason             │ Status     │%n");
         System.out.println("├────┼───────────────┼────────────────────┼────────────────────┼────────────┤");
@@ -781,7 +781,7 @@ public class PatientUI {
     /**
      * Helper method to view details of selected visit
      */
-    public void viewSelectedVisitDetails(CustomADT<String, VisitHistory> visits) {
+    public void viewSelectedVisitDetails(OrderedMap<String, VisitHistory> visits) {
         if (visits.isEmpty()) {
             System.out.println("No visit histories available.");
             return;
@@ -838,7 +838,7 @@ public class PatientUI {
      * Display patient registration summary report
      */
     public void displayPatientRegistrationReport() {
-        CustomADT<String, Object> data = patientMaintenance.generatePatientRegistrationReport();
+        OrderedMap<String, Object> data = patientMaintenance.generatePatientRegistrationReport();
         String now = java.time.ZonedDateTime.now()
                 .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
 
@@ -855,8 +855,8 @@ public class PatientUI {
         int qEm   = (Integer) data.get("emergencyQueueSize");
         int qNm   = (Integer) data.get("normalQueueSize");
 
-        CustomADT<String,Integer> gender = (CustomADT<String,Integer>) data.get("genderBreakdown");
-        CustomADT<String,Integer> ages = (CustomADT<String,Integer>) data.get("ageGroupBreakdown");
+        OrderedMap<String,Integer> gender = (OrderedMap<String,Integer>) data.get("genderBreakdown");
+        OrderedMap<String,Integer> ages = (OrderedMap<String,Integer>) data.get("ageGroupBreakdown");
         String[] ageOrder = {"0-18","19-35","36-50","51-65","65+"};
 
         // Prepare rows for each section
@@ -914,7 +914,7 @@ public class PatientUI {
     }
 
     public void displayPatientVisitSummaryReport() {
-        CustomADT<String,Object> rpt = patientMaintenance.generatePatientVisitSummaryReport();
+        OrderedMap<String,Object> rpt = patientMaintenance.generatePatientVisitSummaryReport();
         String now = java.time.ZonedDateTime.now()
                 .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
 
@@ -929,11 +929,11 @@ public class PatientUI {
         int totalVisits = (Integer) rpt.get("totalVisits");
         double avg = ((Double) rpt.get("averageVisitsPerPatient")).doubleValue();
 
-        CustomADT<String,Integer> status = (CustomADT<String,Integer>) rpt.get("statusCounts");
+        OrderedMap<String,Integer> status = (OrderedMap<String,Integer>) rpt.get("statusCounts");
         String[] sts = {"SCHEDULED","IN_PROGRESS","COMPLETED","CANCELLED"};
 
-        CustomADT<String,Integer> vpm = (CustomADT<String,Integer>) rpt.get("visitsPerMonth");
-        CustomADT<String,Integer> top = (CustomADT<String,Integer>) rpt.get("topPatients");
+        OrderedMap<String,Integer> vpm = (OrderedMap<String,Integer>) rpt.get("visitsPerMonth");
+        OrderedMap<String,Integer> top = (OrderedMap<String,Integer>) rpt.get("topPatients");
 
         String[] months = new String[vpm.size()];
         int mCount = 0;

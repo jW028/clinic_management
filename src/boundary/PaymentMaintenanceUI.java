@@ -2,7 +2,7 @@ package boundary;
 
 import control.PaymentMaintenance;
 import entity.Payment;
-import adt.CustomADT;
+import adt.OrderedMap;
 
 import java.util.Scanner;
 
@@ -50,7 +50,7 @@ public class PaymentMaintenanceUI {
         System.out.print("Consultation ID (can be empty if not linked): ");
         String consultationId = scanner.nextLine();
 
-        CustomADT<String, Double> breakdown = new CustomADT<>();
+        OrderedMap<String, Double> breakdown = new OrderedMap<>();
         double totalAmount = 0.0;
         String more;
         do {

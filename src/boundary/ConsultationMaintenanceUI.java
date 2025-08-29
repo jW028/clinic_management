@@ -1,5 +1,6 @@
 package boundary;
 
+import adt.OrderedMap;
 import control.ConsultationMaintenance;
 import control.PatientMaintenance;
 import entity.Appointment;
@@ -9,7 +10,6 @@ import entity.Diagnosis;
 import entity.Patient;
 import entity.Doctor;
 import entity.VisitHistory;
-import adt.CustomADT;
 import utility.IDGenerator;
 import utility.InputHandler;
 import utility.DateTimeFormatterUtil;
@@ -260,7 +260,7 @@ public class ConsultationMaintenanceUI {
         LocalDateTime consultationTime = appointment.getAppointmentTime();
 
         // Select ConsultationServices
-        CustomADT<String, ConsultationService> servicesUsed = new CustomADT<>();
+        OrderedMap<String, ConsultationService> servicesUsed = new OrderedMap<>();
         System.out.println("\n-- Available Services --");
         System.out.println("+------------+---------------------------+------------+");
         System.out.printf("| %-10s | %-25s | %-10s | \n",
@@ -365,7 +365,7 @@ public class ConsultationMaintenanceUI {
 
             if (slots != null && slots.length > 0) {
                 int slotIndex = 1;
-                CustomADT<Integer, Object[]> slotSelectionMap = new CustomADT<>();
+                OrderedMap<Integer, Object[]> slotSelectionMap = new OrderedMap<>();
                 for (int i = 0; i < slots.length; i++) {
                     if (i == 0) {
                         System.out.printf("| %-10s | %-20s | %-20s | %3d. %-25s |\n",
@@ -483,7 +483,7 @@ public class ConsultationMaintenanceUI {
         maintenance.updateAppointmentStatus(appointment.getAppointmentId(), "In Progress");
         System.out.println("Consultation added.");
 
-        CustomADT<String, VisitHistory> visits = patientMaintenance.getPatientVisitHistory(consultation.getPatient().getPatientId());
+        OrderedMap<String, VisitHistory> visits = patientMaintenance.getPatientVisitHistory(consultation.getPatient().getPatientId());
         for (int i = 0; i < visits.size(); i++) {
             VisitHistory vh = visits.get(i);
             if (vh.getPatient().getPatientId().equals(consultation.getPatient().getPatientId())
@@ -572,7 +572,7 @@ public class ConsultationMaintenanceUI {
             switch (choice) {
                 case 1: {
                     Diagnosis[] diagnoses = maintenance.getAllDiagnoses();
-                    CustomADT<String, Diagnosis> diagnosesADT = new CustomADT<>();
+                    OrderedMap<String, Diagnosis> diagnosesADT = new OrderedMap<>();
                     for (Diagnosis d : diagnoses) diagnosesADT.put(d.getId(), d);
                     System.out.println("\nAvailable Diagnoses:");
                     System.out.println("+-----------------+----------------------+--------------------------------------------+-----------------+");
@@ -612,7 +612,7 @@ public class ConsultationMaintenanceUI {
                 }
                 case 3: { // Add Service
                     ConsultationService[] services = maintenance.getAllServices();
-                    CustomADT<String, ConsultationService> servicesADT = new CustomADT<>();
+                    OrderedMap<String, ConsultationService> servicesADT = new OrderedMap<>();
                     for (ConsultationService s : services) servicesADT.put(s.getServiceId(), s);
                     System.out.println("\nAvailable Services:");
                     System.out.println("+------------+---------------------------+------------+");
@@ -653,7 +653,7 @@ public class ConsultationMaintenanceUI {
                     break;
                 }
                 case 4: { // Remove Service
-                    CustomADT<String, ConsultationService> usedADT = consultation.getServicesUsed();
+                    OrderedMap<String, ConsultationService> usedADT = consultation.getServicesUsed();
                     if (usedADT == null || usedADT.size() == 0) {
                         System.out.println("No services to remove.");
                         break;
@@ -794,7 +794,7 @@ public class ConsultationMaintenanceUI {
             System.out.print("\nEnter patient name (Eg. Alice, or 0 to return): ");
             String pName = scanner.nextLine().trim();
             if (pName.equals("0")) return;
-            CustomADT<String, Consultation> found = maintenance.searchConsultationsByPatientName(pName);
+            OrderedMap<String, Consultation> found = maintenance.searchConsultationsByPatientName(pName);
 
             if (found.isEmpty()) {
                 System.out.println("No consultations found for patient name containing: " + pName);
@@ -819,7 +819,7 @@ public class ConsultationMaintenanceUI {
             System.out.print("\nEnter doctor name (Eg. Alice, or 0 to return): ");
             String dName = scanner.nextLine().trim();
             if (dName.equals("0")) return;
-            CustomADT<String, Consultation> found = maintenance.searchConsultationsByDoctorName(dName);
+            OrderedMap<String, Consultation> found = maintenance.searchConsultationsByDoctorName(dName);
 
             if (found.isEmpty()) {
                 System.out.println("No consultations found for doctor name containing: " + dName);
@@ -926,7 +926,7 @@ public class ConsultationMaintenanceUI {
         System.out.println("+------------+----------------------+----------------------+--------------------------------+");
 
         int slotIndex = 1;
-        CustomADT<Integer, Object[]> slotSelectionMap = new CustomADT<>();
+        OrderedMap<Integer, Object[]> slotSelectionMap = new OrderedMap<>();
 
         for (Doctor doctor : doctorsToShow) {
             String[] slots = maintenance.getAvailableSlotsForDoctor(doctor.getDoctorID());
@@ -1322,7 +1322,7 @@ public class ConsultationMaintenanceUI {
             System.out.print("\nEnter patient name (Eg. Alice, or 0 to return): ");
             String pName = scanner.nextLine().trim();
             if (pName.equals("0")) return;
-            CustomADT<String, Appointment> found = maintenance.searchAppointmentsByPatientName(pName);
+            OrderedMap<String, Appointment> found = maintenance.searchAppointmentsByPatientName(pName);
 
             if (found.isEmpty()) {
                 System.out.println("No appointments found for patient name containing: " + pName);
@@ -1347,7 +1347,7 @@ public class ConsultationMaintenanceUI {
             System.out.print("\nEnter doctor name (Eg. Dr. Alice Tan, or 0 to return): ");
             String dName = scanner.nextLine().trim();
             if (dName.equals("0")) return;
-            CustomADT<String, Appointment> found = maintenance.searchAppointmentsByDoctorName(dName);
+            OrderedMap<String, Appointment> found = maintenance.searchAppointmentsByDoctorName(dName);
 
             if (found.isEmpty()) {
                 System.out.println("No appointments found for doctor name containing: " + dName);

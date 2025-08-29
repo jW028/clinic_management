@@ -1,13 +1,13 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.Transaction;
 import java.io.*;
 
 public class TransactionDAO {
     private final String fileName = "src/data/transactions.dat";
 
-    public void saveToFile(CustomADT<String, Transaction> transactions) {
+    public void saveToFile(OrderedMap<String, Transaction> transactions) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName))){
             oos.writeObject(transactions);
         } catch (IOException e){
@@ -16,10 +16,10 @@ public class TransactionDAO {
         }
     }
 
-    public CustomADT<String, Transaction> retrieveFromFile() {
-        CustomADT<String, Transaction> transactions = new CustomADT<>();
+    public OrderedMap<String, Transaction> retrieveFromFile() {
+        OrderedMap<String, Transaction> transactions = new OrderedMap<>();
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName))) {
-            transactions = (CustomADT<String, Transaction>) ois.readObject();
+            transactions = (OrderedMap<String, Transaction>) ois.readObject();
         } catch (FileNotFoundException e) {
             System.out.println("File not found: " + fileName);
         } catch (IOException | ClassNotFoundException e) {

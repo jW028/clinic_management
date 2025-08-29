@@ -1,6 +1,7 @@
 package entity;
 
-import adt.CustomADT;
+import adt.OrderedMap;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -12,7 +13,7 @@ public class Treatment implements Serializable {
     // Core entities
     private Patient patient;
     private Doctor doctor;
-    private CustomADT<String, Procedure> procedures;
+    private OrderedMap<String, Procedure> procedures;
 
     // Treatment details
     private Prescription prescription; // Optional, can be null
@@ -38,8 +39,8 @@ public class Treatment implements Serializable {
         this.treatmentDate = treatmentDate;
         this.notes = notes;
         this.isCritical = isCritical;
-        // Initialize procedures as an empty CustomADT
-        this.procedures = new CustomADT<>();
+        // Initialize procedures as an empty OrderedMap
+        this.procedures = new OrderedMap<>();
 
         // Default values
         this.status = "SCHEDULED";
@@ -58,8 +59,8 @@ public class Treatment implements Serializable {
         this.isCritical = isCritical;
 
         this.prescription = prescription;
-        // Initialize procedures as an empty CustomADT
-        this.procedures = new CustomADT<>();
+        // Initialize procedures as an empty OrderedMap
+        this.procedures = new OrderedMap<>();
 
         this.status = "SCHEDULED";
         this.type = "OUTPATIENT";
@@ -121,7 +122,7 @@ public class Treatment implements Serializable {
     public Patient getPatient() { return patient; }
     public Doctor getDoctor() { return doctor; }
     public Prescription getPrescription() { return prescription; }
-    public CustomADT<String, Procedure> getProcedures() { return procedures; }
+    public OrderedMap<String, Procedure> getProcedures() { return procedures; }
     public LocalDateTime getTreatmentDate() { return treatmentDate; }
     public String getNotes() { return notes; }
     public boolean isCritical() { return isCritical; }
@@ -155,7 +156,7 @@ public class Treatment implements Serializable {
         // Prescriptions
         sb.append("\n=== PRESCRIPTIONS ===\n");
         if (prescription != null) {
-            CustomADT<String, PrescribedMedicine> medicines = prescription.getMedicines();
+            OrderedMap<String, PrescribedMedicine> medicines = prescription.getMedicines();
             if (medicines != null && medicines.size() > 0) {
                 medicines.forEach(medicine -> {
                     sb.append(medicine.toString()).append("\n");

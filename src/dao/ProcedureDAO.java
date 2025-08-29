@@ -1,6 +1,6 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.Procedure;
 import java.io.*;
 import java.nio.file.Files;
@@ -24,10 +24,10 @@ public class ProcedureDAO {
 
     /**
      * Save procedures to file
-     * @param procedures CustomADT of procedures to save
+     * @param procedures OrderedMap of procedures to save
      * @return true if successful, false otherwise
      */
-    public boolean saveToFile(CustomADT<String, Procedure> procedures) {
+    public boolean saveToFile(OrderedMap<String, Procedure> procedures) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(PROCEDURES_FILE))) {
             oos.writeObject(procedures);
             System.out.println("Successfully saved " + procedures.size() + " procedures to " + PROCEDURES_FILE);
@@ -40,11 +40,11 @@ public class ProcedureDAO {
 
     /**
      * Retrieve procedures from file
-     * @return CustomADT of procedures, empty if file doesn't exist or error occurs
+     * @return OrderedMap of procedures, empty if file doesn't exist or error occurs
      */
     @SuppressWarnings("unchecked")
-    public CustomADT<String, Procedure> retrieveFromFile() {
-        CustomADT<String, Procedure> procedures = new CustomADT<>();
+    public OrderedMap<String, Procedure> retrieveFromFile() {
+        OrderedMap<String, Procedure> procedures = new OrderedMap<>();
         File file = new File(PROCEDURES_FILE);
 
         if (!file.exists()) {
@@ -53,7 +53,7 @@ public class ProcedureDAO {
         }
 
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(PROCEDURES_FILE))) {
-            procedures = (CustomADT<String, Procedure>) ois.readObject();
+            procedures = (OrderedMap<String, Procedure>) ois.readObject();
             System.out.println("Successfully loaded " + procedures.size() + " procedures from " + PROCEDURES_FILE);
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Error retrieving procedures from file: " + e.getMessage());

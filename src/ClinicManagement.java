@@ -4,6 +4,12 @@ import utility.*;
 
 
 public class ClinicManagement {
+
+    private static void clearScreen() {
+        for (int i = 0; i < 50; i++) {
+            System.out.println();
+        }
+    }
     
     public static void main(String[] args) {
             PatientMaintenance patientController = new PatientMaintenance();

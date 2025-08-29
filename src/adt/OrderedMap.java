@@ -19,7 +19,7 @@ import java.util.NoSuchElementException;
  * @param <K> the type of keys maintained by this ADT
  * @param <V> the type of mapped values
  */
-public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, Serializable {
+public class OrderedMap<K, V> implements OrderedMapInterface<K, V>, Iterable<V>, Serializable {
     private static final long serialVersionUID = 1L;
 
     // Internal node structure for the doubly-linked list
@@ -51,7 +51,7 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
 
     // Constructor
     @SuppressWarnings("unchecked")
-    public CustomADT() {
+    public OrderedMap() {
         this.capacity = DEFAULT_CAPACITY;
         this.table = new Node[capacity];
         this.size = 0;
@@ -493,15 +493,15 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
      */
     @Override 
     public Iterator<V> iterator() {
-        return new CustomADTIterator();
+        return new OrderedMapIterator();
     }
 
-    private class CustomADTIterator implements Iterator<V> {
+    private class OrderedMapIterator implements Iterator<V> {
         private Node<K, V> current;
         private Node<K, V> lastReturned;
         private int expectedSize;
 
-        public CustomADTIterator() {
+        public OrderedMapIterator() {
             this.current = head;
             this.lastReturned = null;
             this.expectedSize = size; // Capture the expected size for fail-fast behavior
@@ -542,7 +542,7 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
             }
 
             // Remove the last returned element
-            CustomADT.this.remove(lastReturned.key);
+            OrderedMap.this.remove(lastReturned.key);
             expectedSize = size; // Update expected size after removal
             lastReturned = null; 
         }
@@ -695,11 +695,11 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
      * Filter elements based on a condition using a predicate-style comparator
      * @param referenceValue the value to compare against
      * @param condition a comparator that returns 0 for elements to keep
-     * @return a new CustomADT containing filtered elements
+     * @return a new OrderedMap containing filtered elements
      */
     @Override
-    public CustomADT<K, V> filter(V referenceValue, Comparator<V> condition) {
-        CustomADT<K, V> filtered = new CustomADT<>();
+    public OrderedMap<K, V> filter(V referenceValue, Comparator<V> condition) {
+        OrderedMap<K, V> filtered = new OrderedMap<>();
         Node<K, V> current = head;
 
 
@@ -718,11 +718,11 @@ public class CustomADT<K, V> implements CustomADTInterface<K, V>, Iterable<V>, S
      * @param min the minimum value (includsive)
      * @param max the maximum value (inclusive)
      * @param comparator the comparator for range checking
-     * @return a new CustomADT containing elements within the range
+     * @return a new OrderedMap containing elements within the range
      */
     @Override
-    public CustomADT<K, V> rangeSearch(V min, V max, Comparator<V> comparator) {
-        CustomADT<K, V> results = new CustomADT<>();
+    public OrderedMap<K, V> rangeSearch(V min, V max, Comparator<V> comparator) {
+        OrderedMap<K, V> results = new OrderedMap<>();
         Node<K, V> current = head;
 
         while (current != null) {

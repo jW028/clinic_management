@@ -1,11 +1,14 @@
+/**
+ * @author Lim Xin Hui
+ */
+
 package control;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import dao.DoctorDAO;
 import entity.Doctor;
 import entity.Schedule;
 import utility.IDGenerator;
-import control.ScheduleMaintenance;
 
 public class DoctorMaintenance {
     // === Undo Feature ===
@@ -18,16 +21,16 @@ public class DoctorMaintenance {
         String newValue;   // for update
     }
 
-    private CustomADT<String, Doctor> doctorRegistry;
-    private CustomADT<Integer, UndoAction> undoHistory;
-    private CustomADT<Integer, String> recentDoctorActions; // Keep this for history text
+    private OrderedMap<String, Doctor> doctorRegistry;
+    private OrderedMap<Integer, UndoAction> undoHistory;
+    private OrderedMap<Integer, String> recentDoctorActions; // Keep this for history text
     private ScheduleMaintenance scheduleMaintenance;
 
     public DoctorMaintenance() {
         IDGenerator.loadCounter("counter.dat");
         this.doctorRegistry = DoctorDAO.loadDoctors();
-        this.undoHistory = new CustomADT<>();
-        this.recentDoctorActions = new CustomADT<>();
+        this.undoHistory = new OrderedMap<>();
+        this.recentDoctorActions = new OrderedMap<>();
         this.scheduleMaintenance = new ScheduleMaintenance();
 
         String highestID = "DC000";
@@ -113,7 +116,7 @@ public class DoctorMaintenance {
     }
 
     public boolean removeDoctor(String doctorID) {
-        CustomADT<Integer, Schedule> futureSchedules = scheduleMaintenance.getSchedulesByDoctor(doctorID);
+        OrderedMap<Integer, Schedule> futureSchedules = scheduleMaintenance.getSchedulesByDoctor(doctorID);
         boolean hasFuture = false;
         String today = java.time.LocalDate.now().toString();
         for (int i = 0; i < futureSchedules.size(); i++) {
@@ -166,7 +169,7 @@ public class DoctorMaintenance {
     }
 
     public Doctor[] searchByName(String name) {
-        CustomADT<String, Doctor> results = doctorRegistry.filter(
+        OrderedMap<String, Doctor> results = doctorRegistry.filter(
                 new Doctor(null, name, null, null, null, null, null, 0),
                 (d1, d2) -> d1.getName().equalsIgnoreCase(d2.getName()) ? 0 : -1
         );
@@ -174,7 +177,7 @@ public class DoctorMaintenance {
     }
 
     public Doctor[] searchByGender(String gender) {
-        CustomADT<String, Doctor> results = doctorRegistry.filter(
+        OrderedMap<String, Doctor> results = doctorRegistry.filter(
                 new Doctor(null, null, null, null, null, null, gender, 0),
                 (d1, d2) -> d1.getGender().equalsIgnoreCase(d2.getGender()) ? 0 : -1
         );
@@ -182,7 +185,7 @@ public class DoctorMaintenance {
     }
 
     public Doctor[] searchBySpecialty(String specialty) {
-        CustomADT<String, Doctor> results = doctorRegistry.filter(
+        OrderedMap<String, Doctor> results = doctorRegistry.filter(
                 new Doctor(null, null, specialty, null, null, null, null, 0),
                 (d1, d2) -> d1.getSpecialty().equalsIgnoreCase(d2.getSpecialty()) ? 0 : -1
         );
@@ -191,7 +194,7 @@ public class DoctorMaintenance {
 
     // SEARCH BY YEARS OF EXPERIENCE
     public Doctor[] searchByExperience(int years) {
-        CustomADT<String, Doctor> results = doctorRegistry.filter(
+        OrderedMap<String, Doctor> results = doctorRegistry.filter(
                 new Doctor(null, null, null, null, null, null, null, years),
                 (d1, d2) -> d1.getYearsOfExperience() == d2.getYearsOfExperience() ? 0 : -1
         );
@@ -249,12 +252,12 @@ public class DoctorMaintenance {
     }
 
     public Schedule[] getSchedulesForDoctor(String doctorID) {
-        CustomADT<Integer, Schedule> schedules = scheduleMaintenance.getSchedulesByDoctor(doctorID);
+        OrderedMap<Integer, Schedule> schedules = scheduleMaintenance.getSchedulesByDoctor(doctorID);
         return schedules.toArray(new Schedule[schedules.size()]);
     }
 
-    public CustomADT<String, Integer> getSpecialtyCounts() {
-        CustomADT<String, Integer> specialtyCounts = new CustomADT<>();
+    public OrderedMap<String, Integer> getSpecialtyCounts() {
+        OrderedMap<String, Integer> specialtyCounts = new OrderedMap<>();
         for (Doctor doctor : doctorRegistry) {
             String specialty = doctor.getSpecialty();
             if (specialty == null || specialty.isEmpty()) specialty = "Unknown";
@@ -263,9 +266,9 @@ public class DoctorMaintenance {
         }
         return specialtyCounts;
     }
-    public CustomADT<String, Integer> getDoctorCountPerSpecialty() {
+    public OrderedMap<String, Integer> getDoctorCountPerSpecialty() {
         Doctor[] doctors = getAllDoctorsArray();
-        CustomADT<String, Integer> specialtyCount = new CustomADT<>();
+        OrderedMap<String, Integer> specialtyCount = new OrderedMap<>();
         for (Doctor d : doctors) {
             String spec = d.getSpecialty();
             Integer count = specialtyCount.get(spec);
@@ -274,7 +277,7 @@ public class DoctorMaintenance {
         return specialtyCount;
     }
 
-    public CustomADT<String, Integer> getDoctorCountByGender() {
+    public OrderedMap<String, Integer> getDoctorCountByGender() {
         Doctor[] doctors = getAllDoctorsArray();
         int male = 0, female = 0, other = 0;
         for (Doctor d : doctors) {
@@ -283,7 +286,7 @@ public class DoctorMaintenance {
             else if (g.equals("female")) female++;
             else other++;
         }
-        CustomADT<String, Integer> genderMap = new CustomADT<>();
+        OrderedMap<String, Integer> genderMap = new OrderedMap<>();
         genderMap.put("Male", male);
         genderMap.put("Female", female);
         genderMap.put("Other", other);

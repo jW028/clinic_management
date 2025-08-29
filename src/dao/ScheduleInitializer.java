@@ -1,11 +1,11 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.Schedule;
 
 public class ScheduleInitializer {
     public static void main(String[] args) {
-        CustomADT<String, Schedule> scheduleMap = new CustomADT<>();
+        OrderedMap<String, Schedule> scheduleMap = new OrderedMap<>();
 
         // Add more comprehensive schedule data for all doctors
         // Today and future dates with available slots

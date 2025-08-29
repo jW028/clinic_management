@@ -1,6 +1,7 @@
 package entity;
 
-import adt.CustomADT;
+import adt.OrderedMap;
+
 import java.io.Serializable;
 
 public class Payment implements Serializable {
@@ -9,10 +10,10 @@ public class Payment implements Serializable {
     private double totalAmount;
     private double paidAmount;
     private String paymentStatus;
-    private CustomADT<String, Double> paymentBreakdown;
+    private OrderedMap<String, Double> paymentBreakdown;
 
     public Payment(String paymentId, String consultationId, double totalAmount, double paidAmount,
-                   String paymentStatus, CustomADT<String, Double> paymentBreakdown) {
+                   String paymentStatus, OrderedMap<String, Double> paymentBreakdown) {
         this.paymentId = paymentId;
         this.consultationId = consultationId;
         this.totalAmount = totalAmount;
@@ -41,7 +42,7 @@ public class Payment implements Serializable {
         return paymentStatus;
     }
 
-    public CustomADT<String, Double> getPaymentBreakdown() {
+    public OrderedMap<String, Double> getPaymentBreakdown() {
         return paymentBreakdown;
     }
 
@@ -65,7 +66,7 @@ public class Payment implements Serializable {
         this.paymentStatus = paymentStatus;
     }
 
-    public void setPaymentBreakdown(CustomADT<String, Double> paymentBreakdown) {
+    public void setPaymentBreakdown(OrderedMap<String, Double> paymentBreakdown) {
         this.paymentBreakdown = paymentBreakdown;
     }
 

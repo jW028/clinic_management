@@ -1,12 +1,12 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.Patient;
 import utility.IDGenerator;
 
 public class PatientInitializer {
-   public static CustomADT<String, Patient> initializePatients() {
-       CustomADT<String, Patient> patientMap = new CustomADT<>();
+   public static OrderedMap<String, Patient> initializePatients() {
+       OrderedMap<String, Patient> patientMap = new OrderedMap<>();
        // patients.put("P001", new Patient("P001", "Alice", 19, "Female", "1234567890", "123 Main St", false));
        // patients.put("P002", new Patient("P002", "Bob", 40, "Male", "0987654321", "456 Elm St", false));
 
@@ -29,7 +29,7 @@ public class PatientInitializer {
    }
 
    public static void main(String[] args) {
-       CustomADT<String, Patient> patients = initializePatients();
+       OrderedMap<String, Patient> patients = initializePatients();
        // Display initialized patients
 
        String highestID = "P000";

@@ -1,13 +1,13 @@
 package entity;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 
 import java.io.Serializable;
 
 public class Prescription implements Serializable {
     private String prescriptionID;
     private String treatmentID;
-    private CustomADT<String, PrescribedMedicine> medicines;
+    private OrderedMap<String, PrescribedMedicine> medicines;
     private double totalPrice;
     private String status;
 
@@ -15,7 +15,7 @@ public class Prescription implements Serializable {
     public Prescription(String prescriptionID,String treatmentID){
         this.prescriptionID = prescriptionID;
         this.treatmentID = treatmentID;
-        this.medicines = new CustomADT<String, PrescribedMedicine>();
+        this.medicines = new OrderedMap<String, PrescribedMedicine>();
         this.totalPrice = 0.0;
         this.status = "PENDING";
     }
@@ -30,7 +30,7 @@ public class Prescription implements Serializable {
         }
     }
 
-    public CustomADT<String, PrescribedMedicine>   getMedicines() {
+    public OrderedMap<String, PrescribedMedicine> getMedicines() {
         return medicines;
     }
 

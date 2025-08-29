@@ -1,6 +1,6 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.Prescription;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -24,7 +24,7 @@ public class PrescriptionDAO {
         }
     }
 
-    public void saveToFile(CustomADT<String, Prescription> prescriptions) {
+    public void saveToFile(OrderedMap<String, Prescription> prescriptions) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName))){
             oos.writeObject(prescriptions);
         } catch (IOException e){
@@ -33,10 +33,10 @@ public class PrescriptionDAO {
         }
     }
 
-    public CustomADT<String, Prescription> retrieveFromFile() {
-        CustomADT<String, Prescription> prescriptions = new CustomADT<>();
+    public OrderedMap<String, Prescription> retrieveFromFile() {
+        OrderedMap<String, Prescription> prescriptions = new OrderedMap<>();
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName))) {
-            prescriptions = (CustomADT<String, Prescription>) ois.readObject();
+            prescriptions = (OrderedMap<String, Prescription>) ois.readObject();
         } catch (FileNotFoundException e) {
             System.out.println("File not found: " + fileName);
         } catch (IOException | ClassNotFoundException e) {

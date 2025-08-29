@@ -3,14 +3,26 @@
  */
 
 package control;
-import adt.CustomADT;
+import adt.OrderedMap;
+import dao.ProcedureDAO;
 import entity.*;
+import utility.IDGenerator;
 
 public class ProcedureMaintenance {
-    private CustomADT<String, Procedure> procedures;
+    private OrderedMap<String, Procedure> procedures;
+    private final ProcedureDAO procedureDAO;
+    
 
     public ProcedureMaintenance() {
-        this.procedures = new CustomADT<>();
+        this.procedureDAO = new ProcedureDAO();
+        this.procedures = procedureDAO.retrieveFromFile();
+        
+        // Load ID counter if exists
+        try {
+            IDGenerator.loadCounter("counter.dat");
+        } catch (Exception e) {
+            System.out.println("Could not load ID counter, using defaults");
+        }
     }
 
     // ===============================
@@ -39,6 +51,11 @@ public class ProcedureMaintenance {
         Procedure procedure = new Procedure(procedureID, procedureCode, procedureName, 
                                           description, estimatedDuration, cost);
         procedures.put(procedureID, procedure);
+        
+        // Save to file after creating
+        saveToFile();
+        IDGenerator.saveCounters("counter.dat");
+        
         return procedure;
     }
 
@@ -57,19 +74,19 @@ public class ProcedureMaintenance {
 
     /**
      * Get all procedures
-     * @return CustomADT containing all procedures
+     * @return OrderedMap containing all procedures
      */
-    public CustomADT<String, Procedure> getAllProcedures() {
+    public OrderedMap<String, Procedure> getAllProcedures() {
         return procedures;
     }
 
     /**
      * Search procedures by name (partial match)
      * @param name The name to search for
-     * @return CustomADT containing matching procedures
+     * @return OrderedMap containing matching procedures
      */
-    public CustomADT<String, Procedure> searchProceduresByName(String name) {
-        CustomADT<String, Procedure> results = new CustomADT<>();
+    public OrderedMap<String, Procedure> searchProceduresByName(String name) {
+        OrderedMap<String, Procedure> results = new OrderedMap<>();
         
         for (Procedure procedure : procedures) {
             if (procedure.getProcedureName().toLowerCase().contains(name.toLowerCase())) {
@@ -102,6 +119,7 @@ public class ProcedureMaintenance {
         Procedure procedure = procedures.get(procedureID);
         if (procedure != null) {
             procedure.setCost(newCost);
+            saveToFile(); // Save after update
             return true;
         }
         return false;
@@ -117,7 +135,11 @@ public class ProcedureMaintenance {
      * @return The removed procedure, or null if not found
      */
     public Procedure removeProcedure(String procedureID) {
-        return procedures.remove(procedureID);
+        Procedure removed = procedures.remove(procedureID);
+        if (removed != null) {
+            saveToFile(); // Save after removal
+        }
+        return removed;
     }
 
     /**
@@ -156,5 +178,63 @@ public class ProcedureMaintenance {
      */
     public void clearAllProcedures() {
         procedures.clear();
+        saveToFile(); // Save after clearing
+    }
+
+    // ===============================
+    // DATA PERSISTENCE OPERATIONS
+    // ===============================
+
+    /**
+     * Save procedures to file using DAO
+     * @return true if successful, false otherwise
+     */
+    public boolean saveToFile() {
+        return procedureDAO.saveToFile(procedures);
+    }
+
+    /**
+     * Reload procedures from file
+     * @return true if successful, false otherwise
+     */
+    public boolean loadFromFile() {
+        try {
+            this.procedures = procedureDAO.retrieveFromFile();
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error loading procedures from file: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Check if procedures file exists
+     * @return true if file exists and has data
+     */
+    public boolean hasDataFile() {
+        return procedureDAO.proceduresFileExists();
+    }
+
+    /**
+     * Get the current file path being used
+     * @return the file path as String
+     */
+    public String getDataFilePath() {
+        return procedureDAO.getFilePath();
+    }
+
+    /**
+     * Create a procedure with auto-generated ID
+     * @param procedureCode The procedure code
+     * @param procedureName The name of the procedure
+     * @param description The description of the procedure
+     * @param estimatedDuration Duration in minutes
+     * @param cost The cost of the procedure
+     * @return The created procedure, or null if creation failed
+     */
+    public Procedure createProcedureWithAutoID(String procedureCode, String procedureName, 
+                                             String description, int estimatedDuration, double cost) {
+        String procedureID = IDGenerator.generateProcedureID();
+        return createProcedure(procedureID, procedureCode, procedureName, description, estimatedDuration, cost);
     }
 }

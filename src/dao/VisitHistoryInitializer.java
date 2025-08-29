@@ -1,13 +1,14 @@
 package dao;
 
+import adt.OrderedMap;
 import entity.VisitHistory;
 import entity.Patient;
-import adt.CustomADT;
+
 import java.time.LocalDateTime;
 
 public class VisitHistoryInitializer {
-    public static CustomADT<String, VisitHistory> initializeVisitHistories() {
-        CustomADT<String, VisitHistory> visitHistories = new CustomADT<>();
+    public static OrderedMap<String, VisitHistory> initializeVisitHistories() {
+        OrderedMap<String, VisitHistory> visitHistories = new OrderedMap<>();
 
         // Create sample patients for the visit histories
         Patient patient1 = new Patient("P001", "Alice", 19, "Female", "1234567890", "123 Main St", false);
@@ -50,7 +51,7 @@ public class VisitHistoryInitializer {
     }
 
     public static void main(String[] args) {
-        CustomADT<String, VisitHistory> visitHistories = initializeVisitHistories();
+        OrderedMap<String, VisitHistory> visitHistories = initializeVisitHistories();
         // Display initialized visit histories
         System.out.println("=== INITIALIZED VISIT HISTORIES ===");
         for (int i = 0; i < visitHistories.size(); i++) {

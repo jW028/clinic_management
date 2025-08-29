@@ -1,11 +1,11 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.Doctor;
 
 public class DoctorInitializer {
     public static void main(String[] args) {
-        CustomADT<String, Doctor> doctorRegistry = new CustomADT<>();
+        OrderedMap<String, Doctor> doctorRegistry = new OrderedMap<>();
 
         doctorRegistry.put("DC001", new Doctor("DC001", "Dr. Alice Tan", "Cardiology",
                 "012-3456789", "alice.tan@hospital.com", "123 Jalan Medan", "FEMALE", 18));

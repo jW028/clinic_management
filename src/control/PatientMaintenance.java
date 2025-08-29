@@ -1,3 +1,7 @@
+/**
+ * @author Samuel Chew Chun Hong
+ */
+
 package control;
 
 import adt.*;
@@ -7,15 +11,15 @@ import java.time.LocalDateTime;
 import utility.IDGenerator;
 
 public class PatientMaintenance {
-    private final CustomADT<String, Patient> normalQueue;
-    private final CustomADT<String, Patient> emergencyQueue;
-    private final CustomADT<String, Patient> patientRegistry;
-    private final CustomADT<String, VisitHistory> visitHistoryMap;
+    private final OrderedMap<String, Patient> normalQueue;
+    private final OrderedMap<String, Patient> emergencyQueue;
+    private OrderedMap<String, Patient> patientRegistry;
+    private final OrderedMap<String, VisitHistory> visitHistoryMap;
     private final PatientDAO patientDAO;
     private final VisitHistoryDAO visitHistoryDAO;
     private static final int MAX_QUEUE_SIZE = 20;
-    private CustomADT<String, Consultation> consultationMap;
-    private CustomADT<String, Treatment> treatmentMap;
+    private OrderedMap<String, Consultation> consultationMap;
+    private OrderedMap<String, Treatment> treatmentMap;
     private final ConsultationDAO consultationDAO;
     private final TreatmentDAO treatmentDAO;
     private ConsultationMaintenance consultationMaintenance;
@@ -35,32 +39,32 @@ public class PatientMaintenance {
         this.consultationMaintenance = new ConsultationMaintenance();
         this.treatmentMaintenance = new TreatmentMaintenance();
 
-        CustomADT<String, Patient> loadedPatients = patientDAO.retrieveFromFile();
+        OrderedMap<String, Patient> loadedPatients = patientDAO.retrieveFromFile();
         if (loadedPatients != null) {
-            this.patientRegistry = (CustomADT<String, Patient>) loadedPatients;
+            this.patientRegistry = (OrderedMap<String, Patient>) loadedPatients;
         } else {
-            this.patientRegistry = new CustomADT<>();
+            this.patientRegistry = new OrderedMap<>();
         }
 
-        CustomADT<String, VisitHistory> loadedVisitHistory = visitHistoryDAO.retrieveFromFile();
+        OrderedMap<String, VisitHistory> loadedVisitHistory = visitHistoryDAO.retrieveFromFile();
         if (loadedVisitHistory != null) {
-            this.visitHistoryMap = (CustomADT<String, VisitHistory>) loadedVisitHistory;
+            this.visitHistoryMap = (OrderedMap<String, VisitHistory>) loadedVisitHistory;
         } else {
-            this.visitHistoryMap = new CustomADT<>();
+            this.visitHistoryMap = new OrderedMap<>();
         }
 
-        CustomADT<String, Consultation> loadedConsultations = consultationDAO.retrieveFromFile();
+        OrderedMap<String, Consultation> loadedConsultations = consultationDAO.retrieveFromFile();
         if (loadedConsultations != null) {
-            this.consultationMap = (CustomADT<String, Consultation>) loadedConsultations;
+            this.consultationMap = (OrderedMap<String, Consultation>) loadedConsultations;
         } else {
-            this.consultationMap = new CustomADT<>();
+            this.consultationMap = new OrderedMap<>();
         }
 
-        CustomADT<String, Treatment> loadedTreatments = treatmentDAO.retrieveFromFile();
+        OrderedMap<String, Treatment> loadedTreatments = treatmentDAO.retrieveFromFile();
         if (loadedTreatments != null) {
-            this.treatmentMap = (CustomADT<String, Treatment>) loadedTreatments;
+            this.treatmentMap = (OrderedMap<String, Treatment>) loadedTreatments;
         } else {
-            this.treatmentMap = new CustomADT<>();
+            this.treatmentMap = new OrderedMap<>();
         }
 
         IDGenerator.loadCounter("counter.dat");
@@ -73,8 +77,8 @@ public class PatientMaintenance {
         return instance;
     }
 
-    public CustomADT<String, Consultation> getConsultationsByPatient(String patientId) {
-        CustomADT<String, Consultation> result = new CustomADT<>();
+    public OrderedMap<String, Consultation> getConsultationsByPatient(String patientId) {
+        OrderedMap<String, Consultation> result = new OrderedMap<>();
         if (consultationMaintenance == null) return result;
         Consultation[] arr = consultationMaintenance.getAllConsultations();
         for (Consultation c : arr) {
@@ -86,13 +90,13 @@ public class PatientMaintenance {
         return result;
     }
 
-    public CustomADT<String, Treatment> getTreatmentsForPatient(String patientId) {
-        CustomADT<String, Treatment> result = new CustomADT<>();
+    public OrderedMap<String, Treatment> getTreatmentsForPatient(String patientId) {
+        OrderedMap<String, Treatment> result = new OrderedMap<>();
         if (patientId == null) return result;
         Patient p = getPatientById(patientId);
         if (p == null) return result;
 
-        CustomADT<String, Treatment> fetched = treatmentMaintenance.getTreatmentsByPatient(p);
+        OrderedMap<String, Treatment> fetched = treatmentMaintenance.getTreatmentsByPatient(p);
         for (Treatment t : fetched) {
             if (t != null && t.getTreatmentID() != null) {
                 result.put(t.getTreatmentID(), t);
@@ -164,9 +168,9 @@ public class PatientMaintenance {
         return true;
     }
 
-    public CustomADT<String, Patient> searchPatients(String searchTerm) {
+    public OrderedMap<String, Patient> searchPatients(String searchTerm) {
         if (searchTerm == null || searchTerm.trim().isEmpty()) {
-            return new CustomADT<>();
+            return new OrderedMap<>();
         }
         String term = searchTerm.trim().toLowerCase();
         return patientRegistry.filter(
@@ -196,11 +200,11 @@ public class PatientMaintenance {
     }
 
     /**
-     * Get patient registry as CustomADT
+     * Get patient registry as OrderedMap
      */
-    public CustomADT<String, Patient> getAllPatients() {
+    public OrderedMap<String, Patient> getAllPatients() {
         // Create a copy to avoid modifying the original registry
-        CustomADT<String, Patient> sortedPatients = new CustomADT<>();
+        OrderedMap<String, Patient> sortedPatients = new OrderedMap<>();
         for (Patient patient : patientRegistry) {
             sortedPatients.put(patient.getPatientId(), patient);
         }
@@ -248,7 +252,7 @@ public class PatientMaintenance {
      * Serve next patient from queues
      */
     public Patient serveNextPatient() {
-        // Use CustomADT's poll() method for proper queue behavior (FIFO)
+        // Use OrderedMap's poll() method for proper queue behavior (FIFO)
         Patient nextPatient = emergencyQueue.poll();
 
         if (nextPatient == null) {
@@ -276,7 +280,7 @@ public class PatientMaintenance {
     /**
      * Get emergency queue contents for display
      */
-    public CustomADT<String, Patient> getEmergencyQueue() {
+    public OrderedMap<String, Patient> getEmergencyQueue() {
         return getAllQueuedPatients().filter(null, (patient, reference) -> {
             if (patient == null) return -1;
             return patient.isEmergency() ? 0 : -1;
@@ -286,7 +290,7 @@ public class PatientMaintenance {
     /**
      * Get normal queue contents for display
      */
-    public CustomADT<String, Patient> getNormalQueue() {
+    public OrderedMap<String, Patient> getNormalQueue() {
         return getAllQueuedPatients().filter(null, (patient, reference) -> {
             if (patient == null) return -1;
             return !patient.isEmergency() ? 0 : -1;
@@ -296,8 +300,8 @@ public class PatientMaintenance {
     /**
      * Helper method to get all patients currently in any queue
      */
-    private CustomADT<String, Patient> getAllQueuedPatients() {
-        CustomADT<String, Patient> allQueued = new CustomADT<>();
+    private OrderedMap<String, Patient> getAllQueuedPatients() {
+        OrderedMap<String, Patient> allQueued = new OrderedMap<>();
 
         // Add all patients from emergency queue
         for (Patient patient : emergencyQueue) {
@@ -367,13 +371,13 @@ public class PatientMaintenance {
     /**
      * Get patient visit history
      */
-    public CustomADT<String, VisitHistory> getPatientVisitHistory(String patientId) {
+    public OrderedMap<String, VisitHistory> getPatientVisitHistory(String patientId) {
         if (patientId == null || patientId.trim().isEmpty()) {
-            return new CustomADT<>();
+            return new OrderedMap<>();
         }
 
         // Get existing visit histories with proper filtering
-        CustomADT<String, VisitHistory> patientVisits = new CustomADT<>();
+        OrderedMap<String, VisitHistory> patientVisits = new OrderedMap<>();
         for (VisitHistory visit : visitHistoryMap) {
             if (visit.getPatient() != null &&
                     visit.getPatient().getPatientId().equals(patientId)) {
@@ -400,10 +404,10 @@ public class PatientMaintenance {
     /**
      * Get all visit histories
      */
-    public CustomADT<String, VisitHistory> getAllVisitHistories() {
-        CustomADT<String, VisitHistory> copy = new CustomADT<>();
+    public OrderedMap<String, VisitHistory> getAllVisitHistories() {
+        OrderedMap<String, VisitHistory> copy = new OrderedMap<>();
 
-        // Use CustomADT indexed access to copy all entries
+        // Use OrderedMap indexed access to copy all entries
         for (int i = 0; i < visitHistoryMap.size(); i++) {
             VisitHistory visit = visitHistoryMap.get(i);
             if (visit != null) {
@@ -473,10 +477,10 @@ public class PatientMaintenance {
 
     /**
      * Generate patient registration summary report data
-     * @return CustomADT containing report data with keys for different metrics
+     * @return OrderedMap containing report data with keys for different metrics
      */
-    public CustomADT<String, Object> generatePatientRegistrationReport() {
-        CustomADT<String, Object> reportData = new CustomADT<>();
+    public OrderedMap<String, Object> generatePatientRegistrationReport() {
+        OrderedMap<String, Object> reportData = new OrderedMap<>();
         // Total counts
         reportData.put("totalPatients", patientRegistry.size());
         // Queue statistics
@@ -484,46 +488,46 @@ public class PatientMaintenance {
         reportData.put("emergencyQueueSize", getEmergencyQueueSize());
         reportData.put("normalQueueSize", getNormalQueueSize());
         // Gender breakdown using filter
-        CustomADT<String, Integer> genderStats = new CustomADT<>();
+        OrderedMap<String, Integer> genderStats = new OrderedMap<>();
         // Filter for males
-        CustomADT<String, Patient> malePatients = patientRegistry.filter(
+        OrderedMap<String, Patient> malePatients = patientRegistry.filter(
                 new Patient("", "", 0, "Male", "", "", false),
                 (p1, p2) -> p1.getGender().equalsIgnoreCase(p2.getGender()) ? 0 : -1
         );
         genderStats.put("Male", malePatients.size());
         // Filter for females
-        CustomADT<String, Patient> femalePatients = patientRegistry.filter(
+        OrderedMap<String, Patient> femalePatients = patientRegistry.filter(
                 new Patient("", "", 0, "Female", "", "", false),
                 (p1, p2) -> p1.getGender().equalsIgnoreCase(p2.getGender()) ? 0 : -1
         );
         genderStats.put("Female", femalePatients.size());
         reportData.put("genderBreakdown", genderStats);
         // Age group breakdown using filter
-        CustomADT<String, Integer> ageGroups = new CustomADT<>();
+        OrderedMap<String, Integer> ageGroups = new OrderedMap<>();
         // Filter for each age group
-        CustomADT<String, Patient> group0to18 = patientRegistry.filter(
+        OrderedMap<String, Patient> group0to18 = patientRegistry.filter(
                 new Patient("", "", 18, "", "", "", false),
                 (p1, p2) -> p1.getAge() <= 18 ? 0 : -1
         );
         ageGroups.put("0-18", group0to18.size());
-        CustomADT<String, Patient> group19to35 = patientRegistry.filter(
+        OrderedMap<String, Patient> group19to35 = patientRegistry.filter(
                 new Patient("", "", 35, "", "", "", false),
                 (p1, p2) -> (p1.getAge() >= 19 && p1.getAge() <= 35) ? 0 : -1
         );
         ageGroups.put("19-35", group19to35.size());
 
-        CustomADT<String, Patient> group36to50 = patientRegistry.filter(
+        OrderedMap<String, Patient> group36to50 = patientRegistry.filter(
                 new Patient("", "", 50, "", "", "", false),
                 (p1, p2) -> (p1.getAge() >= 36 && p1.getAge() <= 50) ? 0 : -1
         );
         ageGroups.put("36-50", group36to50.size());
-        CustomADT<String, Patient> group51to65 = patientRegistry.filter(
+        OrderedMap<String, Patient> group51to65 = patientRegistry.filter(
                 new Patient("", "", 65, "", "", "", false),
                 (p1, p2) -> (p1.getAge() >= 51 && p1.getAge() <= 65) ? 0 : -1
         );
         ageGroups.put("51-65", group51to65.size());
 
-        CustomADT<String, Patient> group65Plus = patientRegistry.filter(
+        OrderedMap<String, Patient> group65Plus = patientRegistry.filter(
                 new Patient("", "", 66, "", "", "", false),
                 (p1, p2) -> p1.getAge() > 65 ? 0 : -1
         );
@@ -532,20 +536,20 @@ public class PatientMaintenance {
         return reportData;
     }
 
-    public CustomADT<String, Object> generatePatientVisitSummaryReport() {
-        CustomADT<String, Object> report = new CustomADT<>();
+    public OrderedMap<String, Object> generatePatientVisitSummaryReport() {
+        OrderedMap<String, Object> report = new OrderedMap<>();
 
         // 1) aggregate
-        CustomADT<String, Integer> statusCounts = new CustomADT<>();
+        OrderedMap<String, Integer> statusCounts = new OrderedMap<>();
         statusCounts.put("SCHEDULED", 0);
         statusCounts.put("IN_PROGRESS", 0);
         statusCounts.put("COMPLETED", 0);
         statusCounts.put("CANCELLED", 0);
 
-        CustomADT<String, Integer> visitsPerMonth = new CustomADT<>();
-        CustomADT<String, Integer> countByPatient = new CustomADT<>();
+        OrderedMap<String, Integer> visitsPerMonth = new OrderedMap<>();
+        OrderedMap<String, Integer> countByPatient = new OrderedMap<>();
 
-        CustomADT<String, VisitHistory> allV = getAllVisitHistories();
+        OrderedMap<String, VisitHistory> allV = getAllVisitHistories();
         int total = allV.size();
 
         for (int i = 0; i < allV.size(); i++) {
@@ -572,7 +576,7 @@ public class PatientMaintenance {
         int patientDenom = Math.max(1, getAllPatients().size());
         double avgPerPatient = (double) total / patientDenom;
 
-        CustomADT<String, Integer> topPatients = new CustomADT<>();
+        OrderedMap<String, Integer> topPatients = new OrderedMap<>();
         int picks = Math.min(3, countByPatient.size());
         for (int pick = 0; pick < picks; pick++) {
             String bestId = null;

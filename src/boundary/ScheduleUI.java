@@ -1,7 +1,7 @@
 package boundary;
 
+import adt.OrderedMap;
 import control.ScheduleMaintenance;
-import adt.CustomADT;
 import utility.IDGenerator;
 import utility.InputHandler;
 import entity.Schedule;
@@ -54,7 +54,7 @@ public class ScheduleUI {
     }
 
     private void listAllSchedulesFlow() {
-        CustomADT<Integer, Schedule> schedules = scheduleMaintenance.getAllSchedules();
+        OrderedMap<Integer, Schedule> schedules = scheduleMaintenance.getAllSchedules();
         showScheduleTable(schedules);
         sortScheduleTableFlow(schedules);
     }
@@ -95,11 +95,11 @@ public class ScheduleUI {
         System.out.println(" 2. Show schedules for this date by doctor");
         int choice = InputHandler.getInt("Choose option", 1, 2);
         if (choice == 1) {
-            CustomADT<Integer, Schedule> schedules = scheduleMaintenance.getSchedulesByDate(date);
+            OrderedMap<Integer, Schedule> schedules = scheduleMaintenance.getSchedulesByDate(date);
             showScheduleTable(schedules);
             sortScheduleTableFlow(schedules);
         } else {
-            CustomADT<Integer, String> doctorIDs = scheduleMaintenance.getDoctorIDsByDate(date);
+            OrderedMap<Integer, String> doctorIDs = scheduleMaintenance.getDoctorIDsByDate(date);
             if (doctorIDs.size() == 0) {
                 System.out.println("No doctors have schedules on this date.");
                 return;
@@ -110,7 +110,7 @@ public class ScheduleUI {
             }
             int doctorChoice = InputHandler.getInt("Select doctor number to view slots", 1, doctorIDs.size());
             String doctorID = doctorIDs.get(doctorChoice - 1);
-            CustomADT<Integer, Schedule> schedules = scheduleMaintenance.getSchedulesByDateAndDoctor(date, doctorID);
+            OrderedMap<Integer, Schedule> schedules = scheduleMaintenance.getSchedulesByDateAndDoctor(date, doctorID);
             showScheduleTable(schedules);
             sortScheduleTableFlow(schedules);
         }
@@ -119,7 +119,7 @@ public class ScheduleUI {
     // Search by Doctor
     private void searchByDoctorFlow() {
         String doctorID = InputHandler.getString("Enter Doctor ID: ").trim();
-        CustomADT<Integer, Schedule> schedules = scheduleMaintenance.getSchedulesByDoctor(doctorID);
+        OrderedMap<Integer, Schedule> schedules = scheduleMaintenance.getSchedulesByDoctor(doctorID);
 
         if (schedules.size() == 0) {
             System.out.println("No schedules found for this doctor.");
@@ -134,7 +134,7 @@ public class ScheduleUI {
     // Search by Status
     private void searchByStatusFlow() {
         String statusStr = InputHandler.getString("Enter status (true/false): ").trim();
-        CustomADT<Integer, Schedule> schedules = scheduleMaintenance.getSchedulesByStatus(statusStr);
+        OrderedMap<Integer, Schedule> schedules = scheduleMaintenance.getSchedulesByStatus(statusStr);
 
         if (schedules.size() == 0) {
             System.out.println("No schedules found for this status.");
@@ -166,7 +166,7 @@ public class ScheduleUI {
         String doctorID = InputHandler.getString("Enter Doctor ID: ").trim();
 
         // Show existing schedules for this doctor on that day
-        CustomADT<Integer, Schedule> existingSchedules = scheduleMaintenance.getSchedulesByDateAndDoctor(date, doctorID);
+        OrderedMap<Integer, Schedule> existingSchedules = scheduleMaintenance.getSchedulesByDateAndDoctor(date, doctorID);
         if (existingSchedules.size() > 0) {
             System.out.println("\nExisting schedules for Doctor " + doctorID + " on " + date + ":");
             showScheduleTable(existingSchedules);
@@ -179,8 +179,8 @@ public class ScheduleUI {
 
     // 4. Remove
     private void removeFlow() {
-        CustomADT<Integer, Schedule> schedules = scheduleMaintenance.getAllSchedules();
-        CustomADT<Integer, Schedule> removableSchedules = new CustomADT<>();
+        OrderedMap<Integer, Schedule> schedules = scheduleMaintenance.getAllSchedules();
+        OrderedMap<Integer, Schedule> removableSchedules = new OrderedMap<>();
         int idx = 0;
         for (int i = 0; i < schedules.size(); i++) {
             Schedule s = schedules.get(i);
@@ -226,8 +226,8 @@ public class ScheduleUI {
 
         String date = String.format("%04d-%02d-%02d", year, month, day);
 
-        CustomADT<Integer, Schedule> schedules = scheduleMaintenance.getSchedulesByDate(date);
-        CustomADT<Integer, Schedule> availableSchedules = new CustomADT<>();
+        OrderedMap<Integer, Schedule> schedules = scheduleMaintenance.getSchedulesByDate(date);
+        OrderedMap<Integer, Schedule> availableSchedules = new OrderedMap<>();
         int idx = 0;
         for (int i = 0; i < schedules.size(); i++) {
             Schedule s = schedules.get(i);
@@ -257,7 +257,7 @@ public class ScheduleUI {
     }
 
     // Universally styled table display
-    private void showScheduleTable(CustomADT<Integer, Schedule> schedules) {
+    private void showScheduleTable(OrderedMap<Integer, Schedule> schedules) {
         if (schedules == null || schedules.size() == 0) {
             System.out.println("No schedules to display.");
             return;
@@ -280,7 +280,7 @@ public class ScheduleUI {
     }
 
     // Sort menu for any shown table
-    private void sortScheduleTableFlow(CustomADT<Integer, Schedule> schedules) {
+    private void sortScheduleTableFlow(OrderedMap<Integer, Schedule> schedules) {
         if (schedules == null || schedules.size() == 0) return;
         System.out.println("\n┌" + "─".repeat(40) + "┐");
         System.out.println("│ Sort by:                               │");
@@ -293,7 +293,7 @@ public class ScheduleUI {
         System.out.println("└" + "─".repeat(40) + "┘");
         int sortOption = InputHandler.getInt("Choose sort option", 0, 4);
         if (sortOption != 0) {
-            CustomADT<Integer, Schedule> sorted = scheduleMaintenance.sortSchedules(schedules, sortOption);
+            OrderedMap<Integer, Schedule> sorted = scheduleMaintenance.sortSchedules(schedules, sortOption);
             System.out.println("\nSorted Schedule Table:");
             showScheduleTable(sorted);
         }
@@ -304,7 +304,7 @@ public class ScheduleUI {
         String scheduleID = IDGenerator.generateScheduleID();
         System.out.println("Generated Schedule ID: " + scheduleID);
         String timeSlotInput;
-        CustomADT<Integer, String> validSlots;
+        OrderedMap<Integer, String> validSlots;
         while (true) {
             timeSlotInput = InputHandler.getString("Enter Time Slot (e.g. 09:00–10:00)").trim();
             validSlots = scheduleMaintenance.parseAndValidateTimeSlots(timeSlotInput);
@@ -346,13 +346,13 @@ public class ScheduleUI {
             System.out.println(rightInDash("generated at: " + now, 70));
             dash(70); blank();
 
-            CustomADT<String, Integer> countPerDoctor = scheduleMaintenance.getScheduleCountPerDoctor();
+            OrderedMap<String, Integer> countPerDoctor = scheduleMaintenance.getScheduleCountPerDoctor();
             if (countPerDoctor.size() == 0) {
                 System.out.println("\nNo schedules found for any doctor.");
                 line(70);
                 return;
             }
-            CustomADT<Integer, Schedule> allSchedules = scheduleMaintenance.getAllSchedules();
+            OrderedMap<Integer, Schedule> allSchedules = scheduleMaintenance.getAllSchedules();
             java.util.HashSet<String> printed = new java.util.HashSet<>();
             int totalSchedules = 0;
             int maxCount = 0;
@@ -402,7 +402,7 @@ public class ScheduleUI {
             dash(70); blank();
 
 
-            CustomADT<String, Integer> statusMap = scheduleMaintenance.getScheduleCountByStatus();
+            OrderedMap<String, Integer> statusMap = scheduleMaintenance.getScheduleCountByStatus();
             String[] statusKeys = {"Available", "Leave"};
             int total = 0;
             int maxCount = 0;

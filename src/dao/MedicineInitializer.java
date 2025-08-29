@@ -1,12 +1,12 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.Medicine;
 
 
 public class MedicineInitializer {
     public static void main(String[] args) {
-        CustomADT<String, Medicine> medicationMap = new CustomADT<>();
+        OrderedMap<String, Medicine> medicationMap = new OrderedMap<>();
 
         medicationMap.put("M001", new Medicine("M001", "Paracetamol", 100, 5.00, "Pain reliever and fever reducer"));
         medicationMap.put("M002", new Medicine("M002", "Ibuprofen", 50, 10.00, "Anti-inflammatory and pain reliever"));

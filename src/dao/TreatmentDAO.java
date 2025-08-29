@@ -1,6 +1,6 @@
 package dao;
 
-import adt.CustomADT;
+import adt.OrderedMap;
 import entity.Treatment;
 import java.io.*;
 import java.nio.file.Files;
@@ -26,7 +26,7 @@ public class TreatmentDAO {
         }
     }
 
-    public boolean saveToFile(CustomADT<String, Treatment> treatments) {
+    public boolean saveToFile(OrderedMap<String, Treatment> treatments) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(TREATMENTS_FILE))) {
             oos.writeObject(treatments);
             System.out.println("Successfully saved treatments to file.");
@@ -39,8 +39,8 @@ public class TreatmentDAO {
 
 
     @SuppressWarnings("unchecked")
-    public CustomADT<String, Treatment> retrieveFromFile() {
-        CustomADT<String, Treatment> treatments = new CustomADT<>();
+    public OrderedMap<String, Treatment> retrieveFromFile() {
+        OrderedMap<String, Treatment> treatments = new OrderedMap<>();
         File file = new File (TREATMENTS_FILE); 
 
         if (!file.exists()) {
@@ -50,7 +50,7 @@ public class TreatmentDAO {
 
         try (ObjectInputStream ois = new ObjectInputStream(
                 new FileInputStream(TREATMENTS_FILE))) {
-            treatments = (CustomADT<String, Treatment>) ois.readObject();
+            treatments = (OrderedMap<String, Treatment>) ois.readObject();
             System.out.println("Treatments loaded from " + TREATMENTS_FILE);
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Error retrieving treatments from file: " + e.getMessage());
@@ -58,7 +58,7 @@ public class TreatmentDAO {
         return treatments;
     }
 
-    public boolean saveRecentActivities(CustomADT<String, String> recentActivities) {
+    public boolean saveRecentActivities(OrderedMap<String, String> recentActivities) {
         try (ObjectOutputStream oos = new ObjectOutputStream(
                 new FileOutputStream(RECENT_TREATMENTS_FILE))) {
             oos.writeObject(recentActivities);
@@ -71,8 +71,8 @@ public class TreatmentDAO {
     }
 
      @SuppressWarnings("unchecked")
-    public CustomADT<String, String> retrieveRecentActivities() {
-        CustomADT<String, String> recentActivities = new CustomADT<>();
+    public OrderedMap<String, String> retrieveRecentActivities() {
+        OrderedMap<String, String> recentActivities = new OrderedMap<>();
         File file = new File(RECENT_TREATMENTS_FILE);
         
         if (!file.exists()) {
@@ -82,7 +82,7 @@ public class TreatmentDAO {
 
         try (ObjectInputStream ois = new ObjectInputStream(
                 new FileInputStream(RECENT_TREATMENTS_FILE))) {
-            recentActivities = (CustomADT<String, String>) ois.readObject();
+            recentActivities = (OrderedMap<String, String>) ois.readObject();
             System.out.println("Recent activities loaded from " + RECENT_TREATMENTS_FILE);
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Error retrieving recent activities from file: " + e.getMessage());
