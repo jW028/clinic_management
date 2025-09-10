@@ -353,17 +353,17 @@ public class ScheduleUI {
                 return;
             }
             OrderedMap<Integer, Schedule> allSchedules = scheduleMaintenance.getAllSchedules();
-            java.util.HashSet<String> printed = new java.util.HashSet<>();
+            OrderedMap<String, Boolean> printed = new OrderedMap<>();
             int totalSchedules = 0;
             int maxCount = 0;
             // Find max count for scaling
             for (int i = 0; i < allSchedules.size(); i++) {
                 String docId = allSchedules.get(i).getDoctorID();
-                if (!printed.contains(docId)) {
+                if (!printed.containsKey(docId)) {
                     int count = countPerDoctor.get(docId) == null ? 0 : countPerDoctor.get(docId);
                     if (count > maxCount) maxCount = count;
                     totalSchedules += count;
-                    printed.add(docId);
+                    printed.put(docId, true);
                 }
             }
             printed.clear();
@@ -375,12 +375,12 @@ public class ScheduleUI {
 
             for (int i = 0; i < allSchedules.size(); i++) {
                 String docId = allSchedules.get(i).getDoctorID();
-                if (!printed.contains(docId)) {
+                if (!printed.containsKey(docId)) {
                     int count = countPerDoctor.get(docId) == null ? 0 : countPerDoctor.get(docId);
                     int barLen = maxCount == 0 ? 0 : (int)Math.round(((double)count / maxCount) * 28);
                     String bar = "█".repeat(barLen);
                     System.out.printf("  %-12s │ %-18d │ %-28s%n", docId, count, bar);
-                    printed.add(docId);
+                    printed.put(docId, true);
                 }
             }
             dash(70);
@@ -401,12 +401,12 @@ public class ScheduleUI {
             System.out.println(rightInDash("generated at: " + now, 70));
             dash(70); blank();
 
-
             OrderedMap<String, Integer> statusMap = scheduleMaintenance.getScheduleCountByStatus();
             String[] statusKeys = {"Available", "Leave"};
             int total = 0;
             int maxCount = 0;
-            for (String key : statusKeys) {
+            for (int i = 0; i < statusKeys.length; i++) {
+                String key = statusKeys[i];
                 int count = statusMap.get(key) == null ? 0 : statusMap.get(key);
                 if (count > maxCount) maxCount = count;
                 total += count;
@@ -416,7 +416,8 @@ public class ScheduleUI {
             System.out.printf("  %-13s │ %-18s │ %-28s%n", "Status", "Count", "Graph");
             dash(70);
 
-            for (String key : statusKeys) {
+            for (int i = 0; i < statusKeys.length; i++) {
+                String key = statusKeys[i];
                 int count = statusMap.get(key) == null ? 0 : statusMap.get(key);
                 int barLen = maxCount == 0 ? 0 : (int)Math.round(((double)count / maxCount) * 28);
                 String bar = "█".repeat(barLen);

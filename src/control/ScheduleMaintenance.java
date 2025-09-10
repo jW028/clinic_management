@@ -207,8 +207,6 @@ public class ScheduleMaintenance {
         while (j < right.size()) result.put(k++, right.get(j++));
         return result;
     }
-// In ScheduleMaintenance.java
-
     // Show calendar for the schedules of a specific doctor (with * marking scheduled days)
     public void displayDoctorCalendar(String doctorID) {
         System.out.println("\n=== Doctor " + doctorID + " Schedule Calendar ===");

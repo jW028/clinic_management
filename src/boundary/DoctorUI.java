@@ -335,17 +335,17 @@ public class DoctorUI {
 
             OrderedMap<String, Integer> specialtyCount = doctorMaintenance.getDoctorCountPerSpecialty();
             Doctor[] doctors = doctorMaintenance.getAllDoctorsArray();
-            java.util.HashSet<String> printed = new java.util.HashSet<>();
+            OrderedMap<String, Boolean> printed = new OrderedMap<>();
             int totalDoctors = 0;
             int maxCount = 0;
             // Find max count for graph scaling
             for (int i = 0; i < doctors.length; i++) {
                 String spec = doctors[i].getSpecialty();
-                if (!printed.contains(spec)) {
+                if (!printed.containsKey(spec)) {
                     int count = specialtyCount.get(spec) == null ? 0 : specialtyCount.get(spec);
                     if (count > maxCount) maxCount = count;
                     totalDoctors += count;
-                    printed.add(spec);
+                    printed.put(spec, true);
                 }
             }
             printed.clear();
@@ -357,12 +357,12 @@ public class DoctorUI {
 
             for (int i = 0; i < doctors.length; i++) {
                 String spec = doctors[i].getSpecialty();
-                if (!printed.contains(spec)) {
+                if (!printed.containsKey(spec)) {
                     int count = specialtyCount.get(spec) == null ? 0 : specialtyCount.get(spec);
                     int barLen = maxCount == 0 ? 0 : (int)Math.round(((double)count / maxCount) * 30);
                     String bar = "█".repeat(barLen);
                     System.out.printf("  %-25s │ %-8d │ %-15s%n", spec, count, bar);
-                    printed.add(spec);
+                    printed.put(spec, true);
                 }
             }
             dash(80);
@@ -388,7 +388,8 @@ public class DoctorUI {
             String[] keys = {"Male", "Female", "Other"};
             int total = 0;
             int maxCount = 0;
-            for (String key : keys) {
+            for (int i = 0; i < keys.length; i++) {
+                String key = keys[i];
                 int count = genderMap.get(key) == null ? 0 : genderMap.get(key);
                 if (count > maxCount) maxCount = count;
                 total += count;
@@ -398,7 +399,8 @@ public class DoctorUI {
             System.out.printf("  %-10s │ %-8s │ %-15s%n", "Gender", "Count", "Graph");
             dash(80);
 
-            for (String key : keys) {
+            for (int i = 0; i < keys.length; i++) {
+                String key = keys[i];
                 int count = genderMap.get(key) == null ? 0 : genderMap.get(key);
                 int barLen = maxCount == 0 ? 0 : (int)Math.round(((double)count / maxCount) * 30);
                 String bar = "█".repeat(barLen);
