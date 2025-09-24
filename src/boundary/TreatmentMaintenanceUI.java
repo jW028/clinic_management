@@ -62,6 +62,9 @@ public class TreatmentMaintenanceUI {
                 case 8:
                     reportsMenu();
                     break;
+                case 9:
+                    undoOperationsMenu();
+                    break;
                 case 0:
                     System.out.println("Returning to main menu...");
                     break;
@@ -91,6 +94,7 @@ public class TreatmentMaintenanceUI {
         System.out.println("│ 6. Search Treatments                   │");
         System.out.println("│ 7. Manage Procedures                   │");
         System.out.println("│ 8. Reports and Statistics              │");
+        System.out.println("│ 9. Undo Operations                     │");
         System.out.println("│ 0. Back to Main Menu                   │");
         System.out.println("└" + "─".repeat(40) + "┘");
     }
@@ -838,19 +842,28 @@ public class TreatmentMaintenanceUI {
         switch (choice) {
             case 1:
                 String notes = InputHandler.getOptionalString("Enter new notes");
-                treatment.setNotes(notes);
-                System.out.println("✅ Notes updated successfully.");
+                if (treatmentController.updateTreatment(treatment.getTreatmentID(), "notes", notes)) {
+                    System.out.println("✅ Notes updated successfully.");
+                } else {
+                    System.out.println("❌ Failed to update notes.");
+                }
                 break;
             case 2:
                 boolean isCritical = InputHandler.getYesNo("Is this treatment critical?");
-                treatment.setCritical(isCritical);
-                System.out.println("✅ Critical status updated successfully.");
+                if (treatmentController.updateTreatment(treatment.getTreatmentID(), "critical", isCritical)) {
+                    System.out.println("✅ Critical status updated successfully.");
+                } else {
+                    System.out.println("❌ Failed to update critical status.");
+                }
                 break;
             case 3:
                 String type = getTreatmentType();
                 if (type != null) {
-                    treatment.setType(type);
-                    System.out.println("✅ Treatment type updated successfully.");
+                    if (treatmentController.updateTreatment(treatment.getTreatmentID(), "type", type)) {
+                        System.out.println("✅ Treatment type updated successfully.");
+                    } else {
+                        System.out.println("❌ Failed to update treatment type.");
+                    }
                 } else {
                     System.out.println("Operation cancelled.");
                 }
@@ -1071,6 +1084,7 @@ public class TreatmentMaintenanceUI {
     /**
      * Build processing statistics report with table formatting for display
      */
+    //TODO
     private StringBuilder buildProcessingStatisticsReport(OrderedMap<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
 
@@ -1655,6 +1669,139 @@ public class TreatmentMaintenanceUI {
     }
 
     /**
+     * Undo Operations Menu
+     */
+    public void undoOperationsMenu() {
+        int choice;
+        do {
+            printUndoMenu();
+            choice = InputHandler.getInt("Select undo option", 0, 4);
+
+            switch(choice) {
+                case 1:
+                    undoLastOperation();
+                    break;
+                case 2:
+                    viewUndoHistory();
+                    break;
+                case 3:
+                    clearUndoHistory();
+                    break;
+                case 4:
+                    demonstrateUndoFunctionality();
+                    break;
+                case 0:
+                    System.out.println("Returning to treatment menu...");
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+
+            if (choice != 0) {
+                InputHandler.pauseForUser();
+            }
+
+        } while (choice != 0);
+    }
+
+    /**
+     * Print undo menu options
+     */
+    private void printUndoMenu() {
+        System.out.println("\n┌" + "─".repeat(40) + "┐");
+        System.out.println("│           UNDO OPERATIONS MENU         │");
+        System.out.println("├" + "─".repeat(40) + "┤");
+        System.out.println("│ 1. Undo Last Operation                │");
+        System.out.println("│ 2. View Undo History                  │");
+        System.out.println("│ 3. Clear Undo History                 │");
+        System.out.println("│ 4. Demonstrate Undo Functionality     │");
+        System.out.println("│ 0. Back to Treatment Menu             │");
+        System.out.println("└" + "─".repeat(40) + "┘");
+    }
+
+    /**
+     * Undo the last operation
+     */
+    private void undoLastOperation() {
+        System.out.println("\n┌" + "─".repeat(50) + "┐");
+        printCenteredTableHeader("UNDO LAST OPERATION", 50);
+        System.out.println("└" + "─".repeat(50) + "┘");
+
+        boolean success = treatmentController.undoLastOperation();
+        
+        if (success) {
+            System.out.println("\n✅ Undo operation completed successfully!");
+            System.out.println("The last operation has been reversed.");
+        } else {
+            System.out.println("\n❌ Undo operation failed.");
+            System.out.println("There may be no operations to undo or an error occurred.");
+        }
+    }
+
+    /**
+     * View the undo history
+     */
+    private void viewUndoHistory() {
+        System.out.println("\n┌" + "─".repeat(60) + "┐");
+        printCenteredTableHeader("UNDO HISTORY", 60);
+        System.out.println("├" + "─".repeat(60) + "┤");
+
+        String undoInfo = treatmentController.getUndoInfo();
+        
+        // Split the info into lines and display each line properly formatted
+        String[] lines = undoInfo.split("\n");
+        for (String line : lines) {
+            if (line.trim().isEmpty()) continue;
+            // Pad line to fit within table width
+            int padding = Math.max(0, 58 - line.length());
+            System.out.printf("│ %-" + (58 - padding) + "s%" + padding + "s │\n", line, "");
+        }
+
+        System.out.println("└" + "─".repeat(60) + "┘");
+    }
+
+    /**
+     * Clear the undo history
+     */
+    private void clearUndoHistory() {
+        System.out.println("\n┌" + "─".repeat(50) + "┐");
+        printCenteredTableHeader("CLEAR UNDO HISTORY", 50);
+        System.out.println("└" + "─".repeat(50) + "┘");
+
+        String confirmation = InputHandler.getString("Are you sure you want to clear all undo history? (yes/no)");
+        
+        if (confirmation.equalsIgnoreCase("yes") || confirmation.equalsIgnoreCase("y")) {
+            treatmentController.clearUndoHistory();
+            System.out.println("\n✅ Undo history has been cleared successfully!");
+        } else {
+            System.out.println("\n❌ Operation cancelled. Undo history preserved.");
+        }
+    }
+
+    /**
+     * Demonstrate the undo functionality
+     */
+    private void demonstrateUndoFunctionality() {
+        System.out.println("\n┌" + "─".repeat(70) + "┐");
+        printCenteredTableHeader("UNDO FUNCTIONALITY DEMONSTRATION", 70);
+        System.out.println("└" + "─".repeat(70) + "┘");
+
+        System.out.println("\nThis demonstration will show how undo works by:");
+        System.out.println("1. Performing some treatment status changes");
+        System.out.println("2. Showing the undo history");
+        System.out.println("3. Performing undo operations");
+        System.out.println("4. Showing the final state");
+
+        String confirmation = InputHandler.getString("\nProceed with demonstration? (yes/no)");
+        
+        if (confirmation.equalsIgnoreCase("yes") || confirmation.equalsIgnoreCase("y")) {
+            treatmentController.demonstrateUndoFunctionality();
+        } else {
+            System.out.println("\n❌ Demonstration cancelled.");
+        }
+    }
+
+    /**
      * Generate patient treatment summary report using StringBuilder
      */
     private void generatePatientTreatmentSummary() {
@@ -1692,6 +1839,7 @@ public class TreatmentMaintenanceUI {
     /**
      * Build patient treatment summary report with table formatting for display
      */
+    //TODO
     private StringBuilder buildPatientTreatmentSummaryReport(OrderedMap<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
 
@@ -1942,11 +2090,12 @@ public class TreatmentMaintenanceUI {
     /**
      * Build financial summary report with table formatting for display
      */
+    //TODO
     private StringBuilder buildFinancialSummaryReport(OrderedMap<String, Treatment> allTreatments) {
         StringBuilder report = new StringBuilder();
 
         // Add university header in PatientUI style
-        String now = java.time.ZonedDateTime.now()
+        String now = java.time.ZonedsDateTime.now()
                 .format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd yyyy, hh:mm a"));
         
         report.append("=".repeat(W)).append("\n");
@@ -2378,7 +2527,7 @@ public class TreatmentMaintenanceUI {
             return;
         }
 
-        OrderedMap<String, Treatment> results = treatmentController.searchTreatmentByNotes(keyword);
+        OrderedMap<String, Treatment> results = treatmentController.searchTreatmentsByNotes(keyword);
 
         if (results.isEmpty()) {
             System.out.println("No treatments found with notes containing: " + keyword);

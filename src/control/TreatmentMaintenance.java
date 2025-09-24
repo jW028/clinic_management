@@ -13,12 +13,38 @@ import java.util.Comparator;
 import utility.IDGenerator;
 
 public class TreatmentMaintenance {
+    
+    /**
+     * Inner class to represent an undoable command
+     */
+    private static class UndoCommand {
+        private String operationType;
+        private String operationId;
+        private Object data;
+        private LocalDateTime timestamp;
+        
+        public UndoCommand(String operationType, String operationId, Object data) {
+            this.operationType = operationType;
+            this.operationId = operationId;
+            this.data = data;
+            this.timestamp = LocalDateTime.now();
+        }
+        
+        // Getters
+        public String getOperationType() { return operationType; }
+        public String getOperationId() { return operationId; }
+        public Object getData() { return data; }
+        public LocalDateTime getTimestamp() { return timestamp; }
+    }
+    
     private OrderedMap<String, Treatment> treatments;
 
     private OrderedMap<String, Treatment> emergencyQueue;
     private OrderedMap<String, Treatment> regularQueue;
 
     private OrderedMap<String, String> recentTreatments;
+    private OrderedMap<String, UndoCommand> undoStack; // Stack for undo operations
+    private static final int MAX_UNDO_SIZE = 20; // Limit undo history
     private OrderedMap<String, Prescription> prescriptions;
     private OrderedMap<String, Consultation> consultations;
     private final ConsultationMaintenance consultationController;
@@ -27,6 +53,15 @@ public class TreatmentMaintenance {
     private TreatmentDAO treatmentDAO;
     private ProcedureDAO procedureDAO;
     private PaymentMaintenance paymentMaintenance;
+
+    // Hash-based indices for O(1) lookup
+    private OrderedMap<String, OrderedMap<String, Treatment>> patientIndex;
+    private OrderedMap<String, OrderedMap<String, Treatment>> statusIndex;
+    private OrderedMap<String, OrderedMap<String, Treatment>> procedureIndex;
+    private OrderedMap<String, OrderedMap<String, Treatment>> patientNameIndex;
+    
+    private OrderedMap<String, OrderedMap<String, Treatment>> searchCache = new OrderedMap<>();
+
 
     public TreatmentMaintenance() {
         this.treatmentDAO = new TreatmentDAO();
@@ -43,10 +78,605 @@ public class TreatmentMaintenance {
         this.prescriptionController = new PharmacyMaintenance();
 
         loadAllData();
+        
+        // Initialize undo stack
+        undoStack = new OrderedMap<>();
         IDGenerator.loadCounter("counter.dat");
     }
 
+    private void buildHashIndices() {
+        patientIndex = new OrderedMap<>();
+        statusIndex = new OrderedMap<>();
+        procedureIndex = new OrderedMap<>();
+        patientNameIndex = new OrderedMap<>();
+        
+        for (Treatment treatment : treatments) {
+            if (treatment == null) continue;
 
+            String treatmentId = treatment.getTreatmentID();
+
+            // Index by patient ID for O(1) lookup
+            if (treatment.getPatient() != null) {
+                String patientId = treatment.getPatient().getPatientId();
+                addToIndex(patientIndex, patientId, treatmentId, treatment);
+            }
+
+            // Index by patient name for O(1) lookup
+            if (treatment.getPatient() != null && treatment.getPatient().getName() != null) {
+                String patientName = treatment.getPatient().getName();
+                addToIndex(patientNameIndex, patientName, treatmentId, treatment);
+            }
+
+            // Index by status for O(1) lookup
+            String status = treatment.getStatus();
+            if (status != null) {
+                addToIndex(statusIndex, status, treatmentId, treatment);
+            }
+
+            // Index by procedure names for O(1) lookup
+            OrderedMap<String, Procedure> procedures = treatment.getProcedures();
+            if (procedures != null) {
+                for (Procedure procedure : procedures) {
+                    if (procedure != null && procedure.getProcedureName() != null) {
+                        String procedureName = procedure.getProcedureName();
+                        addToIndex(procedureIndex, procedureName, treatmentId, treatment);
+                    }
+                }
+            }
+        }
+    }
+
+    private void addToIndex(OrderedMap<String, OrderedMap<String, Treatment>> index, 
+                            String key, String treatmentId, Treatment treatment) {
+        OrderedMap<String, Treatment> treatmentMap = index.get(key);
+        if (treatmentMap == null) {
+            treatmentMap = new OrderedMap<>();
+            index.put(key, treatmentMap);
+        }
+        treatmentMap.put(treatmentId, treatment);
+    }
+
+    /**
+     * Clear search cache when data changes
+     */
+    private void invalidateSearchCache() {
+        searchCache.clear();
+    }
+
+    /**
+     * Helper method to update hash indices for treatment addition
+     */
+    private void updateIndicesForAddition(Treatment treatment) {
+        String treatmentId = treatment.getTreatmentID();
+
+        // Update patient index
+        if (treatment.getPatient() != null) {
+            String patientId = treatment.getPatient().getPatientId();
+            addToIndex(patientIndex, patientId, treatmentId, treatment);
+
+            String patientName = treatment.getPatient().getName();
+            if (patientName != null) {
+                addToIndex(patientNameIndex, patientName.toLowerCase(), treatmentId, treatment);
+            }
+        }
+
+        // Update status index
+        String status = treatment.getStatus();
+        if (status != null) {
+            addToIndex(statusIndex, status, treatmentId, treatment);
+        }
+
+        // Index by procedure names for O(1) lookup
+        OrderedMap<String, Procedure> procedures = treatment.getProcedures();
+        if (procedures != null) {
+            for (Procedure procedure : procedures) {
+                if (procedure != null && procedure.getProcedureName() != null) {
+                    String procedureName = procedure.getProcedureName();
+                    addToIndex(procedureIndex, procedureName, treatmentId, treatment);
+                }
+            }
+        }
+    }
+
+    /**
+     * Helper method to update hash indices for treatment removal
+     */
+    private void updateIndicesForRemoval(Treatment treatment) {
+        String treatmentId = treatment.getTreatmentID();
+
+        // Remove from patient index
+        if (treatment.getPatient() != null) {
+            String patientId = treatment.getPatient().getPatientId();
+            removeFromIndex(patientIndex, patientId, treatmentId);
+
+            String patientName = treatment.getPatient().getName();
+            if (patientName != null) {
+                removeFromIndex(patientNameIndex, patientName.toLowerCase(), treatmentId);
+            }
+        }
+
+        // Remove from status index
+        String status = treatment.getStatus();
+        if (status != null) {
+            removeFromIndex(statusIndex, status, treatmentId);
+        }
+
+        // Remove from procedure index
+        OrderedMap<String, Procedure> procedures = treatment.getProcedures();
+        if (procedures != null) {
+            for (Procedure procedure : procedures) {
+                if (procedure != null && procedure.getProcedureName() != null) {
+                    String procedureName = procedure.getProcedureName();
+                    removeFromIndex(procedureIndex, procedureName, treatmentId);
+                }
+            }
+        }
+    }
+
+    /**
+     * Helper method to remove treatment from index
+     */
+    private void removeFromIndex(OrderedMap<String, OrderedMap<String, Treatment>> index, 
+                                 String key, String treatmentId) {
+        OrderedMap<String, Treatment> treatmentMap = index.get(key);
+        if (treatmentMap != null) {
+            treatmentMap.remove(treatmentId);
+            if (treatmentMap.isEmpty()) {
+                index.remove(key);
+            }
+        }
+    }
+
+    /**
+     * Undo the last operation performed on treatments
+     * @return true if undo was successful, false otherwise
+     */
+    public boolean undoLastOperation() {
+        try {
+            if (undoStack.isEmpty()) {
+                System.out.println("No operations to undo.");
+                return false;
+            }
+            
+            // Get the most recent undo command (top of stack)
+            UndoCommand lastCommand = undoStack.top();
+            
+            if (lastCommand == null) {
+                System.out.println("Invalid undo command.");
+                return false;
+            }
+            
+            boolean success = false;
+            
+            switch (lastCommand.getOperationType()) {
+                case "ADD":
+                    success = undoAddOperation(lastCommand);
+                    break;
+                case "UPDATE":
+                    success = undoUpdateOperation(lastCommand);
+                    break;
+                case "DELETE":
+                    success = undoDeleteOperation(lastCommand);
+                    break;
+                case "STATUS_CHANGE":
+                    success = undoStatusChangeOperation(lastCommand);
+                    break;
+                default:
+                    System.out.println("Unknown operation type: " + lastCommand.getOperationType());
+                    break;
+            }
+            
+            if (success) {
+                undoStack.pop(); // Remove action from undo stack
+                System.out.println("Undo successful: " + lastCommand.getOperationType() + 
+                                 " operation on treatment " + lastCommand.getOperationId());
+                
+                // Update recent treatments to show undo
+                String undoEntry = "[UNDO] " + lastCommand.getOperationType() + " - " + 
+                                 lastCommand.getOperationId() + " at " + 
+                                 java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+                recentTreatments.push("undo_" + System.currentTimeMillis(), undoEntry);
+            }
+            
+            return success;
+            
+        } catch (Exception e) {
+            System.out.println("Error during undo operation: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Push a command onto the undo stack
+     * @param operationType Type of operation (ADD, UPDATE, DELETE, STATUS_CHANGE)
+     * @param operationId ID of the treatment affected
+     * @param data Backup data needed for undo
+     */
+    private void pushUndoCommand(String operationType, String operationId, Object data) {
+        try {
+            // Limit undo history size
+            if (undoStack.size() >= MAX_UNDO_SIZE) {
+                // Remove oledst undo command
+                undoStack.removeAt(0); //
+            }
+            
+            UndoCommand command = new UndoCommand(operationType, operationId, data);
+            undoStack.push("undo_" + System.currentTimeMillis(), command);
+            
+        } catch (Exception e) {
+            System.out.println("Error pushing undo command: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Undo an ADD operation by removing the treatment
+     */
+    private boolean undoAddOperation(UndoCommand command) {
+        try {
+            String treatmentId = command.getOperationId();
+            Treatment treatment = treatments.get(treatmentId);
+            
+            if (treatment != null) {
+                // Remove from main collection
+                treatments.remove(treatmentId);
+                
+                // Remove from all indices
+                removeFromAllIndices(treatment);
+                
+                // Remove from queues if present
+                emergencyQueue.remove(treatmentId);
+                regularQueue.remove(treatmentId);
+                
+                System.out.println("Undid ADD: Removed treatment " + treatmentId);
+                return true;
+            } else {
+                System.out.println("Treatment " + treatmentId + " not found for undo ADD");
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Error undoing ADD operation: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Undo an UPDATE operation by restoring the previous treatment state
+     */
+    private boolean undoUpdateOperation(UndoCommand command) {
+        try {
+            if (command.getData() instanceof Treatment) {
+                Treatment oldTreatment = (Treatment) command.getData();
+                String treatmentId = command.getOperationId();
+                
+                // Remove current version from indices
+                Treatment currentTreatment = treatments.get(treatmentId);
+                if (currentTreatment != null) {
+                    removeFromAllIndices(currentTreatment);
+                }
+                
+                // Restore old version
+                treatments.put(treatmentId, oldTreatment);
+                addToAllIndices(oldTreatment);
+                
+                System.out.println("Undid UPDATE: Restored treatment " + treatmentId + " to previous state");
+                return true;
+            } else {
+                System.out.println("Invalid data for undo UPDATE operation");
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Error undoing UPDATE operation: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Undo a DELETE operation by restoring the deleted treatment
+     */
+    private boolean undoDeleteOperation(UndoCommand command) {
+        try {
+            if (command.getData() instanceof Treatment) {
+                Treatment deletedTreatment = (Treatment) command.getData();
+                String treatmentId = command.getOperationId();
+                
+                // Restore the treatment
+                treatments.put(treatmentId, deletedTreatment);
+                addToAllIndices(deletedTreatment);
+                
+                // Add back to appropriate queue based on type
+                if (deletedTreatment.getType() != null && 
+                    deletedTreatment.getType().toUpperCase().contains("EMERGENCY")) {
+                    emergencyQueue.put(treatmentId, deletedTreatment);
+                } else {
+                    regularQueue.put(treatmentId, deletedTreatment);
+                }
+                
+                System.out.println("Undid DELETE: Restored treatment " + treatmentId);
+                return true;
+            } else {
+                System.out.println("Invalid data for undo DELETE operation");
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Error undoing DELETE operation: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Undo a STATUS_CHANGE operation by reverting to previous status
+     */
+    private boolean undoStatusChangeOperation(UndoCommand command) {
+        try {
+            if (command.getData() instanceof String) {
+                String previousStatus = (String) command.getData();
+                String treatmentId = command.getOperationId();
+                Treatment treatment = treatments.get(treatmentId);
+                
+                if (treatment != null) {
+                    // Remove from current status index
+                    removeFromIndex(statusIndex, treatment.getStatus(), treatmentId);
+                    
+                    // Update status
+                    treatment.setStatus(previousStatus);
+                    
+                    // Add to new status index
+                    addToIndex(statusIndex, previousStatus, treatmentId, treatment);
+                    
+                    System.out.println("Undid STATUS_CHANGE: Reverted treatment " + treatmentId + 
+                                     " status to " + previousStatus);
+                    return true;
+                } else {
+                    System.out.println("Treatment " + treatmentId + " not found for status change undo");
+                    return false;
+                }
+            } else {
+                System.out.println("Invalid data for undo STATUS_CHANGE operation");
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Error undoing STATUS_CHANGE operation: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Get information about available undo operations
+     * @return String describing the undo stack state
+     */
+    public String getUndoInfo() {
+        if (undoStack.isEmpty()) {
+            return "No operations available to undo.";
+        }
+        
+        StringBuilder info = new StringBuilder();
+        info.append("Available undo operations (").append(undoStack.size()).append("):\n");
+        
+        // Show last few operations by iterating backwards
+        int count = 0;
+        for (int i = undoStack.size() - 1; i >= 0 && count < 5; i--, count++) {
+            try {
+                UndoCommand cmd = undoStack.get(i);
+                if (cmd != null) {
+                    info.append("- ").append(cmd.getOperationType())
+                        .append(" on treatment ").append(cmd.getOperationId())
+                        .append(" at ").append(cmd.getTimestamp().format(
+                            java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
+                        .append("\n");
+                }
+            } catch (Exception e) {
+                // Skip invalid entries
+            }
+        }
+        
+        return info.toString();
+    }
+    
+    /**
+     * Helper method to add treatment to all indices
+     */
+    private void addToAllIndices(Treatment treatment) {
+        String treatmentId = treatment.getTreatmentID();
+        
+        // Add to patient index
+        if (treatment.getPatient() != null) {
+            addToIndex(patientIndex, treatment.getPatient().getPatientId(), treatmentId, treatment);
+        }
+        
+        // Add to status index
+        if (treatment.getStatus() != null) {
+            addToIndex(statusIndex, treatment.getStatus(), treatmentId, treatment);
+        }
+        
+        // Add to procedure index (using first procedure if available)
+        if (treatment.getProcedures() != null && !treatment.getProcedures().isEmpty()) {
+            // Get first procedure for indexing
+            Procedure firstProcedure = treatment.getProcedures().get(0);
+            if (firstProcedure != null) {
+                addToIndex(procedureIndex, firstProcedure.getProcedureName(), treatmentId, treatment);
+            }
+        }
+        
+        // Add to patient name index
+        if (treatment.getPatient() != null && treatment.getPatient().getName() != null) {
+            addToIndex(patientNameIndex, treatment.getPatient().getName(), treatmentId, treatment);
+        }
+    }
+    
+    /**
+     * Helper method to remove treatment from all indices
+     */
+    private void removeFromAllIndices(Treatment treatment) {
+        String treatmentId = treatment.getTreatmentID();
+        
+        // Remove from patient index
+        if (treatment.getPatient() != null) {
+            removeFromIndex(patientIndex, treatment.getPatient().getPatientId(), treatmentId);
+        }
+        
+        // Remove from status index
+        if (treatment.getStatus() != null) {
+            removeFromIndex(statusIndex, treatment.getStatus(), treatmentId);
+        }
+        
+        // Remove from procedure index (using first procedure if available)
+        if (treatment.getProcedures() != null && !treatment.getProcedures().isEmpty()) {
+            // Get first procedure for indexing
+            Procedure firstProcedure = treatment.getProcedures().get(0);
+            if (firstProcedure != null) {
+                removeFromIndex(procedureIndex, firstProcedure.getProcedureName(), treatmentId);
+            }
+        }
+        
+        // Remove from patient name index
+        if (treatment.getPatient() != null && treatment.getPatient().getName() != null) {
+            removeFromIndex(patientNameIndex, treatment.getPatient().getName(), treatmentId);
+        }
+    }
+    
+    /**
+     * Clear the undo history
+     */
+    public void clearUndoHistory() {
+        undoStack.clear();
+        System.out.println("Undo history cleared.");
+    }
+    
+    /**
+     * Helper method to create a deep copy of a treatment for undo operations
+     */
+    private Treatment createTreatmentCopy(Treatment original) {
+        try {
+            // Create new Treatment with same basic properties
+            Treatment copy = new Treatment(
+                original.getTreatmentID(),
+                original.getConsultationID(),
+                original.getPatient(),
+                original.getDoctor(),
+                original.getTreatmentDate(),
+                original.getNotes(),
+                original.isCritical()
+            );
+            
+            // Copy status and type
+            copy.setStatus(original.getStatus());
+            copy.setType(original.getType());
+            
+            // Copy prescription if exists
+            if (original.getPrescription() != null) {
+                copy.setPrescription(original.getPrescription());
+            }
+            
+            // Note: For procedures, we'll keep the reference to the same OrderedMap
+            // since procedures are generally not modified after creation
+            // If deep copy of procedures is needed, it would require additional logic
+            
+            return copy;
+            
+        } catch (Exception e) {
+            System.out.println("Error creating treatment copy: " + e.getMessage());
+            return original; // Return original if copy fails
+        }
+    }
+    
+    /**
+     * Update treatment status with undo support
+     * @param treatmentID The ID of the treatment to update
+     * @param newStatus The new status to set
+     * @return true if update was successful, false otherwise
+     */
+    public boolean updateTreatmentStatus(String treatmentID, String newStatus) {
+        Treatment treatment = treatments.get(treatmentID);
+        if (treatment != null) {
+            String oldStatus = treatment.getStatus();
+            
+            // Remove from old status index
+            removeFromIndex(statusIndex, oldStatus, treatmentID);
+            
+            // Update status
+            treatment.setStatus(newStatus);
+            
+            // Add to new status index
+            addToIndex(statusIndex, newStatus, treatmentID, treatment);
+            
+            // Add undo command with previous status
+            pushUndoCommand("STATUS_CHANGE", treatmentID, oldStatus);
+            
+            // Update recent treatments
+            recentTreatments.push("STATUS_" + System.currentTimeMillis(), 
+                                "Status changed: " + treatmentID + " from " + oldStatus + " to " + newStatus);
+            
+            // Invalidate caches
+            invalidateSearchCache();
+            
+            saveAllData();
+            
+            System.out.println("Treatment " + treatmentID + " status updated from " + 
+                             oldStatus + " to " + newStatus);
+            return true;
+        }
+        
+        System.out.println("Treatment " + treatmentID + " not found for status update");
+        return false;
+    }
+    
+    /**
+     * Update treatment fields with undo support
+     * @param treatmentID The treatment ID to update
+     * @param fieldName The field name being updated (notes, type, critical)
+     * @param newValue The new value
+     * @return true if updated successfully, false otherwise
+     */
+    public boolean updateTreatment(String treatmentID, String fieldName, Object newValue) {
+        Treatment treatment = getTreatmentByID(treatmentID);
+        if (treatment == null) {
+            System.out.println("Treatment " + treatmentID + " not found");
+            return false;
+        }
+        
+        // Create a copy of the current treatment for undo
+        Treatment oldTreatment = createTreatmentCopy(treatment);
+        
+        // Apply the update
+        boolean updated = false;
+        switch (fieldName.toLowerCase()) {
+            case "notes":
+                treatment.setNotes((String) newValue);
+                updated = true;
+                break;
+            case "type":
+                treatment.setType((String) newValue);
+                updated = true;
+                break;
+            case "critical":
+                treatment.setCritical((Boolean) newValue);
+                updated = true;
+                break;
+            default:
+                System.out.println("Unknown field: " + fieldName);
+                return false;
+        }
+        
+        if (updated) {
+            // Push undo command
+            pushUndoCommand("UPDATE", treatmentID, oldTreatment);
+            
+            // Update recent treatments
+            recentTreatments.push("UPDATE_" + System.currentTimeMillis(), 
+                               "Updated " + fieldName + " for treatment " + treatmentID + 
+                               " (Patient: " + (treatment.getPatient() != null ? treatment.getPatient().getName() : "N/A") + ")");
+            
+            // Save data
+            saveAllData();
+            
+            System.out.println("Treatment " + treatmentID + " " + fieldName + " updated successfully");
+            return true;
+        }
+        
+        return false;
+    }
+
+    
 
     public boolean saveAllData() {
         boolean success = true;
@@ -58,6 +688,8 @@ public class TreatmentMaintenance {
     public boolean loadAllData() {
         treatments = treatmentDAO.retrieveFromFile();
         recentTreatments = treatmentDAO.retrieveRecentActivities();
+
+        buildHashIndices();
 
         rebuildQueues();
         return true;
@@ -135,9 +767,18 @@ public class TreatmentMaintenance {
             regularQueue.offer(treatmentID, treatment);
         }
 
+        updateIndicesForAddition(treatment);
+
         // Track recent treatments using stack functionality
         recentTreatments.push("OP_" + System.currentTimeMillis(), 
                             "Added treatment: " + treatmentID);
+
+        // Add undo command
+        pushUndoCommand("ADD", treatmentID, null);
+
+        // Invalidate caches
+        invalidateSearchCache();
+
         saveAllData();
         IDGenerator.saveCounters("counter.dat");
 
@@ -193,12 +834,24 @@ public class TreatmentMaintenance {
     public boolean removeTreatment(String treatmentID) {
         Treatment removed = treatments.remove(treatmentID);
         if (removed != null) {
+            // Store copy for undo before modifying
+            Treatment treatmentCopy = createTreatmentCopy(removed);
+            
             emergencyQueue.remove(treatmentID);
             regularQueue.remove(treatmentID);
 
             if (removed.hasPrescription()) {
                 prescriptions.remove(removed.getPrescription().getPrescriptionID());
             }
+
+            // Update hash indices
+            updateIndicesForRemoval(removed);
+
+            // Add undo command with full treatment data
+            pushUndoCommand("DELETE", treatmentID, treatmentCopy);
+
+            // Invalidate caches
+            invalidateSearchCache();
 
             saveAllData();
             System.out.println("Treatment " + treatmentID + " removed successfully.");
@@ -247,6 +900,7 @@ public class TreatmentMaintenance {
         Treatment next = emergencyQueue.poll();
         if (next != null) {
             next.complete(); // Mark treatment as completed
+            updateAppointmentStatusForTreatment(next);
             recentTreatments.push("OP_" + System.currentTimeMillis(),
                     "Processed emergency treatment: " + next.getTreatmentID());
             System.out.println("Processed emergency treatment: " + next.getTreatmentID());
@@ -267,6 +921,7 @@ public class TreatmentMaintenance {
         Treatment next = regularQueue.poll();
         if (next != null) {
             next.complete(); // Mark treatment as completed
+            updateAppointmentStatusForTreatment(next);
             recentTreatments.push("OP_" + System.currentTimeMillis(),
                                   "Processed regular treatment: " + next.getTreatmentID());
             System.out.println("Processed regular treatment: " + next.getTreatmentID());
@@ -277,6 +932,32 @@ public class TreatmentMaintenance {
         saveAllData();
         return next;
 
+    }
+
+    private void updateAppointmentStatusForTreatment(Treatment treatment) {
+        try {
+            String consultationId = treatment.getConsultationID();
+            if (consultationId != null) {
+                // Get the consultation associated with this treatment
+                Consultation consultation = consultationController.getConsultation(consultationId);
+                if (consultation != null && consultation.getAppointment() != null) {
+                    String appointmentId = consultation.getAppointment().getAppointmentId();
+                    
+                    // Update appointment status to "Completed"
+                    boolean updated = consultationController.updateAppointmentStatus(appointmentId, "Completed");
+                    
+                    if (updated) {
+                        System.out.println("Updated appointment " + appointmentId + " status to 'Completed'");
+                    } else {
+                        System.out.println("Warning: Could not update appointment status for appointment " + appointmentId);
+                    }
+                } else {
+                    System.out.println("Warning: No associated appointment found for treatment " + treatment.getTreatmentID());
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error updating appointment status for treatment " + treatment.getTreatmentID() + ": " + e.getMessage());
+        }
     }
 
     /**
@@ -392,15 +1073,11 @@ public class TreatmentMaintenance {
     public OrderedMap<String, Treatment> getTreatmentsByPatient(Patient patient) {
         if (patient == null) return new OrderedMap<>();
 
-        Treatment dummyTreatment = new Treatment("", "", patient, (Doctor)null, LocalDateTime.now(), "", false);
-        
-        return treatments.filter(dummyTreatment, (t1, t2) -> {
-            if (t1.getPatient() != null && t2.getPatient() != null &&
-                t1.getPatient().getPatientId().equals(t2.getPatient().getPatientId())) {
-                return 0; // Match found
-            }
-            return 1; // No match
-        });
+        String patientId = patient.getPatientId();
+
+        // O(1) hash lookup using patientIndex
+        OrderedMap<String, Treatment> result = patientIndex.get(patientId);
+        return result != null ? result : new OrderedMap<>();
     }
 
 
@@ -410,35 +1087,44 @@ public class TreatmentMaintenance {
      * @return OrderedMap of treatments with the specified status
      */
     public OrderedMap<String, Treatment> getTreatmentsByStatus(String status) {
-        // Create dummy treatment with the specified status
-        Treatment dummyTreatment = new Treatment("", "", (Patient)null, (Doctor)null, LocalDateTime.now(), "", false);
-        dummyTreatment.setStatus(status);
-        // Filter treatments with the same status
-        return treatments.filter(dummyTreatment, (t1, t2) -> {
-            if (t1.getStatus().equalsIgnoreCase(t2.getStatus())) {
-                return 0;
-            }
-            return -1;
-        });
+        if (status == null || status.trim().isEmpty()) return new OrderedMap<>();
+
+        // O(1) hash lookup using statusIndex
+        OrderedMap<String, Treatment> result = statusIndex.get(status);
+        return result != null ? result : new OrderedMap<>();
     }
 
     /**
-     * Search treatments by notes keyword
+     * Cached search of treatments by notes keyword with hash-based memoization
      * @param keyword The keyword to search for in treatment notes
      * @return OrderedMap of treatments containing the keyword in their notes
      */
-    public OrderedMap<String, Treatment> searchTreatmentByNotes(String keyword) {
+    public OrderedMap<String, Treatment> searchTreatmentsByNotes(String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) return new OrderedMap<>();
+
+        String cacheKey = "notes_search_" + keyword.toLowerCase();
+
+        // O(1) cache lookup
+        OrderedMap<String, Treatment> cachedResult = searchCache.get(cacheKey);
+        if (cachedResult != null) {
+            // Cache hit for keyword
+            return cachedResult;
+        }
 
         Treatment dummyTreatment = new Treatment("", "", (Patient)null, (Doctor)null, LocalDateTime.now(), "", false);
         dummyTreatment.setNotes(keyword);
 
-        return treatments.filter(dummyTreatment, (t1, t2) -> {
+        // Cache miss, perform search
+        OrderedMap<String, Treatment> result = treatments.filter(dummyTreatment, (t1, t2) -> {
             if (t1.getNotes() != null && t1.getNotes().toLowerCase().contains(t2.getNotes().toLowerCase())) {
                 return 0; // Match found
             }
             return 1; // No match
         });
+
+        // Cache the result for future lookups
+        searchCache.put(cacheKey, result);
+        return result;
     }
 
     /**
@@ -471,14 +1157,9 @@ public class TreatmentMaintenance {
     public OrderedMap<String, Treatment> searchTreatmentsByProcedure(String procedureName) {
         if (procedureName == null || procedureName.isEmpty()) return new OrderedMap<>();
 
-        Treatment dummyTreatment = new Treatment("", "", (Patient)null, (Doctor)null, LocalDateTime.now(), "", false);
-
-        return treatments.filter(dummyTreatment, (t1, t2) -> {
-            if (treatmentHasProcedure(t1, procedureName)) {
-                return 0; // Match found
-            }
-            return 1; // No match
-        });
+        // O(1) hash lookup using procedureIndex
+        OrderedMap<String, Treatment> result = procedureIndex.get(procedureName);
+        return result != null ? result : new OrderedMap<>();
     }
 
     /**
@@ -504,15 +1185,9 @@ public class TreatmentMaintenance {
     public OrderedMap<String, Treatment> searchTreatmentsByPatientName(String patientName) {
         if (patientName == null || patientName.trim().isEmpty()) return new OrderedMap<>();
 
-        Treatment dummyTreatment = new Treatment("", "", (Patient)null, (Doctor)null, LocalDateTime.now(), "", false);
-
-        return treatments.filter(dummyTreatment, (t1, t2) -> {
-            if (t1.getPatient() != null && 
-                t1.getPatient().getName().toLowerCase().contains(patientName.toLowerCase())) {
-                return 0; // Match found
-            }
-            return 1; // No match
-        });
+        // O(1) hash lookup using patientNameIndex
+        OrderedMap<String, Treatment> result = patientNameIndex.get(patientName.toLowerCase());
+        return result != null ? result : new OrderedMap<>();
     }
 
     /**
@@ -803,6 +1478,5 @@ public class TreatmentMaintenance {
         OrderedMap<String, Procedure> procedureMap = procedureDAO.retrieveFromFile();
         return procedureMap.toArray(new Procedure[0]);
     }
-
 
 }
