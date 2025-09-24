@@ -50,16 +50,20 @@ public class PatientMaintenance {
     }
 
     private void logRegisterPatient(String patientId) {
+        Patient p = patientRegistry.get(patientId);
+        if (p == null) return;
         UndoAction action = new UndoAction();
         action.type = "REGISTER";
-        action.patientAfter = getPatientById(patientId);
+        action.patientAfter = copyPatient(p);
         logUndoAction(action);
     }
 
     private void logUpdatePatient(String patientId, String field, String prevValue, String newValue) {
+        Patient p = patientRegistry.get(patientId);
+        if (p == null) return;
         UndoAction action = new UndoAction();
         action.type = "UPDATE";
-        action.patientBefore = getPatientById(patientId);
+        action.patientBefore = copyPatient(p); // snapshot before change
         action.field = field;
         action.prevValue = prevValue;
         action.newValue = newValue;
@@ -67,13 +71,15 @@ public class PatientMaintenance {
     }
 
     private void logDeletePatient(String patientId) {
+        Patient p = patientRegistry.get(patientId);
+        if (p == null) return;
         UndoAction action = new UndoAction();
         action.type = "DELETE";
-        action.patientBefore = getPatientById(patientId);
+        action.patientBefore = copyPatient(p);
         logUndoAction(action);
     }
 
-    private Patinet copyPatient(Patient original) {
+    private Patient copyPatient(Patient original) {
         if (original == null) return null;
         return new Patient(
                 original.getPatientId(),
@@ -87,21 +93,50 @@ public class PatientMaintenance {
     }
 
     public String undoLastAction() {
-        if (undoHistory.size() == 0) return "No action to undo.";
-        UndoAction action = undoHistory.pop();
+        if (undoStack.size() == 0) return "No action to undo.";
+        String lastKey = "action" + undoStack.size();
+        UndoAction action = undoStack.get(lastKey);
+        if (action == null) return "No action to undo.";
+        undoStack.remove(lastKey);
+
         switch (action.type) {
             case "REGISTER":
-                patientRegistry.remove(action.patientAfter.getPatientId());
-                saveChanges();
-                return "Undo Register: Patient removed.";
-            case "REMOVE":
-                patientRegistry.put(action.patientBefore.getPatientId(), copyPatient(action.patientBefore));
-                saveChanges();
-                return "Undo Remove: Patient restored.";
+                if (action.patientAfter != null) {
+                    patientRegistry.remove(action.patientAfter.getPatientId());
+                    // remove from indices
+                    removeFromNameIndex(action.patientAfter);
+                    removeFromGenderIndex(action.patientAfter);
+                    removeFromAgeIndex(action.patientAfter);
+                    saveChanges();
+                    return "Undo Register: Patient removed.";
+                }
+                return "Undo failed: missing data.";
+            case "DELETE":
+                if (action.patientBefore != null) {
+                    patientRegistry.put(action.patientBefore.getPatientId(), copyPatient(action.patientBefore));
+                    // re-index
+                    addToNameIndex(action.patientBefore);
+                    addToGenderIndex(action.patientBefore);
+                    addToAgeIndex(action.patientBefore);
+                    saveChanges();
+                    return "Undo Delete: Patient restored.";
+                }
+                return "Undo failed: missing data.";
             case "UPDATE":
-                patientRegistry.put(action.patientBefore.getPatientId(), copyPatient(action.patientBefore));
-                saveChanges();
-                return "Undo Update: Patient reverted.";
+                if (action.patientBefore != null) {
+                    // replace current with previous snapshot
+                    patientRegistry.put(action.patientBefore.getPatientId(), copyPatient(action.patientBefore));
+                    // rebuild indexes for that patient
+                    removeFromNameIndex(action.patientAfter);
+                    removeFromGenderIndex(action.patientAfter);
+                    removeFromAgeIndex(action.patientAfter);
+                    addToNameIndex(action.patientBefore);
+                    addToGenderIndex(action.patientBefore);
+                    addToAgeIndex(action.patientBefore);
+                    saveChanges();
+                    return "Undo Update: Patient reverted.";
+                }
+                return "Undo failed: missing data.";
             default:
                 return "Unknown action type.";
         }
@@ -199,15 +234,16 @@ public class PatientMaintenance {
         }
         Patient newPatient = new Patient(patientId, name, age, gender, contactNumber, address, isEmergency);
         patientRegistry.put(patientId, newPatient);
+
+        // maintain indices
         addToNameIndex(newPatient);
         addToGenderIndex(newPatient);
         addToAgeIndex(newPatient);
-        saveChanges();
-        String visitReason = isEmergency ? "Emergency Registration" : "Regular Registration";
-        IDGenerator.saveCounters("counter.dat");
-        logRegisterPatient(newPatient);
-        return true;
 
+        saveChanges();
+        IDGenerator.saveCounters("counter.dat");
+        logRegisterPatient(patientId);
+        return true;
     }
 
     /**
@@ -226,15 +262,15 @@ public class PatientMaintenance {
         if (patient == null) {
             return false;
         }
+        logUpdatePatient(patientId, "ALL_FIELDS",
+                patient.getName() + "|" + patient.getAge() + "|" + patient.getGender() + "|" +
+                        patient.getContactNumber() + "|" + patient.getAddress() + "|" + patient.isEmergency(),
+                name + "|" + age + "|" + gender + "|" + contactNumber + "|" + address + "|" + isEmergency
+        );
+
         removeFromNameIndex(patient);
         removeFromGenderIndex(patient);
         removeFromAgeIndex(patient);
-
-        logUpdatePatient(patientId, "ALL_FIELDS",
-            patient.getName() + "|" + patient.getAge() + "|" + patient.getGender() + "|" +
-            patient.getContactNumber() + "|" + patient.getAddress() + "|" + patient.isEmergency(),
-            name + "|" + age + "|" + gender + "|" + contactNumber + "|" + address + "|" + isEmergency
-        );
 
         patient.setName(name);
         patient.setAge(age);
@@ -242,6 +278,10 @@ public class PatientMaintenance {
         patient.setContactNumber(contactNumber);
         patient.setAddress(address);
         patient.setEmergency(isEmergency);
+
+        addToNameIndex(patient);
+        addToGenderIndex(patient);
+        addToAgeIndex(patient);
 
         saveChanges();
         return true;
@@ -254,17 +294,17 @@ public class PatientMaintenance {
         if (!patientRegistry.containsKey(patientId)) {
             return false;
         }
+        logDeletePatient(patientId);
+
         Patient removedPatient = patientRegistry.get(patientId);
         removeFromNameIndex(removedPatient);
         removeFromGenderIndex(removedPatient);
         removeFromAgeIndex(removedPatient);
-        logDeletePatient(patientId);
 
         emergencyQueue.remove(patientId);
         normalQueue.remove(patientId);
         patientRegistry.remove(patientId);
         saveChanges();
-        logDeletePatient()
         return true;
     }
 
@@ -288,16 +328,14 @@ public class PatientMaintenance {
     private void rebuildNameIndex() {
         nameIndex.clear();
         for (Patient patient : patientRegistry) {
-            if (patient != null) {
-                addToNameIndex(patient);
-            }
+            if (patient != null) addToNameIndex(patient);
         }
     }
 
     private void addToNameIndex(Patient patient) {
         if (patient == null || patient.getName() == null) return;
         String key = patient.getName().toLowerCase();
-        OrderedMap<String, Patient> bucket = nameIndex;
+        OrderedMap<String, Patient> bucket = nameIndex.get(key);
         if (bucket == null) {
             bucket = new OrderedMap<>();
             nameIndex.put(key, bucket);
@@ -306,12 +344,12 @@ public class PatientMaintenance {
     }
 
     private void removeFromNameIndex(Patient patient) {
-        if (patient = null || patient.getName() == null) return;
+        if (patient == null || patient.getName() == null) return;
         String key = patient.getName().toLowerCase();
         OrderedMap<String, Patient> bucket = nameIndex.get(key);
         if (bucket != null) {
             bucket.remove(patient.getPatientId());
-            if (bucket.isEmpty()) {
+            if (bucket.size() == 0) {
                 nameIndex.remove(key);
             }
         }
