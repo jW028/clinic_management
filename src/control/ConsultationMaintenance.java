@@ -25,6 +25,19 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 
 public class ConsultationMaintenance {
+    private static class UndoAction {
+        String type; // "ADD", "REMOVE", "UPDATE"
+        Consultation before;
+        Consultation after;
+        LocalDateTime timestamp;
+        UndoAction(String type, Consultation before, Consultation after) {
+            this.type = type;
+            this.before = before;
+            this.after = after;
+            this.timestamp = LocalDateTime.now();
+        }
+    }
+
     private final OrderedMap<String, Consultation> consultationMap;
     private final OrderedMap<String, Patient> patientMap;
     private final OrderedMap<String, Appointment> appointmentMap;
@@ -40,6 +53,14 @@ public class ConsultationMaintenance {
     private final AppointmentDAO appointmentDAO = new AppointmentDAO();
     private final DoctorDAO doctorDAO = new DoctorDAO();
     private final ScheduleDAO scheduleDAO = new ScheduleDAO();
+
+    // Undo stack
+    private final OrderedMap<Integer, UndoAction> undoHistory = new OrderedMap<>();
+    private static final int MAX_UNDO_SIZE = 20;
+
+    // search
+    private OrderedMap<String, OrderedMap<String, Consultation>> patientNameIndex = new OrderedMap<>();
+    private OrderedMap<String, OrderedMap<String, Consultation>> doctorNameIndex = new OrderedMap<>();
 
     public static final String[] VALID_APPOINTMENT_STATUSES = {
             "Scheduled", "In Progress", "Completed", "Cancelled"
@@ -75,6 +96,116 @@ public class ConsultationMaintenance {
         }
         IDGenerator.updateConsultationCounterFromHighestID(highestConsultationId);
         IDGenerator.saveCounters("counter.dat");
+
+        buildNameIndices();
+    }
+
+    // Helper: Deep copy
+    private Consultation copyConsultation(Consultation c) {
+        if (c == null) return null;
+        return new Consultation(
+                c.getConsultationId(),
+                c.getAppointment(),
+                c.getPatient(),
+                c.getDoctor(),
+                c.getConsultationTime(),
+                c.getServicesUsed(),
+                c.getDiagnosis(),
+                c.getNotes(),
+                c.getPayment(),
+                c.isFollowUpNeeded(),
+                c.getFollowUpDate()
+        );
+    }
+    private void logUndoAction(UndoAction action) {
+        undoHistory.push(undoHistory.size(), action);
+        if (undoHistory.size() > MAX_UNDO_SIZE) undoHistory.removeAt(0);
+    }
+
+    // === Undo API ===
+    public String undoLastAction() {
+        if (undoHistory.size() == 0) return "No action to undo.";
+        UndoAction action = undoHistory.pop();
+        switch (action.type) {
+            case "ADD":
+                consultationMap.remove(action.after.getConsultationId());
+                removeFromIndices(action.after);
+                consultationDAO.saveToFile(consultationMap);
+                return "Undo Add: Consultation removed.";
+            case "REMOVE":
+                consultationMap.put(action.before.getConsultationId(), copyConsultation(action.before));
+                updateIndicesForAddition(action.before);
+                consultationDAO.saveToFile(consultationMap);
+                return "Undo Remove: Consultation restored.";
+            case "UPDATE":
+                consultationMap.put(action.before.getConsultationId(), copyConsultation(action.before));
+                updateIndicesForAddition(action.before);
+                consultationDAO.saveToFile(consultationMap);
+                return "Undo Update: Consultation reverted.";
+            default:
+                return "Unknown action type.";
+        }
+    }
+
+    public String getUndoInfo() {
+        if (undoHistory.isEmpty()) return "No operations available to undo.";
+        StringBuilder sb = new StringBuilder();
+        sb.append("Available undo operations (").append(undoHistory.size()).append("):\n");
+        for (int i = undoHistory.size() - 1; i >= 0 && i >= undoHistory.size() - 5; i--) {
+            UndoAction action = undoHistory.get(i);
+            sb.append("- ").append(action.type)
+                    .append(" on consultation ").append(action.after != null ? action.after.getConsultationId() :
+                            action.before != null ? action.before.getConsultationId() : "(unknown)")
+                    .append(" at ").append(action.timestamp)
+                    .append("\n");
+        }
+        return sb.toString();
+    }
+    public void clearUndoHistory() {
+        undoHistory.clear();
+    }
+
+    // === Indexing for fast search ===
+    private void buildNameIndices() {
+        patientNameIndex.clear();
+        doctorNameIndex.clear();
+        for (Consultation c : consultationMap) {
+            updateIndicesForAddition(c);
+        }
+    }
+    private void updateIndicesForAddition(Consultation c) {
+        if (c == null) return;
+        if (c.getPatient() != null) {
+            String name = c.getPatient().getName().toLowerCase();
+            if (!patientNameIndex.containsKey(name)) {
+                patientNameIndex.put(name, new OrderedMap<>());
+            }
+            patientNameIndex.get(name).put(c.getConsultationId(), c);
+        }
+        if (c.getDoctor() != null) {
+            String name = c.getDoctor().getName().toLowerCase();
+            if (!doctorNameIndex.containsKey(name)) {
+                doctorNameIndex.put(name, new OrderedMap<>());
+            }
+            doctorNameIndex.get(name).put(c.getConsultationId(), c);
+        }
+    }
+    private void removeFromIndices(Consultation c) {
+        if (c == null) return;
+        if (c.getPatient() != null) {
+            String name = c.getPatient().getName().toLowerCase();
+            if (patientNameIndex.containsKey(name)) {
+                patientNameIndex.get(name).remove(c.getConsultationId());
+                if (patientNameIndex.get(name).isEmpty()) patientNameIndex.remove(name);
+            }
+        }
+        if (c.getDoctor() != null) {
+            String name = c.getDoctor().getName().toLowerCase();
+            if (doctorNameIndex.containsKey(name)) {
+                doctorNameIndex.get(name).remove(c.getConsultationId());
+                if (doctorNameIndex.get(name).isEmpty()) doctorNameIndex.remove(name);
+            }
+        }
     }
 
     // Get patient info
@@ -107,12 +238,24 @@ public class ConsultationMaintenance {
         }
 
         consultationMap.put(consultation.getConsultationId(), consultation);
+        updateIndicesForAddition(consultation);
         consultationDAO.saveToFile(consultationMap);
         IDGenerator.saveCounters("counter.dat");
+
+        logUndoAction(new UndoAction("ADD", null, copyConsultation(consultation)));
     }
 
     public Consultation getConsultation(String id) {
         return consultationMap.get(id);
+    }
+
+    // Update method for undo (used for updateConsultation)
+    public void updateConsultation(Consultation updated) {
+        Consultation before = copyConsultation(getConsultation(updated.getConsultationId()));
+        consultationMap.put(updated.getConsultationId(), updated);
+        updateIndicesForAddition(updated);
+        consultationDAO.saveToFile(consultationMap);
+        logUndoAction(new UndoAction("UPDATE", before, copyConsultation(updated)));
     }
 
     public void updateFollowUpScheduleSlot(Consultation consultation, LocalDateTime newFollowUpDate) {
@@ -156,7 +299,11 @@ public class ConsultationMaintenance {
 
     public boolean removeConsultation(String id) {
         Consultation removed = consultationMap.remove(id);
+        removeFromIndices(removed);
         consultationDAO.saveToFile(consultationMap);
+        if (removed != null) {
+            logUndoAction(new UndoAction("REMOVE", copyConsultation(removed), null));
+        }
         return removed != null;
     }
 
@@ -309,12 +456,15 @@ public class ConsultationMaintenance {
 
     // --- Searching and Sorting for Consultations ---
     public OrderedMap<String, Consultation> searchConsultationsByPatientName(String name) {
+        name = name.toLowerCase();
+        if (patientNameIndex.containsKey(name)) {
+            return patientNameIndex.get(name);
+        }
         OrderedMap<String, Consultation> result = new OrderedMap<>();
-        String search = name.toLowerCase();
         for (int i = 0; i < consultationMap.size(); i++) {
             Consultation c = consultationMap.get(i);
             Patient patient = c.getPatient();
-            if (patient != null && patient.getName().toLowerCase().contains(search)) {
+            if (patient != null && patient.getName().toLowerCase().contains(name)) {
                 result.put(c.getConsultationId(), c);
             }
         }
@@ -322,12 +472,15 @@ public class ConsultationMaintenance {
     }
 
     public OrderedMap<String, Consultation> searchConsultationsByDoctorName(String name) {
+        name = name.toLowerCase();
+        if (doctorNameIndex.containsKey(name)) {
+            return doctorNameIndex.get(name);
+        }
         OrderedMap<String, Consultation> result = new OrderedMap<>();
-        String search = name.toLowerCase();
         for (int i = 0; i < consultationMap.size(); i++) {
             Consultation c = consultationMap.get(i);
             Doctor doctor = c.getDoctor();
-            if (doctor != null && doctor.getName().toLowerCase().contains(search)) {
+            if (doctor != null && doctor.getName().toLowerCase().contains(name)) {
                 result.put(c.getConsultationId(), c);
             }
         }
