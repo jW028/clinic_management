@@ -27,7 +27,85 @@ public class PatientMaintenance {
     private final PatientQueueDAO patientEmergencyQueueDAO = new PatientQueueDAO(1);
     private final PatientQueueDAO patientNormalQueueDAO = new PatientQueueDAO(2);
 
+    private OrderedMap<String, OrderedMap<String, Patient>> nameIndex = new OrderedMap<>();
+    private OrderedMap<String, OrderedMap<String, Patient>> genderIndex = new OrderedMap<>();
+    private OrderedMap<String, OrderedMap<String, Patient>> ageIndex = new OrderedMap<>();
+
     private static PatientMaintenance instance;
+
+    private static class UndoAction {
+        String type;
+        Patient patientBefore;
+        Patient patientAfter;
+        String field;
+        String prevValue;
+        String newValue;
+    }
+
+    public OrderedMap<String, UndoAction> undoStack = new OrderedMap<>();
+
+    private void logUndoAction(UndoAction action) {
+        String key = "action" + (undoStack.size() + 1);
+        undoStack.put(key, action);
+    }
+
+    private void logRegisterPatient(String patientId) {
+        UndoAction action = new UndoAction();
+        action.type = "REGISTER";
+        action.patientAfter = getPatientById(patientId);
+        logUndoAction(action);
+    }
+
+    private void logUpdatePatient(String patientId, String field, String prevValue, String newValue) {
+        UndoAction action = new UndoAction();
+        action.type = "UPDATE";
+        action.patientBefore = getPatientById(patientId);
+        action.field = field;
+        action.prevValue = prevValue;
+        action.newValue = newValue;
+        logUndoAction(action);
+    }
+
+    private void logDeletePatient(String patientId) {
+        UndoAction action = new UndoAction();
+        action.type = "DELETE";
+        action.patientBefore = getPatientById(patientId);
+        logUndoAction(action);
+    }
+
+    private Patinet copyPatient(Patient original) {
+        if (original == null) return null;
+        return new Patient(
+                original.getPatientId(),
+                original.getName(),
+                original.getAge(),
+                original.getGender(),
+                original.getContactNumber(),
+                original.getAddress(),
+                original.isEmergency()
+        );
+    }
+
+    public String undoLastAction() {
+        if (undoHistory.size() == 0) return "No action to undo.";
+        UndoAction action = undoHistory.pop();
+        switch (action.type) {
+            case "REGISTER":
+                patientRegistry.remove(action.patientAfter.getPatientId());
+                saveChanges();
+                return "Undo Register: Patient removed.";
+            case "REMOVE":
+                patientRegistry.put(action.patientBefore.getPatientId(), copyPatient(action.patientBefore));
+                saveChanges();
+                return "Undo Remove: Patient restored.";
+            case "UPDATE":
+                patientRegistry.put(action.patientBefore.getPatientId(), copyPatient(action.patientBefore));
+                saveChanges();
+                return "Undo Update: Patient reverted.";
+            default:
+                return "Unknown action type.";
+        }
+    }
 
     public PatientMaintenance() {
         this.normalQueue = patientNormalQueueDAO.retrieveFromFile();
@@ -68,6 +146,9 @@ public class PatientMaintenance {
         }
 
         IDGenerator.loadCounter("counter.dat");
+        rebuildNameIndex();
+        rebuildGenderIndex();
+        rebuildAgeIndex();
     }
 
     public static PatientMaintenance getInstance() {
@@ -118,9 +199,13 @@ public class PatientMaintenance {
         }
         Patient newPatient = new Patient(patientId, name, age, gender, contactNumber, address, isEmergency);
         patientRegistry.put(patientId, newPatient);
+        addToNameIndex(newPatient);
+        addToGenderIndex(newPatient);
+        addToAgeIndex(newPatient);
         saveChanges();
         String visitReason = isEmergency ? "Emergency Registration" : "Regular Registration";
         IDGenerator.saveCounters("counter.dat");
+        logRegisterPatient(newPatient);
         return true;
 
     }
@@ -141,6 +226,15 @@ public class PatientMaintenance {
         if (patient == null) {
             return false;
         }
+        removeFromNameIndex(patient);
+        removeFromGenderIndex(patient);
+        removeFromAgeIndex(patient);
+
+        logUpdatePatient(patientId, "ALL_FIELDS",
+            patient.getName() + "|" + patient.getAge() + "|" + patient.getGender() + "|" +
+            patient.getContactNumber() + "|" + patient.getAddress() + "|" + patient.isEmergency(),
+            name + "|" + age + "|" + gender + "|" + contactNumber + "|" + address + "|" + isEmergency
+        );
 
         patient.setName(name);
         patient.setAge(age);
@@ -160,15 +254,21 @@ public class PatientMaintenance {
         if (!patientRegistry.containsKey(patientId)) {
             return false;
         }
+        Patient removedPatient = patientRegistry.get(patientId);
+        removeFromNameIndex(removedPatient);
+        removeFromGenderIndex(removedPatient);
+        removeFromAgeIndex(removedPatient);
+        logDeletePatient(patientId);
 
         emergencyQueue.remove(patientId);
         normalQueue.remove(patientId);
         patientRegistry.remove(patientId);
         saveChanges();
+        logDeletePatient()
         return true;
     }
 
-    public OrderedMap<String, Patient> searchPatients(String searchTerm) {
+    /*public OrderedMap<String, Patient> searchPatients(String searchTerm) {
         if (searchTerm == null || searchTerm.trim().isEmpty()) {
             return new OrderedMap<>();
         }
@@ -181,8 +281,164 @@ public class PatientMaintenance {
                             p.getName().toLowerCase().contains(term)) ? 0 : -1;
                 }
         );
+    }*/
+
+
+    // Index Maintenance Methods
+    private void rebuildNameIndex() {
+        nameIndex.clear();
+        for (Patient patient : patientRegistry) {
+            if (patient != null) {
+                addToNameIndex(patient);
+            }
+        }
     }
 
+    private void addToNameIndex(Patient patient) {
+        if (patient == null || patient.getName() == null) return;
+        String key = patient.getName().toLowerCase();
+        OrderedMap<String, Patient> bucket = nameIndex;
+        if (bucket == null) {
+            bucket = new OrderedMap<>();
+            nameIndex.put(key, bucket);
+        }
+        bucket.put(patient.getPatientId(), patient);
+    }
+
+    private void removeFromNameIndex(Patient patient) {
+        if (patient = null || patient.getName() == null) return;
+        String key = patient.getName().toLowerCase();
+        OrderedMap<String, Patient> bucket = nameIndex.get(key);
+        if (bucket != null) {
+            bucket.remove(patient.getPatientId());
+            if (bucket.isEmpty()) {
+                nameIndex.remove(key);
+            }
+        }
+    }
+
+    private void rebuildGenderIndex() {
+        genderIndex.clear();
+        for (Patient patient : patientRegistry) {
+            if (patient != null) {
+                addToGenderIndex(patient);
+            }
+        }
+    }
+
+    private void addToGenderIndex(Patient patient) {
+        if (patient == null || patient.getGender() == null) return;
+        String key = patient.getGender().toLowerCase();
+        OrderedMap<String, Patient> bucket = genderIndex.get(key);
+        if (bucket == null) {
+            bucket = new OrderedMap<>();
+            genderIndex.put(key, bucket);
+        }
+        bucket.put(patient.getPatientId(), patient);
+    }
+
+    private void removeFromGenderIndex(Patient patient) {
+        if (patient == null || patient.getGender() == null) return;
+        String key = patient.getGender().toLowerCase();
+        OrderedMap<String, Patient> bucket = genderIndex.get(key);
+        if (bucket != null) {
+            bucket.remove(patient.getPatientId());
+            if (bucket.isEmpty()) {
+                genderIndex.remove(key);
+            }
+        }
+    }
+
+    private void rebuildAgeIndex() {
+        ageIndex.clear();
+        for (Patient patient : patientRegistry) {
+            if (patient != null) {
+                addToAgeIndex(patient);
+            }
+        }
+    }
+
+    private void addToAgeIndex(Patient patient) {
+        if (patient == null) return;
+        String key = Integer.toString(patient.getAge());
+        OrderedMap<String, Patient> bucket = ageIndex.get(key);
+        if (bucket == null) {
+            bucket = new OrderedMap<>();
+            ageIndex.put(key, bucket);
+        }
+        bucket.put(patient.getPatientId(), patient);
+    }
+
+    private void removeFromAgeIndex(Patient patient) {
+        if (patient == null) return;
+        String key = Integer.toString(patient.getAge());
+        OrderedMap<String, Patient> bucket = ageIndex.get(key);
+        if (bucket != null) {
+            bucket.remove(patient.getPatientId());
+            if (bucket.isEmpty()) {
+                ageIndex.remove(key);
+            }
+        }
+    }
+
+    public OrderedMap<String, Patient> searchPatients(String searchTerm) {
+        OrderedMap<String, Patient> result = new OrderedMap<>();
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return result;
+        }
+        String term = searchTerm.trim().toLowerCase();
+
+        // 1. O(1) patient ID lookup
+        Patient byId = patientRegistry.get(searchTerm);
+        if (byId != null) {
+            result.put(byId.getPatientId(), byId);
+            return result;
+        }
+
+        // 2. O(1) exact name lookup
+        OrderedMap<String, Patient> nameBucket = nameIndex.get(term);
+        if (nameBucket != null) {
+            for (Patient p : nameBucket) {
+                if (p != null) result.put(p.getPatientId(), p);
+            }
+            return result;
+        }
+
+        // 3. O(1) gender lookup (supports male/female shortcuts)
+        String gKey = null;
+        if (term.equals("m") || term.equals("male")) gKey = "male";
+        else if (term.equals("f") || term.equals("female")) gKey = "female";
+        if (gKey != null) {
+            OrderedMap<String, Patient> gBucket = genderIndex.get(gKey);
+            if (gBucket != null) {
+                for (Patient p : gBucket) {
+                    if (p != null) result.put(p.getPatientId(), p);
+                }
+            }
+            return result;
+        }
+
+        // 4. O(1) exact age lookup (numeric term)
+        boolean numeric = term.chars().allMatch(Character::isDigit);
+        if (numeric) {
+            OrderedMap<String, Patient> ageBucket = ageIndex.get(term);
+            if (ageBucket != null) {
+                for (Patient p : ageBucket) {
+                    if (p != null) result.put(p.getPatientId(), p);
+                }
+            }
+            return result;
+        }
+
+        // 5. Fallback partial name (linear)
+        for (Patient p : patientRegistry) {
+            if (p != null && p.getName() != null &&
+                p.getName().toLowerCase().contains(term)) {
+                result.put(p.getPatientId(), p);
+            }
+        }
+        return result;
+    }
 
     /**
      * Get all patients as array
@@ -573,7 +829,7 @@ public class PatientMaintenance {
             countByPatient.put(pid, countByPatient.get(pid) + 1);
         }
 
-        int patientDenom = Math.max(1, getAllPatients().size());
+        int patientDenom = Math.max(1, patientRegistry.size());
         double avgPerPatient = (double) total / patientDenom;
 
         OrderedMap<String, Integer> topPatients = new OrderedMap<>();

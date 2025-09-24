@@ -78,10 +78,11 @@ public class PatientUI {
             System.out.println("2. Update Patient Details"); // Patient
             System.out.println("3. Delete Patient"); // Admin
             System.out.println("4. View Patient List"); // Admin
+            System.out.println("5. Undo Last Patient Action");
             System.out.println("0. Back to Patient Menu");
             System.out.println("=".repeat(40));
 
-            choice = InputHandler.getInt("Select an option", 0, 4);
+            choice = InputHandler.getInt("Select an option", 0, 5);
 
             switch(choice) {
                 case 1:
@@ -96,6 +97,9 @@ public class PatientUI {
                 case 4:
                     viewPatientList();
                     break;
+                case 5:
+                    showRecentPatientActionsWithUndo();
+                    break;
                 case 0:
                     System.out.println("Returning to patient menu...");
                     break;
@@ -108,6 +112,22 @@ public class PatientUI {
             }
 
         } while (choice != 0);
+    }
+
+
+    private void showRecentPatientActionsWithUndo() {
+        System.out.println("\n--- Undo Last Patient Action ---");
+        // If you want to show a list of recent actions, you can implement that here.
+        System.out.println("Would you like to undo the last action?");
+        System.out.println("1. Undo Last Action");
+        System.out.println("0. Cancel");
+        int undoChoice = InputHandler.getInt("Choose option", 0, 1);
+        if (undoChoice == 1) {
+            String result = patientMaintenance.undoLastAction();
+            System.out.println(result);
+        } else {
+            System.out.println("Undo cancelled.");
+        }
     }
 
     /**
