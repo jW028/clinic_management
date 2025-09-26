@@ -1,7 +1,3 @@
-/**
- * @author Lim Xin Hui
- */
-
 package control;
 
 import adt.OrderedMap;
@@ -11,7 +7,7 @@ import entity.Schedule;
 import utility.IDGenerator;
 
 public class DoctorMaintenance {
-    // === Undo Feature ===
+    // Undo Feature
     private static class UndoAction {
         String type; // "REGISTER", "REMOVE", "UPDATE"
         Doctor doctorBefore;
@@ -23,8 +19,13 @@ public class DoctorMaintenance {
 
     private OrderedMap<String, Doctor> doctorRegistry;
     private OrderedMap<Integer, UndoAction> undoHistory;
-    private OrderedMap<Integer, String> recentDoctorActions; // Keep this for history text
+    private OrderedMap<Integer, String> recentDoctorActions;
     private ScheduleMaintenance scheduleMaintenance;
+
+    private OrderedMap<String, OrderedMap<String, Doctor>> nameIndex;
+    private OrderedMap<String, OrderedMap<String, Doctor>> specialtyIndex;
+    private OrderedMap<String, OrderedMap<String, Doctor>> genderIndex;
+    private OrderedMap<Integer, OrderedMap<String, Doctor>> experienceIndex;
 
     public DoctorMaintenance() {
         IDGenerator.loadCounter("counter.dat");
@@ -33,21 +34,93 @@ public class DoctorMaintenance {
         this.recentDoctorActions = new OrderedMap<>();
         this.scheduleMaintenance = new ScheduleMaintenance();
 
+        // Initialize indices
+        nameIndex = new OrderedMap<>();
+        specialtyIndex = new OrderedMap<>();
+        genderIndex = new OrderedMap<>();
+        experienceIndex = new OrderedMap<>();
+
         String highestID = "DC000";
         for (Doctor doctor : doctorRegistry) {
             String id = doctor.getDoctorID();
             if (id.compareTo(highestID) > 0) {
                 highestID = id;
             }
+            indexDoctor(doctor);
         }
         IDGenerator.updateDoctorCounterFromHighestID(highestID);
         IDGenerator.saveCounters("counter.dat");
+    }
+
+    private void indexDoctor(Doctor d) {
+        if (d == null) return;
+        String docId = d.getDoctorID();
+
+        // Name index (case-insensitive)
+        String nameKey = (d.getName() == null) ? "" : d.getName().toLowerCase();
+        addToIndex(nameIndex, nameKey, docId, d);
+
+        // Specialty index
+        String specKey = (d.getSpecialty() == null) ? "" : d.getSpecialty().toLowerCase();
+        addToIndex(specialtyIndex, specKey, docId, d);
+
+        // Gender index
+        String genderKey = (d.getGender() == null) ? "" : d.getGender().toLowerCase();
+        addToIndex(genderIndex, genderKey, docId, d);
+
+        // Experience index
+        int expKey = d.getYearsOfExperience();
+        OrderedMap<String, Doctor> bucket = experienceIndex.get(expKey);
+        if (bucket == null) {
+            bucket = new OrderedMap<>();
+            experienceIndex.put(expKey, bucket);
+        }
+        bucket.put(docId, d);
+    }
+
+    private void removeFromIndices(Doctor d) {
+        if (d == null) return;
+        String docId = d.getDoctorID();
+
+        String nameKey = (d.getName() == null) ? "" : d.getName().toLowerCase();
+        removeFromIndex(nameIndex, nameKey, docId);
+
+        String specKey = (d.getSpecialty() == null) ? "" : d.getSpecialty().toLowerCase();
+        removeFromIndex(specialtyIndex, specKey, docId);
+
+        String genderKey = (d.getGender() == null) ? "" : d.getGender().toLowerCase();
+        removeFromIndex(genderIndex, genderKey, docId);
+
+        int expKey = d.getYearsOfExperience();
+        OrderedMap<String, Doctor> bucket = experienceIndex.get(expKey);
+        if (bucket != null) {
+            bucket.remove(docId);
+            if (bucket.isEmpty()) experienceIndex.remove(expKey);
+        }
+    }
+
+    private void addToIndex(OrderedMap<String, OrderedMap<String, Doctor>> index, String key, String docId, Doctor d) {
+        OrderedMap<String, Doctor> bucket = index.get(key);
+        if (bucket == null) {
+            bucket = new OrderedMap<>();
+            index.put(key, bucket);
+        }
+        bucket.put(docId, d);
+    }
+
+    private void removeFromIndex(OrderedMap<String, OrderedMap<String, Doctor>> index, String key, String docId) {
+        OrderedMap<String, Doctor> bucket = index.get(key);
+        if (bucket != null) {
+            bucket.remove(docId);
+            if (bucket.isEmpty()) index.remove(key);
+        }
     }
 
     private void logUndoAction(UndoAction action) {
         undoHistory.push(undoHistory.size(), action);
         if (undoHistory.size() > 20) undoHistory.remove(0);
     }
+
     private void logAction(String action) {
         recentDoctorActions.push(recentDoctorActions.size(), action);
         if (recentDoctorActions.size() > 20) {
@@ -66,10 +139,12 @@ public class DoctorMaintenance {
     public boolean registerDoctor(Doctor doctor) {
         if (doctorRegistry.containsKey(doctor.getDoctorID())) return false;
         doctorRegistry.put(doctor.getDoctorID(), doctor);
+        indexDoctor(doctor);
         DoctorDAO.saveDoctors(doctorRegistry);
         IDGenerator.saveCounters("counter.dat");
         UndoAction action = new UndoAction();
-        action.type = "REGISTER"; action.doctorAfter = copyDoctor(doctor);
+        action.type = "REGISTER";
+        action.doctorAfter = copyDoctor(doctor);
         logUndoAction(action);
         logAction("Registered doctor [" + doctor.getDoctorID() + "] " + doctor.getName());
         return true;
@@ -91,21 +166,51 @@ public class DoctorMaintenance {
         String oldValue = null;
 
         switch (field.toLowerCase()) {
-            case "name" -> { oldValue = doctor.getName(); doctor.setName(newValue); action.newValue = newValue;}
-            case "specialty" -> { oldValue = doctor.getSpecialty(); doctor.setSpecialty(newValue); action.newValue = newValue;}
-            case "phone" -> { oldValue = doctor.getPhone(); doctor.setPhone(newValue); action.newValue = newValue;}
-            case "email" -> { oldValue = doctor.getEmail(); doctor.setEmail(newValue); action.newValue = newValue;}
-            case "address" -> { oldValue = doctor.getAddress(); doctor.setAddress(newValue); action.newValue = newValue;}
-            case "gender" -> { oldValue = doctor.getGender(); doctor.setGender(newValue); action.newValue = newValue;}
+            case "name" -> {
+                oldValue = doctor.getName();
+                doctor.setName(newValue);
+                action.newValue = newValue;
+            }
+            case "specialty" -> {
+                oldValue = doctor.getSpecialty();
+                doctor.setSpecialty(newValue);
+                action.newValue = newValue;
+            }
+            case "phone" -> {
+                oldValue = doctor.getPhone();
+                doctor.setPhone(newValue);
+                action.newValue = newValue;
+            }
+            case "email" -> {
+                oldValue = doctor.getEmail();
+                doctor.setEmail(newValue);
+                action.newValue = newValue;
+            }
+            case "address" -> {
+                oldValue = doctor.getAddress();
+                doctor.setAddress(newValue);
+                action.newValue = newValue;
+            }
+            case "gender" -> {
+                oldValue = doctor.getGender();
+                doctor.setGender(newValue);
+                action.newValue = newValue;
+            }
             case "experience" -> {
                 oldValue = String.valueOf(doctor.getYearsOfExperience());
                 try {
                     int exp = Integer.parseInt(newValue);
                     doctor.setYearsOfExperience(exp);
                     action.newValue = newValue;
-                } catch (NumberFormatException e) { return; }
+                } catch (NumberFormatException e) {
+                    return;
+                }
             }
         }
+
+        // update indices: remove old, add updated
+        removeFromIndices(action.doctorBefore);
+        indexDoctor(doctor);
 
         DoctorDAO.saveDoctors(doctorRegistry);
         IDGenerator.saveCounters("counter.dat");
@@ -132,31 +237,40 @@ public class DoctorMaintenance {
         Doctor removedDoctor = doctorRegistry.get(doctorID);
         boolean removed = doctorRegistry.remove(doctorID) != null;
         if (removed) {
+            removeFromIndices(removedDoctor);
             DoctorDAO.saveDoctors(doctorRegistry);
             IDGenerator.saveCounters("counter.dat");
             UndoAction action = new UndoAction();
-            action.type = "REMOVE"; action.doctorBefore = copyDoctor(removedDoctor);
+            action.type = "REMOVE";
+            action.doctorBefore = copyDoctor(removedDoctor);
             logUndoAction(action);
             logAction("Removed doctor [" + doctorID + "]");
         }
         return removed;
     }
 
-    // === Undo method ===
+    // Undo method
     public String undoLastAction() {
         if (undoHistory.size() == 0) return "No action to undo.";
         UndoAction action = undoHistory.pop();
         switch (action.type) {
             case "REGISTER":
-                doctorRegistry.remove(action.doctorAfter.getDoctorID());
+                Doctor regDoc = action.doctorAfter;
+                doctorRegistry.remove(regDoc.getDoctorID());
+                removeFromIndices(regDoc);
                 DoctorDAO.saveDoctors(doctorRegistry);
                 return "Undo Register: Doctor removed.";
             case "REMOVE":
-                doctorRegistry.put(action.doctorBefore.getDoctorID(), copyDoctor(action.doctorBefore));
+                Doctor remDoc = action.doctorBefore;
+                doctorRegistry.put(remDoc.getDoctorID(), copyDoctor(remDoc));
+                indexDoctor(remDoc);
                 DoctorDAO.saveDoctors(doctorRegistry);
                 return "Undo Remove: Doctor restored.";
             case "UPDATE":
-                doctorRegistry.put(action.doctorBefore.getDoctorID(), copyDoctor(action.doctorBefore));
+                Doctor updDoc = action.doctorBefore;
+                removeFromIndices(doctorRegistry.get(updDoc.getDoctorID())); // remove updated
+                doctorRegistry.put(updDoc.getDoctorID(), copyDoctor(updDoc));
+                indexDoctor(updDoc);
                 DoctorDAO.saveDoctors(doctorRegistry);
                 return "Undo Update: Doctor reverted.";
             default:
@@ -168,39 +282,35 @@ public class DoctorMaintenance {
         return doctorRegistry.toArray(new Doctor[doctorRegistry.size()]);
     }
 
+    // --- O(1) index-based search ---
     public Doctor[] searchByName(String name) {
-        OrderedMap<String, Doctor> results = doctorRegistry.filter(
-                new Doctor(null, name, null, null, null, null, null, 0),
-                (d1, d2) -> d1.getName().equalsIgnoreCase(d2.getName()) ? 0 : -1
-        );
-        return results.toArray(new Doctor[results.size()]);
+        if (name == null) name = "";
+        OrderedMap<String, Doctor> bucket = nameIndex.get(name.toLowerCase());
+        if (bucket == null) return new Doctor[0];
+        return bucket.toArray(new Doctor[bucket.size()]);
     }
 
     public Doctor[] searchByGender(String gender) {
-        OrderedMap<String, Doctor> results = doctorRegistry.filter(
-                new Doctor(null, null, null, null, null, null, gender, 0),
-                (d1, d2) -> d1.getGender().equalsIgnoreCase(d2.getGender()) ? 0 : -1
-        );
-        return results.toArray(new Doctor[results.size()]);
+        if (gender == null) gender = "";
+        OrderedMap<String, Doctor> bucket = genderIndex.get(gender.toLowerCase());
+        if (bucket == null) return new Doctor[0];
+        return bucket.toArray(new Doctor[bucket.size()]);
     }
 
     public Doctor[] searchBySpecialty(String specialty) {
-        OrderedMap<String, Doctor> results = doctorRegistry.filter(
-                new Doctor(null, null, specialty, null, null, null, null, 0),
-                (d1, d2) -> d1.getSpecialty().equalsIgnoreCase(d2.getSpecialty()) ? 0 : -1
-        );
-        return results.toArray(new Doctor[results.size()]);
+        if (specialty == null) specialty = "";
+        OrderedMap<String, Doctor> bucket = specialtyIndex.get(specialty.toLowerCase());
+        if (bucket == null) return new Doctor[0];
+        return bucket.toArray(new Doctor[bucket.size()]);
     }
 
-    // SEARCH BY YEARS OF EXPERIENCE
     public Doctor[] searchByExperience(int years) {
-        OrderedMap<String, Doctor> results = doctorRegistry.filter(
-                new Doctor(null, null, null, null, null, null, null, years),
-                (d1, d2) -> d1.getYearsOfExperience() == d2.getYearsOfExperience() ? 0 : -1
-        );
-        return results.toArray(new Doctor[results.size()]);
+        OrderedMap<String, Doctor> bucket = experienceIndex.get(years);
+        if (bucket == null) return new Doctor[0];
+        return bucket.toArray(new Doctor[bucket.size()]);
     }
 
+    // ...sorts and other methods unchanged...
     public Doctor[] sortByName(boolean ascending) {
         doctorRegistry.sort((d1, d2) -> {
             int cmp = d1.getName().compareToIgnoreCase(d2.getName());
@@ -266,6 +376,7 @@ public class DoctorMaintenance {
         }
         return specialtyCounts;
     }
+
     public OrderedMap<String, Integer> getDoctorCountPerSpecialty() {
         Doctor[] doctors = getAllDoctorsArray();
         OrderedMap<String, Integer> specialtyCount = new OrderedMap<>();
