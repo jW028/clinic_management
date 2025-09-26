@@ -7,6 +7,8 @@ package control;
 import adt.OrderedMap;
 import dao.*;
 import entity.*;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import utility.IDGenerator;
@@ -26,6 +28,8 @@ public class PharmacyMaintenance {
     public static final String STATUS_COMPLETED = "COMPLETED";
     public static final String STATUS_REJECTED = "REJECTED";
 
+    private OrderedMap<String, OrderedMap<String, Medicine>> medicineIndex = new OrderedMap<>();
+
     public PharmacyMaintenance() {
         this.medicineMap = medicineDAO.retrieveFromFile();
         this.pendingPrescriptionMap = pendingPrescriptionDAO.retrieveFromFile();
@@ -33,6 +37,41 @@ public class PharmacyMaintenance {
         this.transactionMap = transactionDAO.retrieveFromFile();
         this.treatmentMap = treatmentDAO.retrieveFromFile();
         IDGenerator.loadCounter("counter.dat");
+        undoStack = new OrderedMap<>();
+    }
+
+    private OrderedMap<String, UndoCommand> undoStack;
+    private OrderedMap<String, String> recentActions;
+    private static final int MAX_UNDO_SIZE = 20;
+
+    private static class UndoCommand {
+        private String actionType;
+        private String actionID;
+        private Object data;
+        private LocalDateTime timestamp;
+
+        public UndoCommand(String actionType, String actionID, Object data) {
+            this.actionType = actionType;
+            this.actionID = actionID;
+            this.data = data;
+            this.timestamp = LocalDateTime.now();
+        }
+
+        public String getActionType() {
+            return actionType;
+        }
+
+        public String getActionID() {
+            return actionID;
+        }
+
+        public Object getData() {
+            return data;
+        }
+
+        public LocalDateTime getTimestamp() {
+            return timestamp;
+        }
     }
 
     /*
@@ -43,12 +82,167 @@ public class PharmacyMaintenance {
         return medicineMap;
     }
 
+
+    private void pushUndoCommand(String actionType, String actionID, Object data) {
+        try {
+            if (undoStack.size() >= MAX_UNDO_SIZE) {
+                undoStack.removeAt(0);
+            }
+            UndoCommand command = new UndoCommand(actionType, actionID, data);
+            undoStack.push("undo_" + System.currentTimeMillis(), command);
+        } catch (Exception e) {
+            System.out.println("Error pushing undo command: " + e.getMessage());
+        }
+    }
+
+    public boolean undoLastAction() {
+        try {
+            if (undoStack.isEmpty()) {
+                System.out.println("No actions to undo.");
+                return false;
+            }
+
+            UndoCommand lastCommand = undoStack.top();
+
+            if (lastCommand == null) {
+                System.out.println("Invalid undo command.");
+                return false;
+            }
+
+            boolean success = false;
+
+            switch (lastCommand.getActionType()){
+                case "ADD":
+                    success = undoAddOperation(lastCommand);
+                    break;
+                case "UPDATE":
+                    success = undoUpdateOperation(lastCommand);
+                    break;
+                case "REMOVE":
+                    success = undoDeleteOperation(lastCommand);
+                    break;
+                default:
+                    System.out.println("Unknown action type: " + lastCommand.getActionType());
+                    break;
+            }
+
+            if (success) {
+                undoStack.pop();
+                System.out.println("Undo successful: " + lastCommand.getActionType() + " " + lastCommand.getActionID());
+
+                String undoEntry = "[UNDO] " + lastCommand.getActionType() + " - " +
+                        lastCommand.getActionID() + " at " +
+                        java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+                recentActions.push("UNDO_" + lastCommand.getActionID(), undoEntry);
+            }
+
+            return success;
+        } catch (Exception e) {
+            System.out.println("Error during undo: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean undoAddOperation(UndoCommand command){
+        try {
+            String medID = command.getActionID();
+            Medicine med = medicineMap.get(medID);
+
+            if (med != null) {
+                medicineMap.remove(medID);
+                removeFromIndex(medicineIndex, med.getName().toLowerCase(), medID);
+
+                System.out.println("Undid addition of medicine ID: " + medID);
+                return true;
+            } else {
+                System.out.println("Medicine ID not found for undo: " + medID);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Error undoing add operation: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean undoUpdateOperation(UndoCommand command) {
+        try {
+            if (command.getData() instanceof Medicine) {
+                Medicine oldMed = (Medicine) command.getData();
+                String medID = command.getActionID();
+
+                Medicine currentMed = medicineMap.get(medID);
+                if (currentMed != null) {
+                    removeFromIndex(medicineIndex, currentMed.getName().toLowerCase(), medID);
+                }
+
+                medicineMap.put(medID, oldMed);
+                addToIndex(medicineIndex, oldMed.getName().toLowerCase(), oldMed, medID);
+
+                System.out.println("Undid UPDATE: Restored medicine " + medID + " to previous state.");
+                return true;
+            } else {
+                System.out.println("Invalid data for undoing update operation.");
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Error undoing update operation: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean undoDeleteOperation(UndoCommand command) {
+        try {
+            if (command.getData() instanceof Medicine) {
+                Medicine deletedMed = (Medicine) command.getData();
+                String medID = command.getActionID();
+
+                medicineMap.put(medID, deletedMed);
+                addToIndex(medicineIndex, deletedMed.getName().toLowerCase(), deletedMed, medID);
+
+                System.out.println("Undid deletion: Restored medicine " + medID);
+                return true;
+            } else {
+                System.out.println("Invalid data for undoing delete operation.");
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Error undoing delete operation: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public String getUndoInfo() {
+        if (undoStack.isEmpty()){
+            return "No actions to undo.";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = undoStack.size() - 1; i >= 0; i--) {
+            UndoCommand cmd = undoStack.get(i);
+            sb.append(String.format("%d. %s - %s at %s\n", undoStack.size() - i,
+                    cmd.getActionType(),
+                    cmd.getActionID(),
+                    cmd.getTimestamp().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"))));
+        }
+        return sb.toString();
+    }
+
+    public void clearUndoHistory() {
+        undoStack.clear();
+        System.out.println("Undo history cleared.");
+    }
+
     /*
      * Add a new medicine to the medicine map
      * @param newMedicine the new medicine to be added
      */
     public void addMedicine(Medicine newMedicine) {
         medicineMap.put(newMedicine.getId(), newMedicine);
+        updateIndicesForAddition(newMedicine);
+        recentActions.push("ADD_" + newMedicine.getId(),
+                "[ADD] Medicine ID: " + newMedicine.getId() + " at " +
+                        java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+        pushUndoCommand("ADD", newMedicine.getId(), null);
         medicineDAO.saveToFile(medicineMap);
         IDGenerator.saveCounters("counter.dat");
     }
@@ -62,6 +256,22 @@ public class PharmacyMaintenance {
         return medicineMap.get(id);
     }
 
+    private Medicine createMedicineCopy(Medicine original) {
+        try {
+            Medicine copy = new Medicine(
+                    original.getId(),
+                    original.getName(),
+                    original.getQuantity(),
+                    original.getPrice(),
+                    original.getDescription()
+            );
+
+            return copy;
+        } catch (Exception e){
+            System.out.println("Error creating medicine copy: " + e.getMessage());
+            return original;
+        }
+    }
 
     /* Update a specific field of a medicine
      * @param medID the ID of the medicine to be updated
@@ -70,6 +280,8 @@ public class PharmacyMaintenance {
      */
     public void updateMedicineField(String medID, int choice, String newValue) {
         Medicine med = medicineMap.get(medID);
+        boolean updated = false;
+        Medicine oldMed = createMedicineCopy(med);
 
         try {
             switch (choice) {
@@ -78,6 +290,7 @@ public class PharmacyMaintenance {
                         throw new IllegalArgumentException("Medicine name cannot be empty.");
                     }
                     med.setName(newValue);
+                    updated = true;
                     break;
                 case 2:
                     int newQuantity = Integer.parseInt(newValue);
@@ -85,6 +298,7 @@ public class PharmacyMaintenance {
                         throw new IllegalArgumentException("Quantity cannot be negative.");
                     }
                     med.setQuantity(newQuantity);
+                    updated = true;
                     break;
                 case 3:
                     double newPrice = Double.parseDouble(newValue);
@@ -92,12 +306,14 @@ public class PharmacyMaintenance {
                         throw new IllegalArgumentException("Price cannot be negative.");
                     }
                     med.setPrice(newPrice);
+                    updated = true;
                     break;
                 case 4:
                     if (newValue != null && newValue.isBlank()) {
                         throw new IllegalArgumentException("Description cannot be empty.");
                     }
                     med.setDescription(newValue);
+                    updated = true;
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid field choice.");
@@ -107,6 +323,15 @@ public class PharmacyMaintenance {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Error updating medicine: " + e.getMessage());
         }
+
+        if (updated) {
+            pushUndoCommand("UPDATE", medID, oldMed);
+
+            recentActions.push("UPDATE_" + medID,
+                    "[UPDATE] Medicine ID: " + medID + " at " +
+                            java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+        }
+
         medicineDAO.saveToFile(medicineMap);
     }
 
@@ -115,7 +340,13 @@ public class PharmacyMaintenance {
      * @param medID the ID of the medicine to be removed
      */
     public void removeMedicine(String medID){
-        medicineMap.remove(medID);
+        Medicine removed = medicineMap.remove(medID);
+
+        if(removed != null){
+            Medicine medicineCopy = createMedicineCopy(removed);
+            updateIndicesForRemoval(removed);
+            pushUndoCommand("DELETE", medID, medicineCopy);
+        }
         medicineDAO.saveToFile(medicineMap);
     }
 
@@ -370,10 +601,65 @@ public class PharmacyMaintenance {
      * @return a OrderedMap containing the matching medicines
      */
     public OrderedMap<String, Medicine> searchMedicinesByName(String name) {
-        return medicineMap.filter(
-                new Medicine(null, name, 0, 0.0, null),
-                (med1, med2) -> med1.getName().toLowerCase().contains(med2.getName().toLowerCase()) ? 0 : 1
-        );
+        if (name == null || name.isBlank()) {
+            return new OrderedMap<>();
+        }
+
+        OrderedMap<String, Medicine> result = medicineIndex.get(name.toLowerCase());
+        return result != null ? result : new OrderedMap<>();
+    }
+
+    private void buildMedicineHashIndex(){
+        medicineIndex = new OrderedMap<>();
+
+        for (Medicine med : medicineMap){
+            if (med == null) continue;
+
+            if (med.getName() != null && !med.getName().isBlank()){
+                String medNameKey = med.getName().toLowerCase();
+                addToIndex(medicineIndex, medNameKey, med, med.getId());
+            }
+        }
+    }
+
+    private void addToIndex(OrderedMap<String, OrderedMap<String, Medicine>> index, String key, Medicine med, String medId) {
+        OrderedMap<String, Medicine> medicineMap = index.get(key);
+        if (medicineMap == null) {
+            medicineMap = new OrderedMap<>();
+            index.put(key, medicineMap);
+        }
+        medicineMap.put(medId, med);
+    }
+
+    private void updateIndicesForAddition(Medicine medicine) {
+
+        if (medicine != null) {
+            String medNameKey = medicine.getName().toLowerCase();
+            if (medNameKey != null && !medNameKey.isBlank()) {
+                addToIndex(medicineIndex, medNameKey, medicine, medicine.getId());
+            }
+        }
+    }
+
+    private void updateIndicesForRemoval(Medicine medicine) {
+
+        if (medicine != null) {
+            String medNameKey = medicine.getName().toLowerCase();
+            if (medNameKey != null && !medNameKey.isBlank()) {
+                removeFromIndex(medicineIndex, medNameKey, medicine.getId());
+            }
+        }
+    }
+
+    private void removeFromIndex(OrderedMap<String, OrderedMap<String, Medicine>> index,
+                                 String key, String medId) {
+        OrderedMap<String, Medicine> medicineMap = index.get(key);
+        if (medicineMap != null) {
+            medicineMap.remove(medId);
+            if (medicineMap.isEmpty()) {
+                index.remove(key);
+            }
+        }
     }
 
     /*

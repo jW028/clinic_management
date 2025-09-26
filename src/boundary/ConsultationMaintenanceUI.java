@@ -29,12 +29,13 @@ public class ConsultationMaintenanceUI {
         int choice;
         do {
             printMenu();
-            choice = InputHandler.getInt("Select an option", 0, 3);
+            choice = InputHandler.getInt("Select an option", 0, 4);
 
             switch (choice) {
                 case 1 -> appointmentMenu();
                 case 2 -> consultationMenu();
                 case 3 -> reportMenu();
+                case 4 -> undoMenu();
                 case 0 -> {
                     System.out.println("Returning to Main Menu. ");
                     return;
@@ -141,6 +142,45 @@ public class ConsultationMaintenanceUI {
                 default -> System.out.println("Invalid choice");
             }
         } while (true);
+    }
+
+    private void undoMenu() {
+        int choice;
+        do {
+            System.out.println("\n┌" + "─".repeat(42) + "┐");
+            System.out.println("│           UNDO / HISTORY MENU            |");
+            System.out.println("├" + "─".repeat(42) + "┤");
+            System.out.println("│ 1. Undo Last Consultation Operation      │");
+            System.out.println("│ 2. View Undo History                     │");
+            System.out.println("│ 3. Clear Undo History                    │");
+            System.out.println("│ 0. Return                                │");
+            System.out.println("└" + "─".repeat(42) + "┘");
+
+            choice = InputHandler.getInt("Select an option", 0, 3);
+
+            switch (choice) {
+                case 1 -> undoLastOperation();
+                case 2 -> viewUndoHistory();
+                case 3 -> clearUndoHistory();
+                case 0 -> { return; }
+                default -> System.out.println("Invalid choice");
+            }
+        } while (true);
+    }
+
+    private void undoLastOperation() {
+        String result = maintenance.undoLastAction();
+        System.out.println(result);
+    }
+
+    private void viewUndoHistory() {
+        System.out.println("\n--- Undo History ---");
+        System.out.println(maintenance.getUndoInfo());
+    }
+
+    private void clearUndoHistory() {
+        maintenance.clearUndoHistory();
+        System.out.println("Undo history cleared.");
     }
 
     private void viewAllConsultations() {
